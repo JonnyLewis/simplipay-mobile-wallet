@@ -1,0 +1,28 @@
+# Example Codex CLI configuration for this kit.
+# Copy what you need into ~/.codex/config.toml (Codex config is user-level, not per-repo).
+#
+# Why profiles: the kit's model-routing table (engineering/agents/AGENTS.md) maps
+# SDLC phases to capability tiers. Profiles let you switch tier per task with
+# `codex --profile <name>` instead of editing config.
+#
+# Replace the model names with the current models available to your account -
+# model names age quickly; the *tier structure* is the durable part.
+
+# Default: mid/high tier for implementation work.
+model = "<your-default-coding-model>"
+
+# Top reasoning tier: planning, architecture, L1/L2/L3 review lenses.
+[profiles.plan]
+model = "<your-top-reasoning-model>"
+model_reasoning_effort = "high"
+
+# Fast/cheap tier: status updates, spec edits, backlog grooming,
+# L4/L5 review lenses, update-context runs.
+[profiles.fast]
+model = "<your-fast-cheap-model>"
+model_reasoning_effort = "low"
+
+# Usage examples:
+#   codex --profile plan  "Follow workflows/agent/build-ft.md for FT-012 (Phase 2 only)"
+#   codex --profile fast  "Follow workflows/agent/update-context.md"
+#   codex                 "Continue FT-012 Phase 4 per the approved plan"

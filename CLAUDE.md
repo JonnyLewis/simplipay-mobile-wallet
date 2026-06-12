@@ -1,151 +1,22 @@
-# SimpliPay Mobile Wallet
+# CLAUDE.md - Claude Code entrypoint
 
-This repository contains the SimpliPay mobile wallet codebase.
+@AGENTS.md
 
-It is a brownfield, multi-surface codebase derived from the Mifos Pay / mobile-wallet structure and extended for SimpliPay-specific product needs. Treat this repo as a production financial application with shared contracts, cross-surface blast radius, legacy constraints, and platform-specific behavior.
+## Claude Code specific
 
-## Repo shape
+The shared contract (including this repo's financial-safety rules and Research->Plan->Implement operating mode, formerly in this file) now lives in `AGENTS.md` - root and per folder - so Codex and Claude Code read one rulebook. Every `CLAUDE.md` is only a shim.
 
-This is not a simple single-app mobile repo.
+- Per-folder `CLAUDE.md` files are one-line `@AGENTS.md` imports; folder content lives in the sibling `AGENTS.md`.
+- This repo's custom subagents live in `.claude/agents/` (planner, researcher, reviewer, android-implementer, ios-implementer) and its domain skills in `.claude/skills/` (payment-safety-rules, wallet-domain-rules, api-contract-check, kmp-surface-impact, shared-contract-safety, mifosx-legacy-patterns, implement-plan, research-ticket). They are unchanged and complement the kit workflows below.
+- Use Claude subagents where `engineering/agents/AGENTS.md` says fan-out pays (review lenses, research); keep implementation sequential by default.
 
-Key areas in this repository include:
-- `cmp-shared/` for shared cross-platform UI composition and app assembly
-- `cmp-android/`, `cmp-ios/`, `cmp-web/`, `cmp-desktop/` for platform/surface entry points
-- `feature/` for product feature modules
-- `core/` for domain, data, model, network, analytics, datastore, UI, and common foundations
-- `core-base/` for lower-level shared platform/design/network/database abstractions
-- `android/` and `ios/` for platform-specific application support and wiring
-- `build-logic/` for Gradle conventions and shared build behavior
-- `scripts/` for automation and helper scripts
-- `docs/`, `config/`, `fastlane/`, `libs/`, and supporting repo infrastructure
+## Kit workflows
 
-## Product and safety context
-
-This is a financial app. Correctness, traceability, reversibility, and preserving user trust matter more than speed or elegance.
-
-Typical domains in this repo may include:
-- authentication and session management
-- passcode / OTP / biometrics
-- wallet and balances
-- transfers and payments
-- transaction history and receipts
-- beneficiaries, accounts, cards, invoices, notifications, profile, and settings
-- shared API contracts and shared business logic reused across surfaces
-
-Because this is a financial app:
-- do not invent backend behavior
-- do not invent transaction states
-- do not silently change auth/session behavior
-- do not assume displayed state is the same as authoritative backend state
-- do not casually change shared contracts used across multiple surfaces
-
-## Primary operating mode
-
-For any non-trivial task, always follow this sequence:
-
-1. Research
-2. Plan
-3. Implement
-
-Do not jump straight into implementation for medium or large tasks.
-
-### Research
-During research:
-- do not change code
-- identify the exact user flow or system behavior involved
-- identify the exact entry point(s)
-- trace the path through UI, state holder, domain, data, network, storage, mapping, and side effects
-- identify shared-code impact and surface-specific impact
-- identify confirmed facts, inferences, and unknowns
-- identify likely regression risks
-
-Write research to:
-- `.ai/research/<task-name>.md`
-
-### Plan
-During planning:
-- list the exact files expected to change
-- describe intended behavior change
-- describe behavior that must not change
-- note cross-surface blast radius
-- note validation to run
-- note rollback or follow-up risk
-
-Write the plan to:
-- `.ai/plans/<task-name>.md`
-
-### Implement
-During implementation:
-- implement only the approved plan
-- make the smallest safe patch possible
-- preserve behavior outside the requested scope
-- if new findings invalidate the plan, stop and update the plan first
-- summarize what changed, what did not change, and what was validated
-
-## Evidence rules
-
-Research must reference exact file paths, classes, functions, routes, screens, models, mappers, plugins, or scripts where possible.
-
-Every research note must clearly separate:
-- Confirmed facts
-- Inferences
-- Unknowns
-
-Plans must list exact files before implementation begins.
-
-If something is inferred rather than confirmed from code, say so explicitly.
-
-Do not invent:
-- APIs
-- DTO fields
-- routes
-- feature flags
-- transaction states
-- storage keys
-- Gradle behavior
-- surface-specific behavior
-- validation assumptions
-
-## Shared-code rules
-
-If the task touches shared code:
-- assume multiple surfaces may be affected
-- trace all known consumers before changing contracts
-- explicitly state blast radius
-- identify whether the change affects model shape, serialization, state semantics, or UI expectations
-
-## High-risk areas
-
-Treat these as high risk and call out impact before editing:
-- auth, passcode, OTP, biometrics, session restore, session refresh
-- wallet balance source of truth
-- payments, transfers, top-up, cash-in, cash-out
-- transaction history, receipts, and status mapping
-- shared models, DTOs, serializers, and mappers
-- network request/response contracts
-- token handling, secure storage, encryption
-- retry behavior, idempotency, duplicate prevention
-- background work, sync, and pending-operation handling
-- amount formatting, fee handling, rounding
-- Gradle conventions, signing, release, and automation scripts
-
-## Definition of done
-
-A task is complete only when:
-- the exact files involved were identified
-- the requested change was implemented with the smallest safe patch
-- unrelated refactoring was not mixed in unless explicitly requested
-- relevant validation was run and summarized
-- shared-contract and cross-surface impact was called out where relevant
-- risks and unvalidated areas were clearly stated
-- reusable repo truth discovered during the task was written back into docs or reusable skills when appropriate
-
-## Expected output style
-
-When working on a task:
-- be explicit about what files are involved
-- call out shared-code impact clearly
-- keep summaries concise and structured
-- state assumptions clearly
-- state residual risks clearly
-- avoid dumping large logs unless something failed
+| Claude command | Shared workflow |
+|---|---|
+| `/start-session` | `workflows/agent/start-session.md` |
+| `/build-ft` | `workflows/agent/build-ft.md` |
+| `/update-context` | `workflows/agent/update-context.md` |
+| `/setup-permissions` | `workflows/agent/setup-permissions.md` |
+| `/wrap-up` | `workflows/agent/wrap-up.md` |
+| `/stop-session` | `workflows/agent/stop-session.md` |
