@@ -21,21 +21,12 @@ class InstanceConfigManager(
     companion object {
         // Default main instance configuration
         private val DEFAULT_MAIN_INSTANCE = ServerInstance(
-            endpoint = "mifos-bank-2.mifos.community",
+            endpoint = "wallet.simplipay.co.za",
             protocol = "https://",
             path = "/fineract-provider/api/v1/",
-            platformTenantId = "mifos-bank-2",
-            label = "Default Instance",
+            platformTenantId = "default",
+            label = "SimpliPay",
             isDefault = true,
-            interbankServers = listOf(
-                InterbankServer(
-                    endpoint = "apis.flexcore.mx",
-                    protocol = "https://",
-                    path = "/v1.0/vnext2/",
-                    label = "Default Interbank",
-                    isDefault = true,
-                ),
-            ),
         )
 
         // Default interbank instance configuration

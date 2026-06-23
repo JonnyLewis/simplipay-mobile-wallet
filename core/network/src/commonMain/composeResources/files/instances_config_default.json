@@ -1,12 +1,21 @@
 {
   "instances": [
     {
+      "endpoint": "wallet.simplipay.co.za",
+      "protocol": "https://",
+      "path": "/fineract-provider/api/v1/",
+      "platformTenantId": "default",
+      "label": "SimpliPay",
+      "isDefault": true,
+      "interbankServers": []
+    },
+    {
       "endpoint": "mifos-bank-2.mifos.community",
       "protocol": "https://",
       "path": "/fineract-provider/api/v1/",
       "platformTenantId": "mifos-bank-2",
       "label": "Mifos Bank 2 Instance",
-      "isDefault": true,
+      "isDefault": false,
       "interbankServers": [
         {
           "endpoint": "apis.flexcore.mx",

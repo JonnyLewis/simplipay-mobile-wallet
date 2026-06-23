@@ -84,7 +84,7 @@ When `/gap-planning` creates a plan with N tasks:
 
 ## Project Overview
 
-MifosX Mobile Wallet is a Kotlin Multiplatform (KMP) application providing mobile payment and wallet services. It supports account management, peer-to-peer transfers (intrabank and interbank), QR payments, autopay/bill management, UPI setup, merchants, invoices, saved cards, KYC, and standing instructions. It targets Android, iOS, Desktop (JVM), and Web (Kotlin/JS + WASM).
+MifosX Mobile Wallet is a Kotlin Multiplatform (KMP) application providing mobile payment and wallet services. Active features include account management, peer-to-peer transfers (intrabank and interbank), QR payments, send-money, and autopay/bill management. Additional modules — merchants, invoices, saved cards, KYC, UPI setup, and standing instructions — are built and DI-wired but currently disabled (their navigation entry points are commented out in `MifosNavHost.kt`) in the v2 app shell. It targets Android, iOS, Desktop (JVM), and Web (Kotlin/JS + WASM).
 
 ## Build Commands
 
@@ -145,39 +145,39 @@ MifosX Mobile Wallet is a Kotlin Multiplatform (KMP) application providing mobil
 - `ui/` - BaseViewModel (template), EventsEffect, NavGraphBuilder extensions, ShareUtils, LifecycleEventEffect
 - `analytics/` - Analytics abstractions
 
-**Feature Modules (`feature/`):** Each feature is a separate KMP module containing screens, ViewModels, and navigation. The 29 features are:
+**Feature Modules (`feature/`):** Each feature is a separate KMP module containing screens, ViewModels, and navigation. The 27 feature modules are listed below; the **Status** column marks whether the feature currently has a reachable entry point in the v2 app shell:
 
-| # | Module | Domain |
-|:-:|--------|--------|
-| 1 | `auth` | Login, signup, mobile verification |
-| 2 | `home` | Wallet home — accounts, quick actions, recent transactions |
-| 3 | `accounts` | Savings account list and detail |
-| 4 | `history` | Transaction history, detail, specific account transactions |
-| 5 | `receipt` | Transaction receipt view |
-| 6 | `faq` | Frequently asked questions |
-| 7 | `make-transfer` | Transfer orchestration ViewModel |
-| 8 | `send-money` | UPI/contact-based send money flow |
-| 9 | `transfer-intrabank` | Intra-bank transfer hub, payee selection, confirm, success |
-| 10 | `transfer-interbank` | Inter-bank transfer flow |
-| 11 | `notification` | Push notification list |
-| 12 | `editpassword` | Change password |
-| 13 | `kyc` | KYC levels 1–3 |
-| 14 | `savedcards` | Saved debit/credit card management |
-| 15 | `invoices` | Invoice list and detail |
-| 16 | `settings` | App settings, language selection |
-| 17 | `profile` | User profile, edit profile |
-| 18 | `finance` | Finance overview tab |
-| 19 | `merchants` | Merchant list and merchant transfer |
-| 20 | `beneficiary` | Beneficiary list, add/edit/delete |
-| 21 | `standing-instruction` | Standing instruction list, create/edit/detail |
-| 22 | `payments` | Payments tab, request money, transfer type selection |
-| 23 | `upi-setup` | UPI PIN setup via debit card + OTP |
-| 24 | `qr` | QR code scanner (basic) |
-| 25 | `autopay` | Autopay schedules, bills, billers, history |
-| 26 | `mpay-qr` | QR code generation for receiving payments |
-| 27 | `mpay-qr-scan` | Full QR scan flow with camera, import, processing |
-| 28 | `fast-mpay` | Fast payment via QR processing |
-| 29 | `passcode` | Passcode and biometrics setup/auth |
+| # | Module | Domain | Status |
+|:-:|--------|--------|:------:|
+| 1 | `auth` | Login, signup, mobile verification | Active |
+| 2 | `home` | Wallet home — accounts, quick actions, recent transactions | Active |
+| 3 | `accounts` | Savings account list and detail | Active |
+| 4 | `history` | Transaction history, detail, specific account transactions | Active |
+| 5 | `receipt` | Transaction receipt view | Active |
+| 6 | `faq` | Frequently asked questions | Active |
+| 7 | `send-money` | UPI/contact-based send money flow | Active |
+| 8 | `transfer-intrabank` | Intra-bank transfer hub, payee selection, confirm, success | Active |
+| 9 | `transfer-interbank` | Inter-bank transfer flow | Active |
+| 10 | `notification` | Push notification list | Active |
+| 11 | `editpassword` | Change password | Active |
+| 12 | `kyc` | KYC levels 1–3 | Disabled |
+| 13 | `savedcards` | Saved debit/credit card management | Disabled |
+| 14 | `invoices` | Invoice list and detail | Disabled |
+| 15 | `settings` | App settings, language selection | Active |
+| 16 | `profile` | User profile, edit profile | Active |
+| 17 | `finance` | Finance overview tab | Active |
+| 18 | `merchants` | Merchant list and merchant transfer | Disabled |
+| 19 | `beneficiary` | Beneficiary list, add/edit/delete | Active |
+| 20 | `standing-instruction` | Standing instruction list, create/edit/detail | Disabled |
+| 21 | `payments` | Payments tab, request money, transfer type selection | Active |
+| 22 | `upi-setup` | UPI PIN setup via debit card + OTP | Disabled |
+| 23 | `autopay` | Autopay schedules, bills, billers, history | Active |
+| 24 | `mpay-qr` | QR code generation for receiving payments | Active |
+| 25 | `mpay-qr-scan` | Full QR scan flow with camera, import, processing | Active |
+| 26 | `fast-mpay` | Fast payment via QR processing | Active |
+| 27 | `passcode` | Passcode and biometrics setup/auth | Active |
+
+> **Disabled** = the module builds and is registered in Koin, but its navigation entry point is commented out in `MifosNavHost.kt`, so it has no reachable path in the current v2 app shell. (Two earlier-listed modules, `make-transfer` and `qr`, were removed — they were build-less orphan stubs with no `build.gradle.kts`, never compiled, and depended on by nothing.)
 
 ### Key Patterns
 
