@@ -11,14 +11,33 @@ package org.mifospay.feature.send.money.di
 
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import org.mifospay.feature.send.money.BankTransferViewModel
+import org.mifospay.feature.send.money.PayAnyoneViewModel
+import org.mifospay.feature.send.money.PayeeDetailsViewModel
+import org.mifospay.feature.send.money.PaymentChatHistoryViewModel
+import org.mifospay.feature.send.money.PaymentDetailsViewModel
+import org.mifospay.feature.send.money.PaymentProcessingViewModel
+import org.mifospay.feature.send.money.PaymentSuccessViewModel
 import org.mifospay.feature.send.money.ScannerModule
+import org.mifospay.feature.send.money.SearchIfscViewModel
+import org.mifospay.feature.send.money.SendMoneyOptionsViewModel
 import org.mifospay.feature.send.money.SendMoneyViewModel
-import org.mifospay.feature.send.money.selectScreen.SelectScreenViewModel
-import org.mifospay.feature.send.money.v2.SendMoneyV2ViewModel
+import org.mifospay.feature.send.money.UpiPinViewModel
+import org.mifospay.feature.send.money.UpiTransactionHistoryViewModel
 
 val SendMoneyModule = module {
     includes(ScannerModule)
     viewModelOf(::SendMoneyViewModel)
-    viewModelOf(::SelectScreenViewModel)
-    viewModelOf(::SendMoneyV2ViewModel)
+    viewModelOf(::SendMoneyOptionsViewModel)
+    viewModelOf(::PayeeDetailsViewModel)
+    viewModelOf(::BankTransferViewModel)
+    viewModelOf(::SearchIfscViewModel)
+
+    viewModelOf(::PayAnyoneViewModel)
+    viewModelOf(::PaymentProcessingViewModel)
+    viewModelOf(::PaymentSuccessViewModel)
+    viewModelOf(::UpiTransactionHistoryViewModel)
+    viewModelOf(::UpiPinViewModel)
+    viewModelOf(::PaymentChatHistoryViewModel)
+    viewModelOf(::PaymentDetailsViewModel)
 }

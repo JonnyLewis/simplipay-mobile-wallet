@@ -12,13 +12,17 @@ package org.mifospay.core.network
 import de.jensklingenberg.ktorfit.Ktorfit
 import org.mifospay.core.network.services.createAccountTransfersService
 import org.mifospay.core.network.services.createAuthenticationService
+import org.mifospay.core.network.services.createAutoPayService
 import org.mifospay.core.network.services.createBeneficiaryService
+import org.mifospay.core.network.services.createBillService
+import org.mifospay.core.network.services.createBillerService
 import org.mifospay.core.network.services.createClientService
 import org.mifospay.core.network.services.createDocumentService
 import org.mifospay.core.network.services.createInterBankService
 import org.mifospay.core.network.services.createInvoiceService
 import org.mifospay.core.network.services.createKYCLevel1Service
 import org.mifospay.core.network.services.createNotificationService
+import org.mifospay.core.network.services.createOfficeService
 import org.mifospay.core.network.services.createRegistrationService
 import org.mifospay.core.network.services.createRunReportService
 import org.mifospay.core.network.services.createSavedCardService
@@ -64,7 +68,15 @@ class KtorfitClient(
 
     internal val standingInstructionApi by lazy { ktorfit.createStandingInstructionService() }
 
+    internal val autoPayApi by lazy { ktorfit.createAutoPayService() }
+
     internal val beneficiaryApi by lazy { ktorfit.createBeneficiaryService() }
 
     internal val interBankApi by lazy { ktorfit.createInterBankService() }
+
+    internal val officeApi by lazy { ktorfit.createOfficeService() }
+
+    internal val billerApi by lazy { ktorfit.createBillerService() }
+
+    internal val billApi by lazy { ktorfit.createBillService() }
 }

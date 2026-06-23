@@ -20,7 +20,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import mobile_wallet.feature.make_transfer.generated.resources.Res
+import mobile_wallet.feature.make_transfer.generated.resources.feature_make_transfer_error_empty_amount
+import mobile_wallet.feature.make_transfer.generated.resources.feature_make_transfer_error_empty_description
 import mobile_wallet.feature.make_transfer.generated.resources.feature_make_transfer_error_inactive_account
 import mobile_wallet.feature.make_transfer.generated.resources.feature_make_transfer_error_insufficient_balance
 import mobile_wallet.feature.make_transfer.generated.resources.feature_make_transfer_error_invalid_amount
@@ -29,7 +32,6 @@ import mobile_wallet.feature.make_transfer.generated.resources.feature_make_tran
 import org.jetbrains.compose.resources.StringResource
 import org.mifospay.core.common.DataState
 import org.mifospay.core.common.DateHelper
-import org.mifospay.core.common.StringResourceSerializer
 import org.mifospay.core.common.getSerialized
 import org.mifospay.core.common.setSerialized
 import org.mifospay.core.common.utils.capitalizeWords
@@ -79,10 +81,7 @@ internal class MakeTransferViewModel(
                     } else {
                         val account = result.data.first { it.id == state.defaultAccountId }
                         sendAction(MakeTransferAction.SelectAccount(account))
-                        val activeAccounts = result.data.filter {
-                            it.status.active
-                        }
-                        ViewState.Content(activeAccounts)
+                        ViewState.Content(result.data)
                     }
                 }
             }
@@ -106,19 +105,13 @@ internal class MakeTransferViewModel(
 
             is MakeTransferAction.AmountChanged -> {
                 mutableStateFlow.update {
-                    it.copy(
-                        amount = action.amount,
-                        isContinueButtonEnabled = action.amount.isNotBlank() && state.description.isNotBlank(),
-                    )
+                    it.copy(amount = action.amount)
                 }
             }
 
             is MakeTransferAction.DescriptionChanged -> {
                 mutableStateFlow.update {
-                    it.copy(
-                        description = action.desc,
-                        isContinueButtonEnabled = state.amount.isNotBlank() && action.desc.isNotBlank(),
-                    )
+                    it.copy(description = action.desc)
                 }
             }
 
@@ -141,7 +134,11 @@ internal class MakeTransferViewModel(
     }
 
     private fun validateTransfer() = when {
+        state.amount.isBlank() -> updateErrorState(Res.string.feature_make_transfer_error_empty_amount)
+
         state.amount.toDoubleOrNull() == null -> updateErrorState(Res.string.feature_make_transfer_error_invalid_amount)
+
+        state.description.isBlank() -> updateErrorState(Res.string.feature_make_transfer_error_empty_description)
 
         state.selectedAccount == null -> updateErrorState(Res.string.feature_make_transfer_error_select_account)
 
@@ -211,8 +208,7 @@ internal data class MakeTransferState(
     val amount: String = toClientData.amount,
     val description: String = "",
     val selectedAccount: Account? = null,
-    val isContinueButtonEnabled: Boolean = false,
-    val dialogState: DialogState? = null,
+    @Transient val dialogState: DialogState? = null,
 ) {
     val amountIsValid: Boolean
         get() = amount.isNotEmpty() && amount.toDoubleOrNull() != null
@@ -237,21 +233,12 @@ internal data class MakeTransferState(
             transferDate = DateHelper.formattedShortDate,
         )
 
-    @Serializable
     sealed interface DialogState {
-        @Serializable
         data object Loading : DialogState
 
-        @Serializable
-        sealed class Error : DialogState {
-            @Serializable
-            data class StringMessage(val message: String) : Error()
-
-            @Serializable
-            data class ResourceMessage(
-                @Serializable(with = StringResourceSerializer::class)
-                val message: StringResource,
-            ) : Error()
+        sealed interface Error : DialogState {
+            data class StringMessage(val message: String) : Error
+            data class ResourceMessage(val message: StringResource) : Error
         }
     }
 }

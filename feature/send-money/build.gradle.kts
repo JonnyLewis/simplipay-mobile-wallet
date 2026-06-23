@@ -9,7 +9,6 @@
  */
 plugins {
     alias(libs.plugins.cmp.feature.convention)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -18,17 +17,33 @@ android {
 
 kotlin {
     sourceSets {
+
+        androidMain.dependencies {
+
+            // ML Kit QR Scanner
+            implementation(libs.mlkit.barcode.scanning)
+
+            // Play Services Code Scanner API
+            implementation(libs.google.play.services.code.scanner)
+
+            // Dynamic module installer
+            implementation(libs.androidx.profileinstaller)
+
+            // Kermit logger
+            implementation(libs.kermit.logging)
+
+            implementation(libs.accompanist.permissions)
+        }
+
         commonMain.dependencies {
             implementation(compose.ui)
             implementation(compose.foundation)
             implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-        }
 
-        androidMain.dependencies {
-            implementation(libs.google.play.services.code.scanner)
+            implementation(projects.core.common)
+            implementation(projects.core.ui)
         }
     }
 }

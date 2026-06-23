@@ -21,6 +21,9 @@ import org.mifospay.core.common.DataState
 import org.mifospay.core.model.account.DefaultAccount
 import org.mifospay.core.model.client.Client
 import org.mifospay.core.model.client.UpdatedClient
+import org.mifospay.core.model.instance.InterbankServer
+import org.mifospay.core.model.instance.ServerInstance
+import org.mifospay.core.model.user.Language
 import org.mifospay.core.model.user.UserInfo
 
 class UserPreferencesRepositoryImpl(
@@ -72,6 +75,34 @@ class UserPreferencesRepositoryImpl(
                 started = SharingStarted.Eagerly,
             )
 
+    override val selectedInstance: StateFlow<ServerInstance?>
+        get() = preferenceManager.selectedInstance.stateIn(
+            scope = unconfinedScope,
+            initialValue = null,
+            started = SharingStarted.Eagerly,
+        )
+
+    override val selectedInterbankInstance: StateFlow<InterbankServer?>
+        get() = preferenceManager.selectedInterbankInstance.stateIn(
+            scope = unconfinedScope,
+            initialValue = null,
+            started = SharingStarted.Eagerly,
+        )
+
+    override val accountExternalIds: StateFlow<Map<Long, String>>
+        get() = preferenceManager.accountExternalIds.stateIn(
+            scope = unconfinedScope,
+            initialValue = emptyMap(),
+            started = SharingStarted.Eagerly,
+        )
+
+    override val language: StateFlow<Language>
+        get() = preferenceManager.language.stateIn(
+            scope = unconfinedScope,
+            initialValue = Language.DEFAULT,
+            started = SharingStarted.Eagerly,
+        )
+
     override suspend fun updateDefaultAccount(account: DefaultAccount): DataState<Unit> {
         return try {
             val result = preferenceManager.updateDefaultAccount(account)
@@ -80,6 +111,37 @@ class UserPreferencesRepositoryImpl(
         } catch (e: Exception) {
             DataState.Error(e)
         }
+    }
+
+    override suspend fun updateSelectedInstance(instance: ServerInstance): DataState<Unit> {
+        return try {
+            preferenceManager.updateSelectedInstance(instance)
+            DataState.Success(Unit)
+        } catch (e: Exception) {
+            DataState.Error(e)
+        }
+    }
+
+    override suspend fun updateSelectedInterbankInstance(instance: InterbankServer): DataState<Unit> {
+        return try {
+            preferenceManager.updateSelectedInterbankInstance(instance)
+            DataState.Success(Unit)
+        } catch (e: Exception) {
+            DataState.Error(e)
+        }
+    }
+
+    override suspend fun updateAccountExternalIds(accountExternalIds: Map<Long, String>): DataState<Unit> {
+        return try {
+            preferenceManager.updateAccountExternalIds(accountExternalIds)
+            DataState.Success(Unit)
+        } catch (e: Exception) {
+            DataState.Error(e)
+        }
+    }
+
+    override fun getAccountExternalId(accountId: Long): String? {
+        return preferenceManager.getAccountExternalId(accountId)
     }
 
     override suspend fun updateToken(token: String): DataState<Unit> {
@@ -111,6 +173,14 @@ class UserPreferencesRepositoryImpl(
         }
     }
 
+    override suspend fun setLanguage(language: Language): DataState<Unit> {
+        return try {
+            preferenceManager.setLanguage(language)
+            DataState.Success(Unit)
+        } catch (e: Exception) {
+            DataState.Error(e)
+        }
+    }
     override suspend fun updateUserInfo(user: UserInfo): DataState<Unit> {
         return try {
             val result = preferenceManager.updateUserInfo(user)

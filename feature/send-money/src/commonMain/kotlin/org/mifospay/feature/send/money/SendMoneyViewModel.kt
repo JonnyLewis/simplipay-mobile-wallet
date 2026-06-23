@@ -26,22 +26,26 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import mobile_wallet.feature.send_money.generated.resources.Res
 import mobile_wallet.feature.send_money.generated.resources.feature_send_money_error_account_cannot_be_empty
 import mobile_wallet.feature.send_money.generated.resources.feature_send_money_error_amount_cannot_be_empty
 import mobile_wallet.feature.send_money.generated.resources.feature_send_money_error_invalid_amount
 import mobile_wallet.feature.send_money.generated.resources.feature_send_money_error_requesting_payment_qr_but_found
 import mobile_wallet.feature.send_money.generated.resources.feature_send_money_error_requesting_payment_qr_data_missing
+import mobile_wallet.feature.send_money.generated.resources.feature_send_money_upi_qr_parsed_successfully
 import org.jetbrains.compose.resources.StringResource
 import org.mifospay.core.common.DataState
 import org.mifospay.core.common.StringResourceSerializer
 import org.mifospay.core.common.getSerialized
 import org.mifospay.core.common.setSerialized
 import org.mifospay.core.data.repository.AccountRepository
+import org.mifospay.core.data.util.StandardUpiQrCodeProcessor
 import org.mifospay.core.data.util.UpiQrCodeProcessor
 import org.mifospay.core.model.search.AccountResult
 import org.mifospay.core.model.utils.PaymentQrData
 import org.mifospay.core.model.utils.toAccount
+import org.mifospay.core.ui.utils.BackgroundEvent
 import org.mifospay.core.ui.utils.BaseViewModel
 import org.mifospay.feature.send.money.SendMoneyAction.HandleRequestData
 import org.mifospay.feature.send.money.SendMoneyState.DialogState.Error
@@ -120,7 +124,11 @@ class SendMoneyViewModel(
             SendMoneyAction.OnClickScan -> {
                 scanner.startScanning().onEach { data ->
                     data?.let { result ->
-                        sendAction(HandleRequestData(result))
+                        if (StandardUpiQrCodeProcessor.isValidUpiQrCode(result)) {
+                            sendEvent(SendMoneyEvent.NavigateToPayeeDetails(result))
+                        } else {
+                            sendAction(HandleRequestData(result))
+                        }
                     }
                 }.launchIn(viewModelScope)
                 // Using Play Service Code Scanner until Qr Scan module is stable
@@ -176,7 +184,16 @@ class SendMoneyViewModel(
     private fun handleRequestData(action: HandleRequestData) {
         viewModelScope.launch {
             try {
-                val requestData = UpiQrCodeProcessor.decodeUpiString(action.requestData)
+                val requestData = try {
+                    UpiQrCodeProcessor.decodeUpiString(action.requestData)
+                } catch (e: Exception) {
+                    if (StandardUpiQrCodeProcessor.isValidUpiQrCode(action.requestData)) {
+                        val standardData = StandardUpiQrCodeProcessor.parseUpiQrCode(action.requestData)
+                        StandardUpiQrCodeProcessor.toPaymentQrData(standardData)
+                    } else {
+                        throw e
+                    }
+                }
 
                 mutableStateFlow.update { state ->
                     state.copy(
@@ -185,6 +202,8 @@ class SendMoneyViewModel(
                         selectedAccount = requestData.toAccount(),
                     )
                 }
+
+                sendEvent(SendMoneyEvent.ShowToast(Res.string.feature_send_money_upi_qr_parsed_successfully))
             } catch (e: Exception) {
                 val errorState = if (action.requestData.isNotEmpty()) {
                     Error.GenericResourceMessage(
@@ -210,7 +229,7 @@ data class SendMoneyState(
     val amount: String = "",
     val accountNumber: String = "",
     val selectedAccount: AccountResult? = null,
-    val dialogState: DialogState? = null,
+    @Transient val dialogState: DialogState? = null,
 ) {
     val amountIsValid: Boolean
         get() = amount.isNotEmpty() &&
@@ -229,9 +248,8 @@ data class SendMoneyState(
             amount = amount,
         )
 
-    @Serializable
     sealed interface DialogState {
-        @Serializable
+
         data object Loading : DialogState
 
         @Serializable
@@ -242,7 +260,6 @@ data class SendMoneyState(
                 val message: StringResource,
             ) : Error()
 
-            @Serializable
             data class GenericResourceMessage(
                 @Serializable(with = StringResourceSerializer::class)
                 val message: StringResource,
@@ -264,6 +281,9 @@ sealed interface SendMoneyEvent {
     data object OnNavigateBack : SendMoneyEvent
     data class NavigateToTransferScreen(val data: String) : SendMoneyEvent
     data object NavigateToScanQrScreen : SendMoneyEvent
+
+    data class NavigateToPayeeDetails(val qrCodeData: String) : SendMoneyEvent, BackgroundEvent
+    data class ShowToast(val message: StringResource) : SendMoneyEvent
 }
 
 sealed interface SendMoneyAction {

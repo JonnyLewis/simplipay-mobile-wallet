@@ -16,12 +16,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import org.mifospay.feature.auth.login.LoginScreen
 
+/** Route string for the login destination. Accepts an optional `username` query arg. */
 const val LOGIN_ROUTE = "login_route"
 
+/**
+ * Registers the login destination.
+ *
+ * @param navigateToMifosPasscodeScreen Fired by `LoginViewModel` on
+ *        successful authentication. Caller should bind this to
+ *        `navController::navigateToRootMifosPasscodeScreen` (the post-login
+ *        passcode-create-or-unlock screen). The token has just been
+ *        persisted by `LoginUseCase` at this point, so the passcode screen
+ *        and any subsequent self-service API calls will see it.
+ */
 fun NavGraphBuilder.loginScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToPasscodeScreen: () -> Unit,
+    navigateToMifosPasscodeScreen: () -> Unit,
     onNavigateToSignupScreen: () -> Unit,
+    onShowInstanceSelector: () -> Unit,
 ) {
     composable(
         route = "$LOGIN_ROUTE?username={username}",
@@ -34,12 +46,17 @@ fun NavGraphBuilder.loginScreen(
     ) {
         LoginScreen(
             onNavigateBack = onNavigateBack,
-            navigateToPasscodeScreen = onNavigateToPasscodeScreen,
+            navigateToMifosPasscodeScreen = navigateToMifosPasscodeScreen,
             navigateToSignupScreen = onNavigateToSignupScreen,
+            onShowInstanceSelector = onShowInstanceSelector,
         )
     }
 }
 
+/**
+ * Pushes [LOGIN_ROUTE]. Pre-fills the username field with [username] if
+ * non-empty (used by sign-up → login hand-off).
+ */
 fun NavController.navigateToLogin(username: String = "") {
     this.navigate("$LOGIN_ROUTE?username=$username")
 }

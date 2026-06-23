@@ -30,12 +30,14 @@ kotlin {
         commonMain.dependencies {
             api(projects.core.common)
             api(projects.core.datastore)
-            api(projects.core.model)
+            implementation(projects.core.model)
             api(projects.core.network)
             implementation(projects.core.analytics)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.jb.composeRuntime)
             implementation(compose.components.resources)
+            implementation(libs.mifos.authenticator.passcode)
+            implementation(libs.mifos.authenticator.biometrics)
         }
 
         androidMain.dependencies {

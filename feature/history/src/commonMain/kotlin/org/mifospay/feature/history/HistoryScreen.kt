@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,18 +36,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobile_wallet.feature.history.generated.resources.Res
 import mobile_wallet.feature.history.generated.resources.feature_history_empty
 import mobile_wallet.feature.history.generated.resources.feature_history_empty_filter
-import mobile_wallet.feature.history.generated.resources.feature_history_error
 import mobile_wallet.feature.history.generated.resources.feature_history_error_oops
 import mobile_wallet.feature.history.generated.resources.feature_history_filter_content_desc
 import mobile_wallet.feature.history.generated.resources.feature_history_header_account
 import mobile_wallet.feature.history.generated.resources.feature_history_header_all
 import mobile_wallet.feature.history.generated.resources.feature_history_header_credit
 import mobile_wallet.feature.history.generated.resources.feature_history_header_debit
-import mobile_wallet.feature.history.generated.resources.feature_history_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.mifospay.core.designsystem.component.MifosScaffold
-import org.mifospay.core.designsystem.component.MifosTopBar
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.model.savingsaccount.TransactionType
 import org.mifospay.core.ui.EmptyContentScreen
@@ -60,18 +56,18 @@ import template.core.base.designsystem.theme.KptTheme
 
 @Composable
 fun HistoryScreen(
-    viewTransferDetail: (Long) -> Unit,
+    viewTransferDetail: (Long, Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = koinViewModel(),
-    showTopBar: Boolean = true,
-    onBackClick: (() -> Unit)? = null,
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 
     EventsEffect(viewModel) { event ->
         when (event) {
             is HistoryEvent.OnTransactionDetail -> {
-                viewTransferDetail.invoke(event.transferId)
+                state.selectedAccount?.id?.let { accountId ->
+                    viewTransferDetail.invoke(accountId, event.transferId)
+                }
             }
         }
     }
@@ -82,8 +78,6 @@ fun HistoryScreen(
         onAction = remember(viewModel) {
             { action -> viewModel.trySendAction(action) }
         },
-        showTopBar = showTopBar,
-        onBackClick = onBackClick,
     )
 }
 
@@ -92,19 +86,9 @@ internal fun HistoryScreenContent(
     state: HistoryState,
     modifier: Modifier = Modifier,
     onAction: (HistoryAction) -> Unit,
-    showTopBar: Boolean = true,
-    onBackClick: (() -> Unit)? = null,
 ) {
     MifosScaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            if (showTopBar && onBackClick != null) {
-                MifosTopBar(
-                    topBarTitle = stringResource(Res.string.feature_history_title),
-                    backPress = onBackClick,
-                )
-            }
-        },
     ) { paddingValues ->
         when (state.viewState) {
             is HistoryState.ViewState.Loading -> MifosProgressIndicator()
@@ -112,7 +96,7 @@ internal fun HistoryScreenContent(
             is HistoryState.ViewState.Error -> {
                 EmptyContentScreen(
                     title = stringResource(Res.string.feature_history_error_oops),
-                    subTitle = stringResource(Res.string.feature_history_error),
+                    subTitle = stringResource(state.viewState.message),
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
@@ -136,12 +120,12 @@ internal fun HistoryScreenContent(
                 ) {
                     HistoryScreenHeader(
                         accountNo = state.selectedAccount?.number ?: "",
-                        selectedTransactionType = state.transactionType,
+                        selectedTransactionType = state.selectedTransactionType,
                         onFilterClick = {
                             onAction(HistoryAction.OnFilterClick)
                         },
                     )
-                    if (state.filteredEmpty) {
+                    if (state.viewState.list.isEmpty()) {
                         EmptyContentScreen(
                             title = stringResource(Res.string.feature_history_error_oops),
                             subTitle = stringResource(Res.string.feature_history_empty_filter),
@@ -158,14 +142,14 @@ internal fun HistoryScreenContent(
                 }
                 if (state.showFilter) {
                     TransactionFilterBottomSheet(
-                        selectedAccount = state.currentSelectedAccount,
+                        selectedAccount = state.selectedAccount,
                         accounts = state.accounts,
-                        selectedTransactionType = state.currentSelectedTransactionType,
+                        selectedTransactionType = state.selectedTransactionType,
                         onAccountSelected = {
                             onAction(HistoryAction.SetSelectedAccount(it))
                         },
                         onTransactionTypeSelected = {
-                            onAction(HistoryAction.SetFilter(it))
+                            onAction(HistoryAction.SetTransactionType(it))
                         },
                         onClearFilters = {
                             onAction(HistoryAction.ClearFilters)

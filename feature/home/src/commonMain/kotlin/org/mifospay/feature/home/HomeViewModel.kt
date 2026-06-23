@@ -9,17 +9,16 @@
  */
 package org.mifospay.feature.home
 
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import mobile_wallet.feature.home.generated.resources.Res
 import mobile_wallet.feature.home.generated.resources.feature_home_account_error
 import mobile_wallet.feature.home.generated.resources.feature_home_account_success
-import mobile_wallet.feature.home.generated.resources.feature_home_no_account
+import mobile_wallet.feature.home.generated.resources.feature_home_failed_to_load_accounts
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
 import org.mifospay.core.common.DataState
 import org.mifospay.core.data.repository.SelfServiceRepository
 import org.mifospay.core.datastore.UserPreferencesRepository
@@ -49,15 +48,18 @@ class HomeViewModel(
 ) {
 
     fun getAccounts() {
-        viewModelScope.launch {
+        launchIO {
             repository.getActiveAccounts(state.client.id)
                 .collect { result ->
                     when (result) {
                         is DataState.Error -> {
+                            val errorMessage = result.exception.message
+                                ?.takeIf { it != "null" && it.isNotBlank() }
+                                ?: getString(Res.string.feature_home_failed_to_load_accounts)
                             mutableStateFlow.update {
                                 it.copy(
                                     isRefreshing = false,
-                                    viewState = ViewState.Error(Res.string.feature_home_no_account),
+                                    viewState = ViewState.Error(errorMessage),
                                 )
                             }
                         }
@@ -78,6 +80,12 @@ class HomeViewModel(
                                 }
                             } else {
                                 val selected = result.data.firstOrNull()
+
+                                // Save account external IDs map
+                                val accountExternalIds = result.data
+                                    .filter { !it.externalId.isNullOrBlank() }
+                                    .associate { it.id to it.externalId!! }
+                                preferencesRepository.updateAccountExternalIds(accountExternalIds)
 
                                 if (selected != null) {
                                     mutableStateFlow.update {
@@ -122,7 +130,7 @@ class HomeViewModel(
             loadTransactionsJob?.cancel()
 
             // launch a new job
-            loadTransactionsJob = viewModelScope.launch {
+            loadTransactionsJob = launchIO {
                 repository.getTransactions(
                     account.id,
                     TRANSACTION_LIMIT,
@@ -177,6 +185,10 @@ class HomeViewModel(
                 sendEvent(HomeEvent.NavigateToSendScreen)
             }
 
+            is HomeAction.AutoPayClicked -> {
+                sendEvent(HomeEvent.NavigateToAutoPayScreen)
+            }
+
             is HomeAction.ClientDetailsClicked -> {
                 sendEvent(HomeEvent.NavigateToClientDetailScreen)
             }
@@ -209,7 +221,7 @@ class HomeViewModel(
             }
 
             is HomeAction.MarkAsDefault -> {
-                viewModelScope.launch {
+                launchIO {
                     val result = preferencesRepository.updateDefaultAccount(
                         DefaultAccount(
                             accountId = action.accountId,
@@ -360,7 +372,7 @@ data class HomeState(
 sealed interface ViewState {
     data object Loading : ViewState
 
-    data class Error(val message: StringResource) : ViewState
+    data class Error(val message: String) : ViewState
 
     data object Content : ViewState
 
@@ -370,6 +382,7 @@ sealed interface ViewState {
 sealed interface HomeEvent {
     data object NavigateBack : HomeEvent
     data object NavigateToSendScreen : HomeEvent
+    data object NavigateToAutoPayScreen : HomeEvent
     data object NavigateToTransactionScreen : HomeEvent
     data object NavigateToClientDetailScreen : HomeEvent
     data class NavigateToRequestScreen(val vpa: String) : HomeEvent
@@ -382,6 +395,7 @@ sealed interface HomeEvent {
 sealed interface HomeAction {
     data object RequestClicked : HomeAction
     data object SendClicked : HomeAction
+    data object AutoPayClicked : HomeAction
     data object ClientDetailsClicked : HomeAction
     data object OnClickSeeAllTransactions : HomeAction
     data object OnDismissDialog : HomeAction

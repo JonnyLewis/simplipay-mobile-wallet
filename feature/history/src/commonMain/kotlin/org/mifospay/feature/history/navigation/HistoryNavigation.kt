@@ -18,14 +18,11 @@ import org.mifospay.feature.history.HistoryScreen
 const val HISTORY_ROUTE = "history_route"
 
 fun NavGraphBuilder.historyNavigation(
-    viewTransactionDetail: (Long) -> Unit,
-    onBackClick: () -> Unit,
+    viewTransactionDetail: (Long, Long) -> Unit,
 ) {
     composable(HISTORY_ROUTE) {
         HistoryScreen(
             viewTransferDetail = viewTransactionDetail,
-            showTopBar = true,
-            onBackClick = onBackClick,
         )
     }
 }

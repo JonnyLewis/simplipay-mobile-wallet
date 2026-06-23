@@ -10,13 +10,21 @@
 package org.mifospay.core.data.di
 
 import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.mifos.authenticator.biometrics.BiometricStorageAdapter
+import org.mifos.authenticator.passcode.PasscodeStorageAdapter
 import org.mifospay.core.common.MifosDispatchers
 import org.mifospay.core.data.repository.AccountRepository
+import org.mifospay.core.data.repository.AppLockRepository
 import org.mifospay.core.data.repository.AssetRepository
 import org.mifospay.core.data.repository.AuthenticationRepository
+import org.mifospay.core.data.repository.AutoPayHistoryRepository
+import org.mifospay.core.data.repository.AutoPayRepository
 import org.mifospay.core.data.repository.BeneficiaryRepository
+import org.mifospay.core.data.repository.BillerRepository
 import org.mifospay.core.data.repository.ClientRepository
 import org.mifospay.core.data.repository.DocumentRepository
 import org.mifospay.core.data.repository.InterBankRepository
@@ -24,6 +32,8 @@ import org.mifospay.core.data.repository.InvoiceRepository
 import org.mifospay.core.data.repository.KycLevelRepository
 import org.mifospay.core.data.repository.LocalAssetRepository
 import org.mifospay.core.data.repository.NotificationRepository
+import org.mifospay.core.data.repository.OfficeRepository
+import org.mifospay.core.data.repository.RecentPayeeRepository
 import org.mifospay.core.data.repository.RegistrationRepository
 import org.mifospay.core.data.repository.RunReportRepository
 import org.mifospay.core.data.repository.SavedCardRepository
@@ -34,17 +44,26 @@ import org.mifospay.core.data.repository.StandingInstructionRepository
 import org.mifospay.core.data.repository.ThirdPartyTransferRepository
 import org.mifospay.core.data.repository.TwoFactorAuthRepository
 import org.mifospay.core.data.repository.UserRepository
+import org.mifospay.core.data.repository.UserVerificationRepository
 import org.mifospay.core.data.repositoryImpl.AccountRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.AppLockRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AssetRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AuthenticationRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.AutoPayHistoryRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.AutoPayRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.BeneficiaryRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.BillerRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.BiometricsSetupAdapterImpl
 import org.mifospay.core.data.repositoryImpl.ClientRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.DocumentRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.InterBankRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.InvoiceRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.KycLevelRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.LocalAssetRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.MifosPasscodeAdapterImpl
 import org.mifospay.core.data.repositoryImpl.NotificationRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.OfficeRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.RecentPayeeRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.RegistrationRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.RunReportRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.SavedCardRepositoryImpl
@@ -55,7 +74,9 @@ import org.mifospay.core.data.repositoryImpl.StandingInstructionRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.ThirdPartyTransferRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.TwoFactorAuthRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.UserRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.UserVerificationRepositoryImpl
 import org.mifospay.core.data.util.NetworkMonitor
+import org.mifospay.core.data.util.QrTransferRouter
 import org.mifospay.core.data.util.TimeZoneMonitor
 
 private val ioDispatcher = named(MifosDispatchers.IO.name)
@@ -82,6 +103,7 @@ val RepositoryModule = module {
     single<InterBankRepository> { InterBankRepositoryImpl(get(), get(ioDispatcher)) }
     single<KycLevelRepository> { KycLevelRepositoryImpl(get(), get(ioDispatcher)) }
     single<NotificationRepository> { NotificationRepositoryImpl(get(), get(ioDispatcher)) }
+    single<RecentPayeeRepository> { RecentPayeeRepositoryImpl(get(), get(ioDispatcher)) }
     single<RegistrationRepository> { RegistrationRepositoryImpl(get(), get(ioDispatcher)) }
     single<RunReportRepository> { RunReportRepositoryImpl(get(), get(ioDispatcher)) }
     single<SavedCardRepository> { SavedCardRepositoryImpl(get(), get(ioDispatcher)) }
@@ -96,6 +118,28 @@ val RepositoryModule = module {
     }
     single<TwoFactorAuthRepository> { TwoFactorAuthRepositoryImpl(get(), get(ioDispatcher)) }
     single<UserRepository> { UserRepositoryImpl(get(), get(ioDispatcher)) }
+    single<AutoPayRepository> { AutoPayRepositoryImpl(get(), get(ioDispatcher)) }
+    single<OfficeRepository> { OfficeRepositoryImpl(get(), get(ioDispatcher)) }
+
+    // Passcode/biometrics surface — the four bindings below are required by the
+    // mifos-authenticator-passcode and mifos-authenticator-biometrics libraries
+    // (the two adapters) plus the in-app re-auth machinery (lock + verification
+    // token). See KDoc on the bound types for the contracts.
+    singleOf(::MifosPasscodeAdapterImpl).bind<PasscodeStorageAdapter>()
+    singleOf(::BiometricsSetupAdapterImpl).bind<BiometricStorageAdapter>()
+    singleOf(::AppLockRepositoryImpl).bind<AppLockRepository>()
+    singleOf(::UserVerificationRepositoryImpl).bind<UserVerificationRepository>()
+
+    // QR Transfer Router for smart intra/inter-bank routing
+    single { QrTransferRouter(userPreferencesRepository = get()) }
+    single<AutoPayHistoryRepository> { AutoPayHistoryRepositoryImpl(get(), get(ioDispatcher)) }
+
+    // TODO: Switch to network-based implementation when APIs are finalized
+    // or use hybrid approach syncing local and remote data
+    // single<BillerRepository> { BillerRepositoryImpl(get(), get(ioDispatcher)) }
+
+    // Current local storage implementation
+    single<BillerRepository> { BillerRepositoryImpl(get(), get(ioDispatcher)) }
 
     includes(platformModule)
     single<PlatformDependentDataModule> { getPlatformDataModule }
