@@ -13,4 +13,10 @@ internal object MifosNavGraph {
     const val ROOT_GRAPH = "root_graph"
     const val LOGIN_GRAPH = "login_graph"
     const val MAIN_GRAPH = "main_graph"
+
+    /** Splash/loading shown first; forwards to the session-resolved destination. */
+    const val SPLASH_ROUTE = "splash_route"
+
+    /** Landing (frame 02) — start of [LOGIN_GRAPH] for unauthenticated users. */
+    const val LANDING_ROUTE = "landing_route"
 }

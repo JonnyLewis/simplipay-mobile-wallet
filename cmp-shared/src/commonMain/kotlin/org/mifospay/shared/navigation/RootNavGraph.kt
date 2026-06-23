@@ -28,6 +28,7 @@ import org.mifos.feature.passcode.rootMifosPasscodeScreen
 import org.mifospay.core.data.util.NetworkMonitor
 import org.mifospay.core.data.util.TimeZoneMonitor
 import org.mifospay.shared.instance.InstanceSelectorScreen
+import org.mifospay.shared.onboarding.SplashScreen
 import org.mifospay.shared.ui.MifosApp
 
 /**
@@ -86,10 +87,20 @@ internal fun RootNavGraph(
 
     NavHost(
         navController = navHostController,
-        startDestination = startDestination,
+        startDestination = MifosNavGraph.SPLASH_ROUTE,
         route = MifosNavGraph.ROOT_GRAPH,
         modifier = modifier,
     ) {
+        composable(MifosNavGraph.SPLASH_ROUTE) {
+            SplashScreen(
+                onTimeout = {
+                    navHostController.navigate(startDestination) {
+                        popUpTo(MifosNavGraph.SPLASH_ROUTE) { inclusive = true }
+                    }
+                },
+            )
+        }
+
         loginNavGraph(
             navController = navHostController,
             onShowInstanceSelector = { showInstanceSelector = true },

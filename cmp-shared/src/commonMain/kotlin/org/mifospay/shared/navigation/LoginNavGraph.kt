@@ -11,6 +11,7 @@ package org.mifospay.shared.navigation
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import org.mifos.feature.passcode.navigateToRootMifosPasscodeScreen
 import org.mifospay.feature.auth.navigation.LOGIN_ROUTE
@@ -21,6 +22,7 @@ import org.mifospay.feature.auth.navigation.navigateToSignup
 import org.mifospay.feature.auth.navigation.signupScreen
 import org.mifospay.feature.auth.socialSignup.navigateToSignupMethod
 import org.mifospay.feature.auth.socialSignup.signupMethodScreen
+import org.mifospay.shared.onboarding.LandingScreen
 
 internal fun NavGraphBuilder.loginNavGraph(
     navController: NavController,
@@ -28,8 +30,15 @@ internal fun NavGraphBuilder.loginNavGraph(
 ) {
     navigation(
         route = MifosNavGraph.LOGIN_GRAPH,
-        startDestination = LOGIN_ROUTE,
+        startDestination = MifosNavGraph.LANDING_ROUTE,
     ) {
+        composable(MifosNavGraph.LANDING_ROUTE) {
+            LandingScreen(
+                onCreateAccount = navController::navigateToSignupMethod,
+                onLogin = navController::navigateToLogin,
+            )
+        }
+
         loginScreen(
             onNavigateBack = navController::popBackStack,
             navigateToMifosPasscodeScreen = navController::navigateToRootMifosPasscodeScreen,

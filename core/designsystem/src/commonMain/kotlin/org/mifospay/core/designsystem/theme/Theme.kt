@@ -60,11 +60,15 @@ fun MifosTheme(
         else -> TintTheme()
     }
 
+    // SimpliPay non-Material tokens (ivory gradient, money colours, mono font, …)
+    val simpliPayTokens = lightSimpliPayTokens()
+
     // Composition locals
     CompositionLocalProvider(
         LocalGradientColors provides gradientColors,
         LocalBackgroundTheme provides backgroundTheme,
         LocalTintTheme provides tintTheme,
+        LocalSimpliPayTokens provides simpliPayTokens,
     ) {
         KptMaterialTheme(
             theme = theme,
