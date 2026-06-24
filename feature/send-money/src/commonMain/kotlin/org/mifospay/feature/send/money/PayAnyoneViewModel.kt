@@ -185,7 +185,7 @@ class PayAnyoneViewModel(
         return buildString {
             appendLine("Hi! I'm trying to send you money via UPI, but I couldn't find you on any UPI app.")
             appendLine()
-            appendLine("Please download Mifos Pay to receive payments instantly:")
+            appendLine("Please download SimpliPay to receive payments instantly:")
             appendLine("https://play.google.com/store/apps/details?id=org.mifospay&hl=en_IN")
             appendLine()
             appendLine("Once you install the app, I'll be able to send you money directly!")

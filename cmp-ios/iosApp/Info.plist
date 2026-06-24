@@ -14,6 +14,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundleDisplayName</key>
+	<string>SimpliPay</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
@@ -30,6 +32,8 @@
 	<string>We use the camera to scan QR codes to send and receive payments.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>This app does not access your contacts. This message is required for compliance only.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>SimpliPay uses Face ID to securely unlock the app and authorize payments.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app does not access your location. This message is required for compliance only.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -41,6 +45,8 @@
 	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>

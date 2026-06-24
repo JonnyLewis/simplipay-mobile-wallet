@@ -76,9 +76,11 @@ private val Ivory3 = Color(0xFFE6E3D8)
 @Composable
 internal fun lightSimpliPayTokens(): SimpliPayTokens = SimpliPayTokens(
     jade = Color(0xFF0F8A7B),
-    jadeTint = Color(0x1A0F8A7B), // rgba(15,138,123,0.10)
+    // rgba(15,138,123,0.10)
+    jadeTint = Color(0x1A0F8A7B),
     credit = Color(0xFF0E9466),
-    creditTint = Color(0x1A0E9466), // rgba(14,148,102,0.10)
+    // rgba(14,148,102,0.10)
+    creditTint = Color(0x1A0E9466),
     debit = Color(0xFF4A5560),
     ink = Color(0xFF101418),
     sub = Color(0xFF6F7782),

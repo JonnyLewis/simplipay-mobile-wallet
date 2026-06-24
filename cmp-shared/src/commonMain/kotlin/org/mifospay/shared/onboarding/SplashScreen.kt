@@ -9,7 +9,6 @@
  */
 package org.mifospay.shared.onboarding
 
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
@@ -31,16 +30,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import org.mifospay.core.designsystem.component.Rosette
+import org.mifospay.core.designsystem.component.RosetteLoader
 import org.mifospay.core.designsystem.component.WalletWordmark
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import kotlin.math.roundToInt
@@ -48,33 +46,26 @@ import kotlin.math.roundToInt
 /**
  * SimpliPay splash / loading screen (design frame 01).
  *
- * The hero is the [Rosette] `(120, 39, 35, 0.85)` spinning `90s` linear over a soft
- * `312dp` radial jade glow, with the `simplipay.` wordmark and three staggered
- * loading dots ([LdDots]) below. After [holdMillis] it forwards to [onTimeout]
- * (the session-resolved destination).
+ * The hero is the large spinning [RosetteLoader] over its soft radial jade glow,
+ * with the `simplipay.` wordmark and
+ * three staggered loading dots ([LdDots]) below. After [holdMillis] (5s) it
+ * forwards to [onTimeout] (the session-resolved destination).
+ *
+ * [onTimeout] is captured via [rememberUpdatedState] so the post-delay forward
+ * uses the LATEST destination — the session resolves asynchronously after this
+ * screen first composes, and we must not fire a stale first-frame target.
  */
 @Composable
 internal fun SplashScreen(
     onTimeout: () -> Unit,
     modifier: Modifier = Modifier,
-    holdMillis: Long = 1500,
+    holdMillis: Long = 5000,
 ) {
-    val tokens = SimpliPayTheme.tokens
-
+    val currentOnTimeout by rememberUpdatedState(onTimeout)
     LaunchedEffect(Unit) {
         delay(holdMillis)
-        onTimeout()
+        currentOnTimeout()
     }
-
-    val transition = rememberInfiniteTransition(label = "splash")
-    val angle by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 90_000, easing = LinearEasing),
-        ),
-        label = "rosette-spin",
-    )
 
     Box(
         modifier = modifier
@@ -82,27 +73,9 @@ internal fun SplashScreen(
             .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
-        // Soft jade glow + spinning rosette, vertically centred.
-        Box(contentAlignment = Alignment.Center) {
-            Box(
-                modifier = Modifier
-                    .size(312.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            0.0f to tokens.jade.copy(alpha = 0.10f),
-                            0.7f to Color.Transparent,
-                        ),
-                    ),
-            )
-            Rosette(
-                radiusX = 120.dp,
-                radiusY = 39.dp,
-                count = 35,
-                opacity = 0.85f,
-                rotation = angle,
-            )
-        }
+        // Soft jade glow + spinning rosette, vertically centred — the same
+        // RosetteLoader the app uses as its loading indicator.
+        RosetteLoader()
 
         // Wordmark + loading dots pinned toward the bottom.
         Column(
@@ -120,7 +93,12 @@ internal fun SplashScreen(
     }
 }
 
-/** Three jade dots bobbing up (`ldDot`), staggered 0 / 200 / 400 ms. */
+/**
+ * Three jade dots that bob up and **brighten in a left-to-right wave**, staggered
+ * 0 / 200 / 400 ms — so the jade highlight visibly travels across the dots as they
+ * move. Each dot's vertical offset and colour intensity are driven by the same
+ * staggered `phase` (0→1), keeping the lift and the colour shift in sync.
+ */
 @Composable
 private fun LdDots() {
     val jade = SimpliPayTheme.tokens.jade
@@ -128,23 +106,23 @@ private fun LdDots() {
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        listOf(0 to 1f, 200 to 0.5f, 400 to 0.3f).forEach { (delayMs, baseAlpha) ->
-            val offsetY by transition.animateFloat(
+        repeat(3) { index ->
+            val phase by transition.animateFloat(
                 initialValue = 0f,
-                targetValue = -4f,
+                targetValue = 1f,
                 animationSpec = infiniteRepeatable(
                     animation = tween(durationMillis = 600, easing = androidx.compose.animation.core.EaseInOut),
                     repeatMode = RepeatMode.Reverse,
-                    initialStartOffset = StartOffset(delayMs),
+                    initialStartOffset = StartOffset(index * 200),
                 ),
-                label = "dot-$delayMs",
+                label = "dot-$index",
             )
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(0, offsetY.roundToInt()) }
+                    .offset { IntOffset(0, (-4f * phase).roundToInt()) }
                     .size(7.dp)
                     .clip(CircleShape)
-                    .background(jade.copy(alpha = baseAlpha)),
+                    .background(jade.copy(alpha = 0.3f + 0.7f * phase)),
             )
         }
     }

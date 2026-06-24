@@ -27,6 +27,8 @@ kotlin {
             implementation(projects.core.domain)
             implementation(projects.coreBase.ui)
             implementation(projects.coreBase.platform)
+            // Reuses the on-device camera + PDF417 decoder for the KYC ID scan.
+            implementation(projects.feature.mpayQrScan)
             implementation(compose.material3)
             implementation(compose.materialIconsExtended)
             implementation(compose.foundation)

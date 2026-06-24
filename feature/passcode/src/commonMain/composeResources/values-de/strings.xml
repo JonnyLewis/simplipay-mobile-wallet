@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Die biometrische Authentifizierung konnte aufgrund ungültiger Argumente nicht gestartet werden.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Die biometrische Registrierung konnte aufgrund ungültiger Argumente nicht gestartet werden.</string>
     <string name="feature_passcode_biometric_error_unknown">Ein unerwarteter biometrischer Fehler ist aufgetreten. Bitte versuchen Sie es erneut.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay entsperren</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay entsperren</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Bestätigen Sie Ihre Identität, um fortzufahren</string>
     <string name="feature_passcode_biometric_prompt_description">Verwenden Sie Ihren Fingerabdruck, Ihr Gesicht oder Ihre Geräteanmeldedaten</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Abbrechen</string>

@@ -9,15 +9,20 @@
  */
 package org.mifospay.feature.profile
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -26,7 +31,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobile_wallet.feature.profile.generated.resources.Res
 import mobile_wallet.feature.profile.generated.resources.feature_profile
@@ -40,6 +48,9 @@ import org.mifospay.core.designsystem.component.MifosButton
 import org.mifospay.core.designsystem.component.MifosLoadingDialog
 import org.mifospay.core.designsystem.component.MifosScaffold
 import org.mifospay.core.designsystem.icon.MifosIcons
+import org.mifospay.core.designsystem.theme.MifosTheme
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
+import org.mifospay.core.model.client.Client
 import org.mifospay.core.ui.ErrorScreenContent
 import org.mifospay.core.ui.MifosProgressIndicatorOverlay
 import org.mifospay.core.ui.utils.EventsEffect
@@ -134,6 +145,7 @@ private fun ProfileScreenContent(
     modifier: Modifier = Modifier,
     onAction: (ProfileAction) -> Unit,
 ) {
+    val tokens = SimpliPayTheme.tokens
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -143,6 +155,18 @@ private fun ProfileScreenContent(
         verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
     ) {
         ProfileImage(bitmap = clientImage)
+
+        Text(
+            text = state.client.displayName,
+            style = KptTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
+            color = tokens.ink,
+        )
+
+        // Gold brand badge — shown for active wallet members (KYC tiers deferred,
+        // so this maps to the client's active status rather than a KYC level).
+        if (state.client.active) {
+            VerifiedBadge()
+        }
 
         ProfileDetailsCard(
             client = state.client,
@@ -188,6 +212,71 @@ private fun ProfileScreenContent(
 //        )
 
         Spacer(modifier = Modifier.height(1.dp))
+    }
+}
+
+/** Headless render-harness entry point (themed, side-effect free). */
+@Composable
+fun ProfileRenderPreview() {
+    val client = Client(
+        id = 1L,
+        accountNo = "100045567",
+        externalId = "jonny@simplipay",
+        active = true,
+        activationDate = emptyList(),
+        firstname = "Jonny",
+        lastname = "Wallet",
+        displayName = "Jonny Wallet",
+        mobileNo = "+27 82 555 0143",
+        emailAddress = "jonny.wallet@example.com",
+        dateOfBirth = emptyList(),
+        isStaff = false,
+        officeId = 1L,
+        officeName = "Head Office",
+        savingsProductName = "Everyday Savings",
+    )
+    MifosTheme(darkTheme = false) {
+        ProfileScreenContent(
+            state = ProfileState(clientId = 1L),
+            clientState = ProfileState.ViewState.Success(client),
+            onAction = {},
+        )
+    }
+}
+
+@Composable
+private fun VerifiedBadge(
+    modifier: Modifier = Modifier,
+) {
+    val tokens = SimpliPayTheme.tokens
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(tokens.verifiedGold.copy(alpha = 0.18f))
+            .border(
+                width = 1.dp,
+                color = tokens.verifiedGold,
+                shape = RoundedCornerShape(50),
+            )
+            .padding(horizontal = 12.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(
+            imageVector = MifosIcons.Check,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = tokens.verifiedGold,
+        )
+        Text(
+            text = "VERIFIED",
+            style = KptTheme.typography.labelSmall.copy(
+                fontFamily = tokens.monoFontFamily,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.5.sp,
+            ),
+            color = tokens.verifiedGold,
+        )
     }
 }
 

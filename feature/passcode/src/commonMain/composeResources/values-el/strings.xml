@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Δεν ήταν δυνατή η εκκίνηση του βιομετρικού ελέγχου ταυτότητας λόγω μη έγκυρων ορισμάτων.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Δεν ήταν δυνατή η εκκίνηση της βιομετρικής εγγραφής λόγω μη έγκυρων ορισμάτων.</string>
     <string name="feature_passcode_biometric_error_unknown">Παρουσιάστηκε μη αναμενόμενο βιομετρικό σφάλμα. Δοκιμάστε ξανά.</string>
-    <string name="feature_passcode_biometric_prompt_title">Ξεκλείδωμα Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Ξεκλείδωμα SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Επαληθεύστε την ταυτότητά σας για να συνεχίσετε</string>
     <string name="feature_passcode_biometric_prompt_description">Χρησιμοποιήστε το δακτυλικό αποτύπωμα, το πρόσωπο ή τα διαπιστευτήρια της συσκευής σας</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Ακύρωση</string>

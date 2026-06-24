@@ -12,5 +12,5 @@ package org.mifospay.core.ui.utils
 object AuthenticationUtils {
     const val DEFAULT_USER_ID = "mifosUser"
     const val DEFAULT_USER_EMAIL = "mifospay@mifos.org"
-    const val DEFAULT_DISPLAY_NAME = "Mifos Pay User"
+    const val DEFAULT_DISPLAY_NAME = "SimpliPay User"
 }

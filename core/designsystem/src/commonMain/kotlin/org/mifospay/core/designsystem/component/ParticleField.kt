@@ -41,9 +41,12 @@ private class Particle(
  * SimpliPay constellation particle field — the slow-drifting jade "network" behind
  * the landing screen (and only there in the source design).
  *
- * Direct port of `setupField` / `animateField` from `SimpliPay All Screens.dc.html`:
+ * Port of `setupField` / `animateField` from `SimpliPay All Screens.dc.html`, tuned
+ * over the original design: **20% more particles** (density `1.35 → 1.62`), a
+ * **faster drift** (velocity `±0.144 → ±0.3024` px/frame), and a **30%-darker**
+ * jade (lerped 30% toward black) for stronger contrast on the ivory field:
  * - particle count = `round(width * height / 16000 * density)` from the measured size
- * - velocity per axis ∈ `[-0.144, +0.144]` px/frame (a deliberately *slow* drift)
+ * - velocity per axis ∈ `[-0.3024, +0.3024]` px/frame
  * - particles bounce off the edges (velocity inverts; no wrap-around)
  * - dots drawn at [dotAlpha] (`0.30`); a line is drawn between any two within
  *   [linkDistancePx] (`120`), its alpha `(1 - d²/max²) * 0.28` — quadratic fade
@@ -55,8 +58,8 @@ private class Particle(
 @Composable
 fun ParticleField(
     modifier: Modifier = Modifier,
-    color: Color = SimpliPayTheme.tokens.jade,
-    density: Float = 1.35f,
+    color: Color = androidx.compose.ui.graphics.lerp(SimpliPayTheme.tokens.jade, Color.Black, 0.3f),
+    density: Float = 1.62f,
     linkDistancePx: Float = 120f,
     dotAlpha: Float = 0.30f,
     maxLinkAlpha: Float = 0.28f,
@@ -80,8 +83,8 @@ fun ParticleField(
                 Particle(
                     x = Random.nextFloat() * w,
                     y = Random.nextFloat() * h,
-                    vx = Random.nextFloat() * 0.288f - 0.144f,
-                    vy = Random.nextFloat() * 0.288f - 0.144f,
+                    vx = Random.nextFloat() * 0.6048f - 0.3024f,
+                    vy = Random.nextFloat() * 0.6048f - 0.3024f,
                     radius = Random.nextFloat() * 1.3f + 0.5f,
                 ),
             )

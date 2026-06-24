@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Biomeetrilist autentimist ei saanud käivitada vigaste argumentide tõttu.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Biomeetrilist registreerimist ei saanud käivitada vigaste argumentide tõttu.</string>
     <string name="feature_passcode_biometric_error_unknown">Tekkis ootamatu biomeetriline viga. Proovi uuesti.</string>
-    <string name="feature_passcode_biometric_prompt_title">Ava Mifos Pay lukk</string>
+    <string name="feature_passcode_biometric_prompt_title">Ava SimpliPay lukk</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Kinnita jätkamiseks oma isik</string>
     <string name="feature_passcode_biometric_prompt_description">Kasuta oma sõrmejälge, nägu või seadme mandaati</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Tühista</string>

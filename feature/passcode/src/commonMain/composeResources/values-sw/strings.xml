@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Haikuweza kuanzisha uthibitishaji wa bayometriki kwa sababu ya hoja batili.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Haikuweza kuanzisha usajili wa bayometriki kwa sababu ya hoja batili.</string>
     <string name="feature_passcode_biometric_error_unknown">Hitilafu ya bayometriki isiyotarajiwa imetokea. Tafadhali jaribu tena.</string>
-    <string name="feature_passcode_biometric_prompt_title">Fungua Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Fungua SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Thibitisha utambulisho wako ili kuendelea</string>
     <string name="feature_passcode_biometric_prompt_description">Tumia alama ya kidole, uso, au kitambulisho cha kifaa chako</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Ghairi</string>

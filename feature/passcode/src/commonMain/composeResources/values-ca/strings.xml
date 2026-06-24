@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">No s\'ha pogut iniciar l\'autenticació biomètrica per arguments no vàlids.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">No s\'ha pogut iniciar el registre biomètric per arguments no vàlids.</string>
     <string name="feature_passcode_biometric_error_unknown">S\'ha produït un error biomètric inesperat. Torna-ho a provar.</string>
-    <string name="feature_passcode_biometric_prompt_title">Desbloqueja Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Desbloqueja SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Verifica la teva identitat per continuar</string>
     <string name="feature_passcode_biometric_prompt_description">Utilitza l\'empremta, la cara o les credencials del dispositiu</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Cancel·la</string>

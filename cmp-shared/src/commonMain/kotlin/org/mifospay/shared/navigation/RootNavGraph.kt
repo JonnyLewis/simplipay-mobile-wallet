@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -79,6 +80,12 @@ internal fun RootNavGraph(
 ) {
     var showInstanceSelector by remember { mutableStateOf(false) }
 
+    // The session-resolved destination arrives async (userInfo flow emits after
+    // first composition). Track the latest value so the splash forwards to the
+    // CURRENT destination — passcode for a returning user — instead of the stale
+    // first-frame LOGIN_GRAPH it would otherwise capture in its onTimeout.
+    val currentStartDestination by rememberUpdatedState(startDestination)
+
     val systemAuthProvider = platformAuthenticationProvider.current
     val authenticatorStatus by systemAuthProvider.authenticatorStatus.collectAsStateWithLifecycle()
 
@@ -94,7 +101,7 @@ internal fun RootNavGraph(
         composable(MifosNavGraph.SPLASH_ROUTE) {
             SplashScreen(
                 onTimeout = {
-                    navHostController.navigate(startDestination) {
+                    navHostController.navigate(currentStartDestination) {
                         popUpTo(MifosNavGraph.SPLASH_ROUTE) { inclusive = true }
                     }
                 },

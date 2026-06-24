@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">చెల్లని ఆర్గ్యుమెంట్‌ల కారణంగా బయోమెట్రిక్ ప్రామాణీకరణను ప్రారంభించలేకపోయాము.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">చెల్లని ఆర్గ్యుమెంట్‌ల కారణంగా బయోమెట్రిక్ నమోదును ప్రారంభించలేకపోయాము.</string>
     <string name="feature_passcode_biometric_error_unknown">ఊహించని బయోమెట్రిక్ లోపం జరిగింది. దయచేసి మళ్లీ ప్రయత్నించండి.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Payని అన్‌లాక్ చేయండి</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPayని అన్‌లాక్ చేయండి</string>
     <string name="feature_passcode_biometric_prompt_subtitle">కొనసాగించడానికి మీ గుర్తింపును ధృవీకరించండి</string>
     <string name="feature_passcode_biometric_prompt_description">మీ వేలిముద్ర, ముఖం, లేదా పరికర ఆధారాన్ని ఉపయోగించండి</string>
     <string name="feature_passcode_biometric_prompt_negative_button">రద్దు చేయండి</string>

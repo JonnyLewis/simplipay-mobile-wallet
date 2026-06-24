@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Biometrické ověření nelze spustit kvůli neplatným argumentům.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Biometrickou registraci nelze spustit kvůli neplatným argumentům.</string>
     <string name="feature_passcode_biometric_error_unknown">Došlo k neočekávané biometrické chybě. Zkuste to znovu.</string>
-    <string name="feature_passcode_biometric_prompt_title">Odemknout Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Odemknout SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Ověřte svou identitu pro pokračování</string>
     <string name="feature_passcode_biometric_prompt_description">Použijte otisk prstu, obličej nebo přihlašovací údaje zařízení</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Zrušit</string>

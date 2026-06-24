@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Kunde inte starta biometrisk autentisering på grund av ogiltiga argument.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Kunde inte starta biometrisk registrering på grund av ogiltiga argument.</string>
     <string name="feature_passcode_biometric_error_unknown">Ett oväntat biometriskt fel uppstod. Försök igen.</string>
-    <string name="feature_passcode_biometric_prompt_title">Lås upp Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Lås upp SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Bekräfta din identitet för att fortsätta</string>
     <string name="feature_passcode_biometric_prompt_description">Använd ditt fingeravtryck, ansikte eller enhetens autentiseringsuppgifter</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Avbryt</string>

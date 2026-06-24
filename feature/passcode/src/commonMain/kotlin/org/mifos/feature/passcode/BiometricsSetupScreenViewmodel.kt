@@ -21,6 +21,7 @@ import org.mifos.authenticator.biometrics.platformAuthenticator.RegistrationResu
 import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.model.client.Client
 import org.mifospay.core.ui.utils.AuthenticationUtils
+import org.mifospay.core.ui.utils.BackgroundEvent
 import org.mifospay.core.ui.utils.BaseViewModel
 
 /**
@@ -150,8 +151,16 @@ sealed interface BiometricSetupScreenAction {
     ) : BiometricSetupScreenAction
 }
 
-/** One-shot navigation events emitted by [BiometricSetupScreenViewmodel]. */
-sealed interface BiometricSetupScreenEvent {
+/**
+ * One-shot navigation events emitted by [BiometricSetupScreenViewmodel].
+ *
+ * Implements [BackgroundEvent] so [EventsEffect] delivers these even when the
+ * screen's lifecycle is momentarily below RESUMED — the iOS Face ID system
+ * prompt pauses the app, so the success event fires while paused and would
+ * otherwise be filtered out and lost (leaving the user stuck on this screen
+ * after a successful enrolment).
+ */
+sealed interface BiometricSetupScreenEvent : BackgroundEvent {
     /** User skipped setup. The route handler should proceed past this screen. */
     data object OnSkipBiometricSetup : BiometricSetupScreenEvent
 

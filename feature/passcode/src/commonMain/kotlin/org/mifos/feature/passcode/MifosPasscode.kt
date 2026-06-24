@@ -9,7 +9,7 @@
  */
 package org.mifos.feature.passcode
 
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +42,8 @@ import org.mifos.authenticator.passcode.screen.PasscodeLogoConfig
 import org.mifos.authenticator.passcode.screen.PasscodeScreen
 import org.mifos.authenticator.passcode.screen.PasscodeSwitchConfig
 import org.mifospay.core.designsystem.component.MifosDialogBox
+import org.mifospay.core.designsystem.component.rememberWalletWordmarkPainter
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import template.core.base.designsystem.theme.KptTheme
 
 /** Navigation-event info marker for the passcode destination. */
@@ -100,6 +102,7 @@ fun MifosPasscode(
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val passcodeManager: PasscodeManager = koinInject<PasscodeManager>()
+    val tokens = SimpliPayTheme.tokens
 
     val systemAuthProvider = platformAuthenticationProvider.current
     val systemAvailableAuthOption = platformAvailableAuthenticationOption.current
@@ -205,37 +208,49 @@ fun MifosPasscode(
         },
         appearanceConfig = PasscodeAppearanceConfig(
             backgroundColor = KptTheme.colorScheme.background,
-            headerTextStyle = KptTheme.typography.headlineMedium,
+            headerTextStyle = KptTheme.typography.headlineMedium.copy(color = tokens.ink),
         ),
-        logoConfig = PasscodeLogoConfig(),
+        logoConfig = PasscodeLogoConfig(
+            logoSize = 80.dp,
+            logoPainter = rememberWalletWordmarkPainter(),
+        ),
         dotConfig = PasscodeDotConfig(
-            dotColor = KptTheme.colorScheme.primary,
-            inactiveDotColor = KptTheme.colorScheme.onBackground,
-            visiblePasscodeTextStyle = KptTheme.typography.headlineSmall,
+            dotColor = tokens.jade,
+            inactiveDotColor = tokens.border,
+            dotSize = 14.dp,
+            visiblePasscodeTextStyle = KptTheme.typography.headlineSmall.copy(
+                fontFamily = tokens.monoFontFamily,
+                color = tokens.ink,
+            ),
         ),
         keyConfig = PasscodeKeyConfig(
-            shouldShuffleKeys = true,
-            keyTextStyle = null,
-            keyColor = KptTheme.colorScheme.primary,
-            keyShape = CircleShape,
+            // Design: ivory rounded keys with mono digits; the library key
+            // container only accepts a flat colour, so the mid ivory stop
+            // stands in for the 155° gradient.
+            shouldShuffleKeys = false,
+            keyTextStyle = KptTheme.typography.headlineSmall.copy(
+                fontFamily = tokens.monoFontFamily,
+            ),
+            keyColor = tokens.cardInk,
+            keyShape = RoundedCornerShape(18.dp),
             keyElevation = null,
-            keyContainerColor = KptTheme.colorScheme.surface,
+            keyContainerColor = tokens.ivoryStops[1],
             keySize = 60.dp,
         ),
         buttonConfig = PasscodeButtonConfig(
-            forgotButtonTextStyle = KptTheme.typography.labelLarge,
+            forgotButtonTextStyle = KptTheme.typography.labelLarge.copy(color = tokens.jade),
         ),
         switchConfig = PasscodeSwitchConfig(
-            switchTabColor = KptTheme.colorScheme.primary,
-            switchTrackColor = KptTheme.colorScheme.surfaceContainerHighest,
-            switchUnselectedTextColor = KptTheme.colorScheme.onSurface,
+            switchTabColor = tokens.jade,
+            switchTrackColor = tokens.line,
+            switchUnselectedTextColor = tokens.sub,
             switchSelectedTextColor = KptTheme.colorScheme.surface,
             switchTextStyle = null,
         ),
         dialogConfig = PasscodeDialogConfig(
             dialogContainerColor = KptTheme.colorScheme.surface,
-            dialogTitleColor = KptTheme.colorScheme.onSurface,
-            dialogButtonTextColor = KptTheme.colorScheme.onSurface,
+            dialogTitleColor = tokens.ink,
+            dialogButtonTextColor = tokens.jade,
             dialogShape = null,
         ),
         isExternalAuthEnabled = allowBiometricAuth && isRegistered,

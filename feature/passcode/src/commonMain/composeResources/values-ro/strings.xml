@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Autentificarea biometrică nu a putut fi pornită din cauza argumentelor invalide.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Înregistrarea biometrică nu a putut fi pornită din cauza argumentelor invalide.</string>
     <string name="feature_passcode_biometric_error_unknown">A apărut o eroare biometrică neașteptată. Încercați din nou.</string>
-    <string name="feature_passcode_biometric_prompt_title">Deblocați Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Deblocați SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Verificați-vă identitatea pentru a continua</string>
     <string name="feature_passcode_biometric_prompt_description">Folosiți amprenta, fața sau acreditările dispozitivului</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Anulați</string>

@@ -9,7 +9,6 @@
  */
 package org.mifospay.core.designsystem.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
@@ -20,13 +19,17 @@ import template.core.base.designsystem.toKptTypography
 
 @Composable
 fun MifosTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    // The "Platinum Ivory" redesign is LIGHT-ONLY. We deliberately ignore the
+    // system dark-mode setting: the dark palette has not been reworked and the
+    // redesigned screens + SimpliPayTokens assume light (ivory) surfaces, so a
+    // device in Dark Mode would render dark-ink content on dark backgrounds —
+    // i.e. a black screen. Forcing light keeps every iPhone consistent until a
+    // proper dark retheme ships.
+    @Suppress("UNUSED_PARAMETER") darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    // Color scheme
-    val selectedColorScheme = when {
-        else -> if (darkTheme) darkKptColorScheme else lightKptColorScheme
-    }
+    // Color scheme — always light for now.
+    val selectedColorScheme = lightKptColorScheme
     val typography = getTypography().toKptTypography()
     val theme = KptThemeProviderImpl(
         colors = selectedColorScheme,
@@ -34,20 +37,13 @@ fun MifosTheme(
         // optionally shapes, spacing, elevation if you want to override defaults
     )
 
-    val lightGradientColors = GradientColors(
-        top = surfaceContainerLowestLight,
-        bottom = surfaceContainerHighestLight,
-        container = Color.Transparent,
+    // Flat Platinum-Ivory background (no gradient) so the screen bg fills
+    // edge-to-edge, including the status-bar and home-indicator safe areas.
+    val gradientColors = GradientColors(
+        top = backgroundLight,
+        bottom = backgroundLight,
+        container = backgroundLight,
     )
-    val darkGradientColors = GradientColors(
-        top = surfaceContainerLowestDark,
-        bottom = surfaceContainerHighDark,
-        container = Color.Transparent,
-    )
-    val gradientColors = when (darkTheme) {
-        true -> darkGradientColors
-        false -> lightGradientColors
-    }
     // Background theme
     val defaultBackgroundTheme = BackgroundTheme(
         color = Color.Transparent,

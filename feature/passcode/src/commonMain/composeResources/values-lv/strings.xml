@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Neizdevās sākt biometrisko autentifikāciju nederīgu argumentu dēļ.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Neizdevās sākt biometrisko reģistrāciju nederīgu argumentu dēļ.</string>
     <string name="feature_passcode_biometric_error_unknown">Radās neparedzēta biometriska kļūda. Lūdzu, mēģiniet vēlreiz.</string>
-    <string name="feature_passcode_biometric_prompt_title">Atbloķēt Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Atbloķēt SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Apstipriniet savu identitāti, lai turpinātu</string>
     <string name="feature_passcode_biometric_prompt_description">Izmantojiet pirksta nospiedumu, seju vai ierīces akreditācijas datus</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Atcelt</string>

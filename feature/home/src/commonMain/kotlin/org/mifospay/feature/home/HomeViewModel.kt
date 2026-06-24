@@ -189,6 +189,10 @@ class HomeViewModel(
                 sendEvent(HomeEvent.NavigateToAutoPayScreen)
             }
 
+            is HomeAction.BuyClicked -> {
+                sendEvent(HomeEvent.NavigateToBuyScreen)
+            }
+
             is HomeAction.ClientDetailsClicked -> {
                 sendEvent(HomeEvent.NavigateToClientDetailScreen)
             }
@@ -383,6 +387,7 @@ sealed interface HomeEvent {
     data object NavigateBack : HomeEvent
     data object NavigateToSendScreen : HomeEvent
     data object NavigateToAutoPayScreen : HomeEvent
+    data object NavigateToBuyScreen : HomeEvent
     data object NavigateToTransactionScreen : HomeEvent
     data object NavigateToClientDetailScreen : HomeEvent
     data class NavigateToRequestScreen(val vpa: String) : HomeEvent
@@ -396,6 +401,7 @@ sealed interface HomeAction {
     data object RequestClicked : HomeAction
     data object SendClicked : HomeAction
     data object AutoPayClicked : HomeAction
+    data object BuyClicked : HomeAction
     data object ClientDetailsClicked : HomeAction
     data object OnClickSeeAllTransactions : HomeAction
     data object OnDismissDialog : HomeAction

@@ -9,7 +9,6 @@
  */
 package org.mifospay.core.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,42 +18,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.alexzhirkevich.compottie.LottieCompositionSpec
-import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
-import io.github.alexzhirkevich.compottie.rememberLottieComposition
-import io.github.alexzhirkevich.compottie.rememberLottiePainter
-import mobile_wallet.core.ui.generated.resources.Res
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.mifospay.core.designsystem.component.RosetteLoadingIndicator
 import org.mifospay.core.designsystem.theme.MifosTheme
-import org.mifospay.core.ui.utils.LottieConstants
 
 @Composable
 fun MifosProgressIndicator(
     modifier: Modifier = Modifier.fillMaxSize(),
 ) {
-    val composition by rememberLottieComposition {
-        LottieCompositionSpec.JsonString(
-            Res.readBytes(LottieConstants.LOADING_ANIMATION).decodeToString(),
-        )
-    }
-    val progress by animateLottieCompositionAsState(composition)
-
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
-        Image(
-            painter = rememberLottiePainter(
-                composition = composition,
-                progress = { progress },
-            ),
-            contentDescription = "Lottie animation",
-        )
+        RosetteLoadingIndicator()
     }
 }
 
@@ -62,25 +42,13 @@ fun MifosProgressIndicator(
 fun MifosProgressIndicatorMini(
     modifier: Modifier = Modifier,
 ) {
-    val composition by rememberLottieComposition {
-        LottieCompositionSpec.JsonString(
-            Res.readBytes(LottieConstants.LOADING_ANIMATION).decodeToString(),
-        )
-    }
-    val progress by animateLottieCompositionAsState(composition)
-
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(140.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Image(
-            painter = rememberLottiePainter(
-                composition = composition,
-                progress = { progress },
-            ),
-            contentDescription = "Lottie animation",
-            modifier = Modifier.height(100.dp),
-        )
+        RosetteLoadingIndicator(radiusX = 44.dp, radiusY = 14.dp)
     }
 }
 
@@ -88,13 +56,6 @@ fun MifosProgressIndicatorMini(
 fun MifosProgressIndicatorOverlay(
     modifier: Modifier = Modifier.fillMaxSize(),
 ) {
-    val composition by rememberLottieComposition {
-        LottieCompositionSpec.JsonString(
-            Res.readBytes(LottieConstants.LOADING_ANIMATION).decodeToString(),
-        )
-    }
-    val progress by animateLottieCompositionAsState(composition)
-
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
@@ -105,13 +66,7 @@ fun MifosProgressIndicatorOverlay(
             ) { },
         contentAlignment = Alignment.Center,
     ) {
-        Image(
-            painter = rememberLottiePainter(
-                composition = composition,
-                progress = { progress },
-            ),
-            contentDescription = "Loading animation",
-        )
+        RosetteLoadingIndicator()
     }
 }
 

@@ -133,6 +133,8 @@ import org.mifospay.feature.transfer.intrabank.selectScreen.selectAccountScreenD
 import org.mifospay.feature.transfer.intrabank.success.navigateTransferSuccess
 import org.mifospay.feature.transfer.intrabank.success.transferSuccessScreen
 import org.mifospay.feature.upi.setup.navigation.setupUpiPinScreen
+import org.mifospay.shared.buy.buyGraph
+import org.mifospay.shared.buy.navigateToBuy
 import org.mifospay.shared.ui.MifosAppState
 import mobile_wallet.cmp_shared.generated.resources.Res as SharedRes
 
@@ -331,16 +333,19 @@ internal fun MifosNavHost(
         homeScreen(
             onNavigateBack = navController::popBackStack,
             onRequest = {
-                navController.navigateToMpayQrScreen()
+                navController.navigateToReceiveOptions()
             },
             onPay = navController::navigateToTransferOptions,
             onAutoPay = {
                 navController.navigateToAutoPay()
             },
+            onBuy = navController::navigateToBuy,
             navigateToTransactionDetail = navController::navigateToSpecificTransaction,
             navigateToAccountDetail = navController::navigateToSavingAccountDetails,
             navigateToHistory = navController::navigateToHistory,
         )
+
+        buyGraph(navController = navController)
 
         settingsScreen(
             onBackPress = navController::navigateUp,
@@ -946,9 +951,32 @@ internal fun MifosNavHost(
         )
 
         transferOptionsDialog(
-            onIntraBankTransferClick = navController::navigateToIntraBankHub,
-            onInterBankTransferClick = navController::navigateToInterbankTransfer,
-            onUpiSendMoney = navController::navigateToSendMoneyOptionsScreen,
+            onSendToMobile = navController::navigateToSendMoneyOptionsScreen,
+            onSendToBank = navController::navigateToIntraBankHub,
+            onSendToBarcode = navController::navigateToScanQr,
+            onProximityPayment = {
+                // Proximity / tap payment is not wired yet — dismiss for now.
+                navController.popBackStack()
+            },
+            onDismiss = {
+                navController.popBackStack()
+            },
+        )
+
+        receiveOptionsDialog(
+            onReceiveByBarcode = navController::navigateToMpayQrScreen,
+            onReceiveByPayLink = {
+                // Pay-link generation is not wired yet — dismiss for now.
+                navController.popBackStack()
+            },
+            onReceiveByMobile = {
+                // Receive-by-mobile is not wired yet — dismiss for now.
+                navController.popBackStack()
+            },
+            onProximityPayment = {
+                // Proximity / tap payment is not wired yet — dismiss for now.
+                navController.popBackStack()
+            },
             onDismiss = {
                 navController.popBackStack()
             },

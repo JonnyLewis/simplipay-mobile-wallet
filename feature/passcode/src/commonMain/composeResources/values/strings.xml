@@ -33,7 +33,7 @@
     <string name="feature_passcode_biometric_error_unknown">An unexpected biometric error occurred. Please try again.</string>
 
     <!-- OS biometric prompt strings (caller-supplied per library v2.3.0-beta contract) -->
-    <string name="feature_passcode_biometric_prompt_title">Unlock Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Unlock SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Verify your identity to continue</string>
     <string name="feature_passcode_biometric_prompt_description">Use your fingerprint, face, or device credential</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Cancel</string>

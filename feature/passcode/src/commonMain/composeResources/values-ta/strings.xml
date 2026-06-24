@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">தவறான உள்ளீடுகளால் பயோமெட்ரிக் அங்கீகாரத்தைத் தொடங்க முடியவில்லை.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">தவறான உள்ளீடுகளால் பயோமெட்ரிக் பதிவைத் தொடங்க முடியவில்லை.</string>
     <string name="feature_passcode_biometric_error_unknown">எதிர்பாராத பயோமெட்ரிக் பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay-ஐ திற</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay-ஐ திற</string>
     <string name="feature_passcode_biometric_prompt_subtitle">தொடர உங்கள் அடையாளத்தை சரிபார்க்கவும்</string>
     <string name="feature_passcode_biometric_prompt_description">உங்கள் கைரேகை, முகம், அல்லது சாதன சான்றிதழைப் பயன்படுத்தவும்</string>
     <string name="feature_passcode_biometric_prompt_negative_button">ரத்துசெய்</string>

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -344,10 +345,15 @@ private fun MifosBottomBar(
             }
         }
 
-        // Center QR Scan FAB - inside navigation bar
+        // Center QR Scan FAB - inside navigation bar. The bottom navigation-bar
+        // inset padding lifts the FAB out of the home-indicator safe area so its
+        // centre lines up with the other nav-item icons (which already sit above
+        // that inset) instead of hanging lower than them.
         FloatingActionButton(
             onClick = onScanQrClick,
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier
+                .navigationBarsPadding()
+                .size(56.dp),
             shape = CircleShape,
             containerColor = KptTheme.colorScheme.primary,
             contentColor = KptTheme.colorScheme.onPrimary,

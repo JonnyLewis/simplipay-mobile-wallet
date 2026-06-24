@@ -636,7 +636,7 @@ private fun DetailedInfoSection(
         )
 
         InfoRow(
-            label = "MifosPay Transaction ID",
+            label = "SimpliPay Transaction ID",
             value = "AbC123dEf456",
         )
     }
@@ -683,7 +683,7 @@ private fun BrandingSection(
         )
 
         Text(
-            text = "Mifos Pay",
+            text = "SimpliPay",
             style = KptTheme.typography.labelLarge,
             color = KptTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
         )

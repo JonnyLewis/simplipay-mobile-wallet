@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Biometristä todennusta ei voitu käynnistää virheellisten argumenttien vuoksi.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Biometristä rekisteröintiä ei voitu käynnistää virheellisten argumenttien vuoksi.</string>
     <string name="feature_passcode_biometric_error_unknown">Odottamaton biometrinen virhe tapahtui. Yritä uudelleen.</string>
-    <string name="feature_passcode_biometric_prompt_title">Avaa Mifos Pay -lukitus</string>
+    <string name="feature_passcode_biometric_prompt_title">Avaa SimpliPay -lukitus</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Vahvista henkilöllisyytesi jatkaaksesi</string>
     <string name="feature_passcode_biometric_prompt_description">Käytä sormenjälkeäsi, kasvojasi tai laitteen tunnistetietoja</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Peruuta</string>

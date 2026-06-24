@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Tidak dapat memulai autentikasi biometrik karena argumen tidak valid.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Tidak dapat memulai pendaftaran biometrik karena argumen tidak valid.</string>
     <string name="feature_passcode_biometric_error_unknown">Terjadi kesalahan biometrik yang tidak terduga. Silakan coba lagi.</string>
-    <string name="feature_passcode_biometric_prompt_title">Buka kunci Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Buka kunci SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Verifikasi identitas Anda untuk melanjutkan</string>
     <string name="feature_passcode_biometric_prompt_description">Gunakan sidik jari, wajah, atau kredensial perangkat Anda</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Batal</string>

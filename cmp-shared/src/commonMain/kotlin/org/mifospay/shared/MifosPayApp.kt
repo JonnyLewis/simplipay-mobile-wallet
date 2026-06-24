@@ -9,6 +9,9 @@
  */
 package org.mifospay.shared
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +41,7 @@ import org.mifospay.core.designsystem.theme.MifosTheme
 import org.mifospay.shared.UserState.Authenticated
 import org.mifospay.shared.navigation.MifosNavGraph.LOGIN_GRAPH
 import org.mifospay.shared.navigation.RootNavGraph
+import template.core.base.designsystem.theme.KptTheme
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
@@ -209,21 +213,31 @@ private fun MifosPayApp(
     }
 
     MifosTheme {
-        RootNavGraph(
-            networkMonitor = networkMonitor,
-            timeZoneMonitor = timeZoneMonitor,
-            navHostController = navController,
-            startDestination = navDestination,
-            modifier = modifier,
-            handleAppLocale = handleAppLocale,
-            onClickLogout = {
-                viewModel.logOut()
-                navController.navigate(LOGIN_GRAPH) {
-                    popUpTo(navController.graph.id) {
-                        inclusive = true
+        // Paint the Platinum-Ivory screen background across the whole window —
+        // behind every screen — so the status-bar and home-indicator safe areas
+        // are ivory too (individual scaffolds inset their own background via
+        // navigationBarsPadding, which otherwise left white "forehead/chin" bands).
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(KptTheme.colorScheme.background),
+        ) {
+            RootNavGraph(
+                networkMonitor = networkMonitor,
+                timeZoneMonitor = timeZoneMonitor,
+                navHostController = navController,
+                startDestination = navDestination,
+                modifier = modifier,
+                handleAppLocale = handleAppLocale,
+                onClickLogout = {
+                    viewModel.logOut()
+                    navController.navigate(LOGIN_GRAPH) {
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
                     }
-                }
-            },
-        )
+                },
+            )
+        }
     }
 }

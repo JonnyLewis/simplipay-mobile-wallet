@@ -29,7 +29,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">No se pudo iniciar la autenticación biométrica debido a argumentos no válidos.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">No se pudo iniciar el registro biométrico debido a argumentos no válidos.</string>
     <string name="feature_passcode_biometric_error_unknown">Se produjo un error biométrico inesperado. Por favor inténtalo de nuevo.</string>
-    <string name="feature_passcode_biometric_prompt_title">Desbloquear Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Desbloquear SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Verifica tu identidad para continuar</string>
     <string name="feature_passcode_biometric_prompt_description">Usa tu huella digital, rostro o credencial del dispositivo</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Cancelar</string>

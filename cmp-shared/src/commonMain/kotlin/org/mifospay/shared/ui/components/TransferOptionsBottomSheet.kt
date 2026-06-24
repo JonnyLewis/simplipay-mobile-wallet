@@ -9,48 +9,47 @@
  */
 package org.mifospay.shared.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import mobile_wallet.cmp_shared.generated.resources.upi_and_autopay
-import mobile_wallet.feature.payments.generated.resources.Res
-import mobile_wallet.feature.payments.generated.resources.feature_payments_inter_bank_transfer_description
-import mobile_wallet.feature.payments.generated.resources.feature_payments_inter_bank_transfer_title
-import mobile_wallet.feature.payments.generated.resources.feature_payments_intra_bank_transfer_description
-import mobile_wallet.feature.payments.generated.resources.feature_payments_intra_bank_transfer_title
-import mobile_wallet.feature.payments.generated.resources.feature_payments_transfer_options_title
-import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.koin.compose.viewmodel.koinViewModel
 import org.mifospay.core.designsystem.component.MifosBottomSheet
+import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.MifosTheme
-import org.mifospay.shared.TransferOptionsViewModel
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import template.core.base.designsystem.theme.KptTheme
-import mobile_wallet.cmp_shared.generated.resources.Res as SharedRes
 
+/**
+ * "Send money" chooser shown when the user taps Send on home. Offers the four
+ * ways to send: to a mobile number, to a bank account, by scanning a barcode/QR,
+ * and (coming soon) a proximity/tap payment.
+ */
 @Composable
 fun TransferOptionsBottomSheet(
-    onIntraBankTransferClick: () -> Unit,
-    onInterBankTransferClick: () -> Unit,
-    onUpiSendMoney: () -> Unit,
+    onSendToMobile: () -> Unit,
+    onSendToBank: () -> Unit,
+    onSendToBarcode: () -> Unit,
+    onProximityPayment: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    transferOptionsViewModel: TransferOptionsViewModel = koinViewModel(),
 ) {
-    val state by transferOptionsViewModel.stateFlow.collectAsStateWithLifecycle()
-
+    val tokens = SimpliPayTheme.tokens
     MifosBottomSheet(
         onDismiss = onDismiss,
         modifier = modifier,
@@ -59,109 +58,93 @@ fun TransferOptionsBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = KptTheme.spacing.md),
-                verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs),
             ) {
                 Text(
-                    text = stringResource(Res.string.feature_payments_transfer_options_title),
-                    modifier = Modifier.padding(horizontal = KptTheme.spacing.md),
+                    text = "Send money",
+                    modifier = Modifier.padding(
+                        horizontal = KptTheme.spacing.lg,
+                        vertical = KptTheme.spacing.sm,
+                    ),
                     style = KptTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                )
-                // Intra-Bank Transfer Option
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            text = stringResource(Res.string.feature_payments_intra_bank_transfer_title),
-                            style = KptTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = KptTheme.colorScheme.onSurface,
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = stringResource(Res.string.feature_payments_intra_bank_transfer_description),
-                            style = KptTheme.typography.bodySmall,
-                            color = KptTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onIntraBankTransferClick()
-                        },
+                    color = tokens.ink,
                 )
 
-                if (state.isInterTransferOptionEnabled) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = KptTheme.spacing.md),
-                        color = KptTheme.colorScheme.outlineVariant,
-                    )
-                    // Inter-Bank Transfer Option
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                text = stringResource(Res.string.feature_payments_inter_bank_transfer_title),
-                                style = KptTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = KptTheme.colorScheme.onSurface,
-                            )
-                        },
-                        supportingContent = {
-                            Text(
-                                text = stringResource(Res.string.feature_payments_inter_bank_transfer_description),
-                                style = KptTheme.typography.bodySmall,
-                                color = KptTheme.colorScheme.onSurfaceVariant,
-                            )
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent,
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onInterBankTransferClick()
-                            },
-                    )
-                }
-
-                if (state.isUpiEnabled) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = KptTheme.spacing.md),
-                        color = KptTheme.colorScheme.outlineVariant,
-                    )
-
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                text = stringResource(SharedRes.string.upi_and_autopay),
-                                style = KptTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = KptTheme.colorScheme.onSurface,
-                            )
-                        },
-                        supportingContent = {
-                            Text(
-                                text = stringResource(SharedRes.string.upi_and_autopay),
-                                style = KptTheme.typography.bodySmall,
-                                color = KptTheme.colorScheme.onSurfaceVariant,
-                            )
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent,
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                onUpiSendMoney()
-                            },
-                    )
-                }
+                TransferOptionRow(
+                    icon = MifosIcons.SendToMobile,
+                    title = "Send to mobile number",
+                    subtitle = "Pay a contact by their phone number",
+                    onClick = onSendToMobile,
+                )
+                TransferOptionRow(
+                    icon = MifosIcons.SendToBank,
+                    title = "Send to bank account",
+                    subtitle = "Transfer money to a bank account",
+                    onClick = onSendToBank,
+                )
+                TransferOptionRow(
+                    icon = MifosIcons.Scan,
+                    title = "Send to barcode",
+                    subtitle = "Scan a QR or barcode to pay",
+                    onClick = onSendToBarcode,
+                )
+                TransferOptionRow(
+                    icon = MifosIcons.Proximity,
+                    title = "Proximity payment",
+                    subtitle = "Coming soon",
+                    onClick = onProximityPayment,
+                )
             }
         },
     )
+}
+
+@Composable
+private fun TransferOptionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tokens = SimpliPayTheme.tokens
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = KptTheme.spacing.lg, vertical = KptTheme.spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(tokens.jadeTint),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tokens.jade,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+        Column {
+            Text(
+                text = title,
+                style = KptTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = tokens.ink,
+            )
+            Text(
+                text = subtitle,
+                style = KptTheme.typography.bodySmall,
+                color = tokens.sub,
+            )
+        }
+    }
 }
 
 @Preview
@@ -169,9 +152,10 @@ fun TransferOptionsBottomSheet(
 fun TransferOptionsBottomSheetPreview() {
     MifosTheme {
         TransferOptionsBottomSheet(
-            onIntraBankTransferClick = {},
-            onInterBankTransferClick = {},
-            onUpiSendMoney = {},
+            onSendToMobile = {},
+            onSendToBank = {},
+            onSendToBarcode = {},
+            onProximityPayment = {},
             onDismiss = {},
         )
     }

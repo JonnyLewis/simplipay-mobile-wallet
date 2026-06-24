@@ -21,6 +21,7 @@ import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.MifosTheme
@@ -84,7 +85,9 @@ fun MifosNavigationBar(
 ) {
     NavigationBar(
         modifier = modifier,
-        containerColor = KptTheme.colorScheme.surface,
+        // Transparent so the flat ivory screen bg fills the bottom safe area
+        // (no white "chin"); the redesigned floating pill nav comes later.
+        containerColor = Color.Transparent,
         contentColor = MifosNavigationDefaults.navigationContentColor(),
         tonalElevation = KptTheme.elevation.level0,
         content = content,

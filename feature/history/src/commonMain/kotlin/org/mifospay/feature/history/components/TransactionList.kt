@@ -45,6 +45,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.savingsaccount.Transaction
 import org.mifospay.core.model.savingsaccount.TransactionType
 import org.mifospay.feature.history.HistoryAction
@@ -93,6 +94,7 @@ internal fun TransactionItem(
     showDescription: Boolean = false,
     onClick: (Long) -> Unit,
 ) {
+    val tokens = SimpliPayTheme.tokens
     Surface(
         modifier = modifier,
         onClick = {
@@ -135,18 +137,27 @@ internal fun TransactionItem(
                     Column {
                         Text(
                             text = transaction.transactionType.name,
-                            fontWeight = FontWeight(400),
+                            fontWeight = FontWeight(500),
                             style = KptTheme.typography.bodySmall,
+                            color = tokens.ink,
                         )
                         Text(
                             text = transaction.date,
                             fontWeight = FontWeight(300),
-                            style = KptTheme.typography.bodySmall,
+                            style = KptTheme.typography.bodySmall.copy(
+                                fontFamily = tokens.monoFontFamily,
+                            ),
+                            color = tokens.sub,
                         )
                     }
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    val accentColor = when (transaction.transactionType) {
+                        TransactionType.CREDIT -> tokens.credit
+                        TransactionType.DEBIT -> tokens.debit
+                        else -> tokens.ink
+                    }
                     Icon(
                         imageVector = vectorResource(mobile_wallet.feature.history.generated.resources.Res.drawable.arrow_outward),
                         modifier = when (transaction.transactionType) {
@@ -156,21 +167,7 @@ internal fun TransactionItem(
 
                             else -> Modifier.graphicsLayer(rotationZ = 180f).size(16.dp)
                         },
-                        tint = when (transaction.transactionType) {
-                            TransactionType.CREDIT -> KptTheme.colorScheme.onTertiaryContainer.copy(
-                                red = 0f,
-                                green = 0.51f,
-                                blue = 0.21f,
-                            )
-
-                            TransactionType.DEBIT -> KptTheme.colorScheme.error.copy(
-                                red = 0.8f,
-                                green = 0f,
-                                blue = 0f,
-                            )
-
-                            else -> KptTheme.colorScheme.scrim
-                        },
+                        tint = accentColor,
                         contentDescription = null,
                     )
                     val amount = CurrencyFormatter.format(
@@ -182,23 +179,10 @@ internal fun TransactionItem(
                         modifier = Modifier,
                         text = amount,
                         style = TextStyle(
+                            fontFamily = tokens.monoFontFamily,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = when (transaction.transactionType) {
-                                TransactionType.CREDIT -> KptTheme.colorScheme.onTertiaryContainer.copy(
-                                    red = 0f,
-                                    green = 0.51f,
-                                    blue = 0.21f,
-                                )
-
-                                TransactionType.DEBIT -> KptTheme.colorScheme.error.copy(
-                                    red = 0.8f,
-                                    green = 0f,
-                                    blue = 0f,
-                                )
-
-                                else -> KptTheme.colorScheme.scrim
-                            },
+                            fontWeight = FontWeight.SemiBold,
+                            color = accentColor,
                             textAlign = TextAlign.End,
                         ),
                     )

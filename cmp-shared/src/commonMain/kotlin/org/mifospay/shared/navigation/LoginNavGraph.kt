@@ -14,7 +14,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import org.mifos.feature.passcode.navigateToRootMifosPasscodeScreen
-import org.mifospay.feature.auth.navigation.LOGIN_ROUTE
 import org.mifospay.feature.auth.navigation.loginScreen
 import org.mifospay.feature.auth.navigation.mobileVerificationScreen
 import org.mifospay.feature.auth.navigation.navigateToLogin

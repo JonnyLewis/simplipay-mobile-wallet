@@ -16,7 +16,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import org.mifospay.core.ui.composableWithPushTransitions
-import org.mifospay.feature.auth.signup.SignupScreen
+import org.mifospay.feature.auth.signup.kyc.KycSignupScreen
 
 const val SIGNUP_ROUTE = "signup_route"
 
@@ -42,7 +42,7 @@ fun NavGraphBuilder.signupScreen(
             },
         ),
     ) {
-        SignupScreen(
+        KycSignupScreen(
             onNavigateBack = onNavigateBack,
             onNavigateToLogin = onNavigateToLogin,
         )

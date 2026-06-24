@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">無効な引数のため生体認証を開始できませんでした。</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">無効な引数のため生体認証登録を開始できませんでした。</string>
     <string name="feature_passcode_biometric_error_unknown">予期しない生体認証エラーが発生しました。もう一度お試しください。</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay のロックを解除</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay のロックを解除</string>
     <string name="feature_passcode_biometric_prompt_subtitle">続行するには本人確認をしてください</string>
     <string name="feature_passcode_biometric_prompt_description">指紋、顔、またはデバイスの認証情報を使用してください</string>
     <string name="feature_passcode_biometric_prompt_negative_button">キャンセル</string>

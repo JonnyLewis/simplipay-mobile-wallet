@@ -24,7 +24,7 @@
     <string name="feature_qr_supported_transfers">Interbancarias • Intrabancarias</string>
     <string name="feature_qr_upload_qr">Subir QR</string>
     <string name="feature_qr_torch">Linterna</string>
-    <string name="feature_qr_powered_by">Desarrollado por Mifos</string>
+    <string name="feature_qr_powered_by">Desarrollado por SimpliPay</string>
     <string name="feature_qr_help_title">Seguridad con códigos QR</string>
     <string name="feature_qr_help_description">Ten cuidado al escanear códigos QR. Pueden dirigirte a sitios de phishing que roban tu información personal o descargar malware en tu dispositivo. Escanea únicamente códigos QR de fuentes confiables.</string>
     <string name="feature_qr_ok">Aceptar</string>
