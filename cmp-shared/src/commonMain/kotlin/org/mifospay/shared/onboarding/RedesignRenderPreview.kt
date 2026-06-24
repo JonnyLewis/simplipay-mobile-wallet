@@ -53,7 +53,18 @@ fun LoadingShot() = MifosTheme(darkTheme = false) { MifosProgressIndicator() }
 
 @Composable
 fun BuyShot() = MifosTheme(darkTheme = false) {
-    org.mifospay.shared.buy.BuyScreen(onBack = {}, onServiceClick = {})
+    org.mifospay.shared.buy.BuyScreenContent(
+        accountName = "Savings",
+        accountMask = "•• 4567",
+        balanceText = "R 12,480.50",
+        recent = listOf(
+            org.mifospay.shared.buy.BuyRecentItem("MTN Airtime", "12 Jun", "−R 50.00", credit = false),
+            org.mifospay.shared.buy.BuyRecentItem("City Power", "9 Jun", "−R 200.00", credit = false),
+            org.mifospay.shared.buy.BuyRecentItem("Vodacom 5GB", "5 Jun", "−R 99.00", credit = false),
+        ),
+        onBack = {},
+        onServiceClick = {},
+    )
 }
 
 @Composable
