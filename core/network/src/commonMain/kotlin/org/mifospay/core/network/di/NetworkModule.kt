@@ -29,6 +29,7 @@ import org.mifospay.core.network.SelfServiceApiManager
 import org.mifospay.core.network.SupabaseApiManager
 import org.mifospay.core.network.config.InstanceConfigLoader
 import org.mifospay.core.network.config.InstanceConfigManager
+import org.mifospay.core.network.config.ServiceAccountConfig
 import org.mifospay.core.network.config.SupabaseCredentialsImpl
 import org.mifospay.core.network.config.SupabaseInstanceConfigLoader
 import org.mifospay.core.network.utils.BaseURL
@@ -107,8 +108,8 @@ val NetworkModule = module {
                             baseUrl = "https://placeholder.local/",
                             basicCredentialsProvider = {
                                 BasicAuthCredentials(
-                                    username = "mifos",
-                                    password = "password",
+                                    username = ServiceAccountConfig.PLATFORM_USERNAME,
+                                    password = ServiceAccountConfig.PLATFORM_PASSWORD,
                                 )
                             },
                             // Headers are set dynamically by KtorInterceptor

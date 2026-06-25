@@ -109,7 +109,7 @@ fun UpiTransactionHistoryScreen(
                     .padding(top = KptTheme.spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
             ) {
-                items(state.groupedTransactions) { monthGroup ->
+                items(state.groupedTransactions, key = { it.monthYear }) { monthGroup ->
                     MonthTransactionGroup(
                         monthGroup = monthGroup,
                     )

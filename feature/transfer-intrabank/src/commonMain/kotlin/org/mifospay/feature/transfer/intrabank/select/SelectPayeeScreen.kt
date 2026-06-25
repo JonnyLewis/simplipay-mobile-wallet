@@ -229,7 +229,10 @@ private fun LazyListScope.accountListContent(
     selected: (AccountOption?) -> Boolean,
     onAction: (SelectScreenAction.SelectAccount) -> Unit,
 ) {
-    items(state.filteredToAccounts?.size ?: 0) { it ->
+    items(
+        count = state.filteredToAccounts?.size ?: 0,
+        key = { index -> state.filteredToAccounts?.get(index)?.accountId ?: index },
+    ) { it ->
         AccountCard(
             account = state.filteredToAccounts?.get(it),
             selected = selected,

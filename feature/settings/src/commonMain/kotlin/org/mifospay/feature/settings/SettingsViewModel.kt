@@ -24,7 +24,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.mifos.authenticator.biometrics.platformAuthenticator.PlatformAuthenticationProvider
 import org.mifos.authenticator.biometrics.platformAuthenticator.RegistrationResult
-import org.mifos.authenticator.passcode.PasscodeManager
+import org.mifospay.passcode.PasscodeManager
 import org.mifos.feature.passcode.BiometricErrorMessages
 import org.mifos.feature.passcode.BiometricPromptStrings
 import org.mifospay.core.common.DataState

@@ -34,7 +34,7 @@
     <string name="feature_auth_name_of_business">Name of Business</string>
     <string name="feature_auth_address_line_1">Address Line 1</string>
     <string name="feature_auth_address_line_2">Address Line 2 (optional)</string>
-    <string name="feature_auth_pin_code">Pin Code</string>
+    <string name="feature_auth_pin_code">Postal code</string>
     <string name="feature_auth_state">State</string>
     <string name="feature_auth_country">Country</string>
     <string name="feature_auth_mobile_no">Mobile No</string>

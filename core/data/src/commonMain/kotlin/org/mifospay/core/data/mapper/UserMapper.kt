@@ -17,10 +17,12 @@ import org.mifospay.core.network.model.entity.user.NewUserEntity
 import org.mifospay.core.network.model.entity.user.User
 
 private const val OFFICE_ID = 1
-private const val MOBILE_WALLET_ROLE_ID = 2
-private const val SUPER_USER_ROLE_ID = 1
 
-val NEW_USER_ROLE_IDS: ArrayList<Int> = arrayListOf(MOBILE_WALLET_ROLE_ID, SUPER_USER_ROLE_ID)
+// Role 2 = "Self Service User" on the backend. New wallet users get ONLY this role — never
+// the super-user role (1), which previously gave every signup full admin permissions.
+private const val SELF_SERVICE_USER_ROLE_ID = 2
+
+val NEW_USER_ROLE_IDS: ArrayList<Int> = arrayListOf(SELF_SERVICE_USER_ROLE_ID)
 
 fun NewUser.toEntity(): NewUserEntity {
     return NewUserEntity(

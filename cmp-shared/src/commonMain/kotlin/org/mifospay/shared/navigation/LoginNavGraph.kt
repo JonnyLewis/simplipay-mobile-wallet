@@ -19,7 +19,7 @@ import org.mifospay.feature.auth.navigation.mobileVerificationScreen
 import org.mifospay.feature.auth.navigation.navigateToLogin
 import org.mifospay.feature.auth.navigation.navigateToSignup
 import org.mifospay.feature.auth.navigation.signupScreen
-import org.mifospay.feature.auth.socialSignup.navigateToSignupMethod
+import org.mifospay.core.data.util.Constants.WALLET_ACCOUNT_SAVINGS_PRODUCT_ID
 import org.mifospay.feature.auth.socialSignup.signupMethodScreen
 import org.mifospay.shared.onboarding.LandingScreen
 
@@ -33,7 +33,10 @@ internal fun NavGraphBuilder.loginNavGraph(
     ) {
         composable(MifosNavGraph.LANDING_ROUTE) {
             LandingScreen(
-                onCreateAccount = navController::navigateToSignupMethod,
+                // Skip the merchant/customer chooser — new accounts are customers by default.
+                onCreateAccount = {
+                    navController.navigateToSignup(savingsProductId = WALLET_ACCOUNT_SAVINGS_PRODUCT_ID)
+                },
                 onLogin = navController::navigateToLogin,
             )
         }
@@ -41,7 +44,9 @@ internal fun NavGraphBuilder.loginNavGraph(
         loginScreen(
             onNavigateBack = navController::popBackStack,
             navigateToMifosPasscodeScreen = navController::navigateToRootMifosPasscodeScreen,
-            onNavigateToSignupScreen = navController::navigateToSignupMethod,
+            onNavigateToSignupScreen = {
+                navController.navigateToSignup(savingsProductId = WALLET_ACCOUNT_SAVINGS_PRODUCT_ID)
+            },
             onShowInstanceSelector = onShowInstanceSelector,
         )
 

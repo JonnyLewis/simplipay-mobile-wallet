@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
@@ -67,7 +68,9 @@ fun RosetteLoader(
             radiusY = radiusY,
             count = count,
             opacity = opacity,
-            rotation = angle,
+            // Spin via a layer transform on the cached fan (rotationZ in the deferred
+            // graphicsLayer block) rather than re-tessellating the ovals every frame.
+            modifier = Modifier.graphicsLayer { rotationZ = angle },
         )
     }
 }
@@ -95,8 +98,8 @@ fun RosetteLoadingIndicator(
         radiusY = radiusY,
         count = count,
         opacity = opacity,
-        rotation = angle,
-        modifier = modifier,
+        // Spin the cached fan via a layer transform instead of redrawing it each frame.
+        modifier = modifier.graphicsLayer { rotationZ = angle },
     )
 }
 

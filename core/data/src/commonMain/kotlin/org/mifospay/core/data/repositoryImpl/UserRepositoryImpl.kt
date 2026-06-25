@@ -22,6 +22,7 @@ import org.mifospay.core.data.mapper.toEntity
 import org.mifospay.core.data.repository.UserRepository
 import org.mifospay.core.data.util.parseMifosError
 import org.mifospay.core.model.user.NewUser
+import org.mifospay.core.network.FineractApiManager
 import org.mifospay.core.network.SelfServiceApiManager
 import org.mifospay.core.network.model.CommonResponse
 import org.mifospay.core.network.model.GenericResponse
@@ -30,6 +31,9 @@ import org.mifospay.core.network.model.entity.user.UpdateUserEntityPassword
 
 class UserRepositoryImpl(
     private val selfServiceApiManager: SelfServiceApiManager,
+    // Platform (admin) API — used for the pre-login onboarding writes (create user, assign
+    // client) which can't go through the self-service base (that needs a logged-in token).
+    private val fineractApiManager: FineractApiManager,
     private val ioDispatcher: CoroutineDispatcher,
 ) : UserRepository {
     override suspend fun getUsers(): Flow<DataState<List<UserWithRole>>> {
@@ -43,7 +47,7 @@ class UserRepositoryImpl(
     override suspend fun createUser(newUser: NewUser): DataState<Int> {
         return try {
             val result = withContext(ioDispatcher) {
-                selfServiceApiManager.userApi.createUser(newUser.toEntity())
+                fineractApiManager.userApi.createUser(newUser.toEntity())
             }
 
             DataState.Success(result.resourceId)
@@ -108,7 +112,7 @@ class UserRepositoryImpl(
     override suspend fun assignClientToUser(userId: Int, clientId: Int): DataState<Unit> {
         return try {
             val result = withContext(ioDispatcher) {
-                selfServiceApiManager.userApi.assignClientToUser(userId, mapOf("clients" to listOf(clientId)))
+                fineractApiManager.userApi.assignClientToUser(userId, mapOf("clients" to listOf(clientId)))
             }
 
             DataState.Success(Unit)

@@ -9,6 +9,9 @@
  */
 package org.mifospay.shared.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -302,6 +305,12 @@ internal fun MifosNavHost(
         startDestination = HOME_ROUTE,
         navController = navController,
         modifier = modifier,
+        // Short, cheap cross-fade keeps the transition window small so a destination's
+        // first frame doesn't animate concurrently with a longer slide/fade.
+        enterTransition = { fadeIn(tween(140)) },
+        exitTransition = { fadeOut(tween(140)) },
+        popEnterTransition = { fadeIn(tween(140)) },
+        popExitTransition = { fadeOut(tween(140)) },
     ) {
         internalMifosPasscodeScreen(
             navigateToLogin = onClickLogout,

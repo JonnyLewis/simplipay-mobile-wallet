@@ -27,8 +27,10 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.useContents
 import kotlinx.cinterop.value
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVCaptureDeviceInput
@@ -111,12 +113,11 @@ fun UiScannerView(
         ),
     )
 
-//    DisposableEffect(Unit) {
-//        onDispose {
-//            // stop capture
-//            coordinator.
-//        }
-//    }
+    DisposableEffect(Unit) {
+        onDispose {
+            coordinator.dispose()
+        }
+    }
 }
 
 @OptIn(ExperimentalForeignApi::class)
@@ -148,6 +149,17 @@ class ScannerCameraCoordinator(
     private var previewLayer: AVCaptureVideoPreviewLayer? = null
     private lateinit var captureSession: AVCaptureSession
     private var captureDevice: AVCaptureDevice? = null
+
+    // Scope tied to this coordinator instead of GlobalScope, so the capture-session
+    // start/restart coroutines are cancelled when the scanner leaves composition.
+    private val coordinatorScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    fun dispose() {
+        coordinatorScope.cancel()
+        if (::captureSession.isInitialized) {
+            captureSession.stopRunning()
+        }
+    }
 
     fun isTorchAvailable(): Boolean {
         return captureDevice?.hasTorch == true
@@ -233,7 +245,7 @@ class ScannerCameraCoordinator(
         }
 
         println("Launching capture session")
-        GlobalScope.launch(Dispatchers.Default) {
+        coordinatorScope.launch {
             captureSession.startRunning()
         }
     }
@@ -265,7 +277,7 @@ class ScannerCameraCoordinator(
     fun onFound(code: String) {
         captureSession.stopRunning()
         if (!onScanned(code)) {
-            GlobalScope.launch(Dispatchers.Default) {
+            coordinatorScope.launch {
                 captureSession.startRunning()
             }
         }

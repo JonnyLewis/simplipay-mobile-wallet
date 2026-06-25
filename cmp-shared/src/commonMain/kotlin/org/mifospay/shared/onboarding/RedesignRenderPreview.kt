@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import org.mifospay.core.designsystem.icon.MifosIcons
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.mifospay.core.designsystem.component.Rosette
@@ -58,9 +59,9 @@ fun BuyShot() = MifosTheme(darkTheme = false) {
         accountMask = "•• 4567",
         balanceText = "R 12,480.50",
         recent = listOf(
-            org.mifospay.shared.buy.BuyRecentItem("MTN Airtime", "12 Jun", "−R 50.00", credit = false),
-            org.mifospay.shared.buy.BuyRecentItem("City Power", "9 Jun", "−R 200.00", credit = false),
-            org.mifospay.shared.buy.BuyRecentItem("Vodacom 5GB", "5 Jun", "−R 99.00", credit = false),
+            org.mifospay.shared.buy.BuyRecentItem("MTN Airtime", "12 Jun", "−R 50.00", credit = false, icon = MifosIcons.Airtime),
+            org.mifospay.shared.buy.BuyRecentItem("City Power", "9 Jun", "−R 200.00", credit = false, icon = MifosIcons.Electricity),
+            org.mifospay.shared.buy.BuyRecentItem("Vodacom 5GB", "5 Jun", "−R 99.00", credit = false, icon = MifosIcons.Data),
         ),
         onBack = {},
         onServiceClick = {},

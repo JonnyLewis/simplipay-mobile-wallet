@@ -43,8 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -266,7 +265,7 @@ private fun MifosNavRail(
                         contentDescription = null,
                     )
                 },
-                modifier = if (hasUnread) Modifier.notificationDot() else Modifier,
+                modifier = if (hasUnread) Modifier.notificationDot(KptTheme.colorScheme.tertiary) else Modifier,
                 selectedIcon = {
                     Icon(
                         imageVector = destination.selectedIcon,
@@ -306,7 +305,7 @@ private fun MifosBottomBar(
                             contentDescription = null,
                         )
                     },
-                    modifier = if (hasUnread) Modifier.notificationDot() else Modifier,
+                    modifier = if (hasUnread) Modifier.notificationDot(KptTheme.colorScheme.tertiary) else Modifier,
                     selectedIcon = {
                         Icon(
                             imageVector = destination.selectedIcon,
@@ -333,7 +332,7 @@ private fun MifosBottomBar(
                             contentDescription = null,
                         )
                     },
-                    modifier = if (hasUnread) Modifier.notificationDot() else Modifier,
+                    modifier = if (hasUnread) Modifier.notificationDot(KptTheme.colorScheme.tertiary) else Modifier,
                     selectedIcon = {
                         Icon(
                             imageVector = destination.selectedIcon,
@@ -370,24 +369,21 @@ private fun MifosBottomBar(
     }
 }
 
-private fun Modifier.notificationDot(): Modifier =
-    composed {
-        val tertiaryColor = KptTheme.colorScheme.tertiary
-        drawWithContent {
+// Non-composed modifier (cheaper than `composed {}`, which re-runs composition for every
+// nav item on every recomposition). The colour is read by the caller and passed in.
+private fun Modifier.notificationDot(color: Color): Modifier =
+    drawWithCache {
+        val radius = 5.dp.toPx()
+        // This is based on the dimensions of the NavigationBar's "indicator pill";
+        // however, its parameters are private, so we must depend on them implicitly
+        // (NavigationBarTokens.ActiveIndicatorWidth = 64.dp)
+        val dotOffset = Offset(
+            64.dp.toPx() * .45f,
+            32.dp.toPx() * -.45f - 6.dp.toPx(),
+        )
+        onDrawWithContent {
             drawContent()
-            drawCircle(
-                tertiaryColor,
-                radius = 5.dp.toPx(),
-                // This is based on the dimensions of the NavigationBar's "indicator pill";
-                // however, its parameters are private, so we must depend on them implicitly
-                // (NavigationBarTokens.ActiveIndicatorWidth = 64.dp)
-                center =
-                center +
-                    Offset(
-                        64.dp.toPx() * .45f,
-                        32.dp.toPx() * -.45f - 6.dp.toPx(),
-                    ),
-            )
+            drawCircle(color, radius = radius, center = center + dotOffset)
         }
     }
 

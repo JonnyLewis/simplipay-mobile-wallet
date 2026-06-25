@@ -117,7 +117,7 @@ val RepositoryModule = module {
         ThirdPartyTransferRepositoryImpl(get(), get(ioDispatcher))
     }
     single<TwoFactorAuthRepository> { TwoFactorAuthRepositoryImpl(get(), get(ioDispatcher)) }
-    single<UserRepository> { UserRepositoryImpl(get(), get(ioDispatcher)) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(), get(ioDispatcher)) }
     single<AutoPayRepository> { AutoPayRepositoryImpl(get(), get(ioDispatcher)) }
     single<OfficeRepository> { OfficeRepositoryImpl(get(), get(ioDispatcher)) }
 

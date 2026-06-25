@@ -34,8 +34,12 @@ class KtorInterceptor(
                 context.header(BaseURL.HEADER_ACCEPT, BaseURL.HEADER_ACCEPT_VALUE)
                 context.header(BaseURL.HEADER_TENANT, plugin.configManager.getPlatformTenantId())
 
+                // The authentication endpoint authenticates via the request body. Never attach
+                // the stored token to it — a stale/expired token makes Fineract reject the login
+                // with 401 even when the username/password are correct.
+                val isAuthRequest = context.url.encodedPathSegments.any { it == "authentication" }
                 plugin.getToken()?.let { token ->
-                    if (token.isNotEmpty()) {
+                    if (token.isNotEmpty() && !isAuthRequest) {
                         context.headers[BaseURL.HEADER_AUTHORIZATION] = "Basic $token"
                     }
                 }
@@ -77,8 +81,9 @@ class KtorInterceptorRe(
                 context.header(BaseURL.HEADER_ACCEPT, BaseURL.HEADER_ACCEPT_VALUE)
                 context.header(BaseURL.HEADER_TENANT, plugin.configManager.getPlatformTenantId())
 
+                val isAuthRequest = context.url.encodedPathSegments.any { it == "authentication" }
                 token?.let { token ->
-                    if (token.isNotEmpty()) {
+                    if (token.isNotEmpty() && !isAuthRequest) {
                         context.headers[BaseURL.HEADER_AUTHORIZATION] = "Basic $token"
                     }
                 }

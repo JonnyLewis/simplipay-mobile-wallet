@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
@@ -55,7 +56,10 @@ fun Rosette(
     color: Color = SimpliPayTheme.tokens.rosetteStroke,
 ) {
     val box = radiusX * 2.3f
-    Canvas(modifier = modifier.size(box)) {
+    // Render the (static) fan into its own graphics layer so the 35 hairline ovals are
+    // tessellated once and cached — recomposition, list/pager scrolling and an outer
+    // rotation transform then just re-composite the cached layer instead of redrawing.
+    Canvas(modifier = modifier.size(box).graphicsLayer()) {
         val rx = radiusX.toPx()
         val ry = radiusY.toPx()
         val center = Offset(rx * 1.15f, rx * 1.15f)

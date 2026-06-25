@@ -18,9 +18,9 @@ import org.jetbrains.compose.resources.getString
 import org.mifos.authenticator.biometrics.platformAuthenticator.AuthenticationResult
 import org.mifos.authenticator.biometrics.platformAuthenticator.PlatformAuthenticationProvider
 import org.mifos.authenticator.biometrics.platformAuthenticator.PlatformAuthenticatorStatus
-import org.mifos.authenticator.passcode.PasscodeManager
-import org.mifos.authenticator.passcode.PasscodeResult
-import org.mifos.authenticator.passcode.PasscodeStep
+import org.mifospay.passcode.PasscodeManager
+import org.mifospay.passcode.PasscodeResult
+import org.mifospay.passcode.PasscodeStep
 import org.mifospay.core.data.repository.AppLockRepository
 import org.mifospay.core.ui.utils.BaseViewModel
 

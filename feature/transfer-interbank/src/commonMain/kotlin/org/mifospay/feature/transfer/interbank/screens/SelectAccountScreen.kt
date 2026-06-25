@@ -128,7 +128,7 @@ fun SelectAccountScreen(
                         )
                     }
 
-                    items(accounts) { account ->
+                    items(accounts, key = { it.id }) { account ->
                         AccountSelectionCard(
                             modifier = Modifier.fillMaxWidth(),
                             account = account,

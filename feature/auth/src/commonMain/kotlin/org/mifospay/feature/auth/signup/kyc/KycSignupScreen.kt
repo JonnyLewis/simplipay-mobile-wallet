@@ -87,15 +87,37 @@ import org.mifospay.feature.auth.signup.SignUpAction
 import org.mifospay.feature.auth.signup.SignUpEvent
 import org.mifospay.feature.auth.signup.SignUpState
 import org.mifospay.feature.auth.signup.SignupViewModel
+import org.mifos.feature.passcode.MifosPasscode
 import org.mifospay.feature.mpay.qr.scan.CodeType
 import org.mifospay.feature.mpay.qr.scan.QrScannerWithPermissions
+import org.mifospay.feature.mpay.qr.scan.ocr.IdOcrDebugContent
 
-/** Steps of the KYC-style signup wizard (facial verification intentionally omitted). */
+/**
+ * Steps of the KYC-style signup wizard (facial verification intentionally omitted).
+ *
+ * The three data-entry steps shown in the progress indicator are PERSONAL, CONTACT and
+ * APP. PIN is the keypad continuation of the APP step (so it shares step 3), and
+ * VERIFY/SCANNING/REVIEW sit outside the counted progress.
+ */
 private enum class KycStep(val title: String) {
     VERIFY("Verify your identity"),
     SCANNING("Scan your ID"),
-    DETAILS("Your details"),
+    PERSONAL("Personal details"),
+    CONTACT("Contact details"),
+    APP("App details"),
+    PIN("Create your PIN"),
     REVIEW("Review & confirm"),
+}
+
+/** Total number of dots shown in the wizard progress indicator. */
+private const val WIZARD_STEP_COUNT = 3
+
+/** 0-based index into the [WIZARD_STEP_COUNT] indicator, or null when not counted. */
+private fun KycStep.wizardStepIndex(): Int? = when (this) {
+    KycStep.PERSONAL -> 0
+    KycStep.CONTACT -> 1
+    KycStep.APP, KycStep.PIN -> 2
+    else -> null
 }
 
 /**
@@ -135,8 +157,11 @@ internal fun KycSignupScreen(
         when (step) {
             KycStep.VERIFY -> onAction(SignUpAction.CloseClick)
             KycStep.SCANNING -> step = KycStep.VERIFY
-            KycStep.DETAILS -> step = KycStep.VERIFY
-            KycStep.REVIEW -> step = KycStep.DETAILS
+            KycStep.PERSONAL -> step = KycStep.VERIFY
+            KycStep.CONTACT -> step = KycStep.PERSONAL
+            KycStep.APP -> step = KycStep.CONTACT
+            KycStep.PIN -> step = KycStep.APP
+            KycStep.REVIEW -> step = KycStep.APP
         }
     }
 
@@ -156,24 +181,81 @@ internal fun KycSignupScreen(
             )
         },
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when (step) {
-                KycStep.VERIFY -> KycVerifyStep(
-                    onScan = { step = KycStep.SCANNING },
-                    onEnter = { step = KycStep.DETAILS },
-                )
-                KycStep.SCANNING -> KycScanningStep(onContinue = { step = KycStep.DETAILS })
-                KycStep.DETAILS -> KycDetailsStep(
-                    state = state,
-                    onAction = onAction,
-                    onContinue = { step = KycStep.REVIEW },
-                )
-                KycStep.REVIEW -> KycReviewStep(
-                    state = state,
-                    onEdit = { step = KycStep.DETAILS },
-                    onConfirm = { onAction(SignUpAction.SubmitClick) },
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            step.wizardStepIndex()?.let { currentStepIndex ->
+                KycStepIndicator(
+                    totalSteps = WIZARD_STEP_COUNT,
+                    currentStep = currentStepIndex,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                 )
             }
+            Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+                when (step) {
+                    KycStep.VERIFY -> KycVerifyStep(
+                        onScan = { step = KycStep.SCANNING },
+                        onEnter = { step = KycStep.PERSONAL },
+                    )
+                    KycStep.SCANNING -> KycScanningStep(
+                        onAction = onAction,
+                        onContinue = { step = KycStep.PERSONAL },
+                    )
+                    KycStep.PERSONAL -> KycPersonalStep(
+                        state = state,
+                        onAction = onAction,
+                        onContinue = { step = KycStep.CONTACT },
+                    )
+                    KycStep.CONTACT -> KycContactStep(
+                        state = state,
+                        onAction = onAction,
+                        onContinue = { step = KycStep.APP },
+                    )
+                    KycStep.APP -> KycAppStep(
+                        state = state,
+                        onAction = onAction,
+                        onContinue = { step = KycStep.PIN },
+                    )
+                    KycStep.PIN -> KycPinStep(
+                        onPinReady = { step = KycStep.REVIEW },
+                    )
+                    KycStep.REVIEW -> KycReviewStep(
+                        state = state,
+                        onEdit = { step = KycStep.PERSONAL },
+                        onConfirm = { onAction(SignUpAction.SubmitClick) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/* ----------------------------- Step progress indicator ----------------------------- */
+
+/**
+ * A minimal, wordless progress indicator: [totalSteps] rounded segments, with the
+ * current and completed ones filled in the brand jade and upcoming ones faint.
+ */
+@Composable
+private fun KycStepIndicator(
+    totalSteps: Int,
+    currentStep: Int,
+    modifier: Modifier = Modifier,
+) {
+    val tokens = SimpliPayTheme.tokens
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        repeat(totalSteps) { index ->
+            val active = index <= currentStep
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(if (active) tokens.jade else tokens.ivoryBorder),
+            )
         }
     }
 }
@@ -252,13 +334,20 @@ private fun ChoiceCard(
 /* ----------------------------- Step 2: Scanning ----------------------------- */
 
 @Composable
-private fun KycScanningStep(onContinue: () -> Unit) {
+private fun KycScanningStep(
+    onAction: (SignUpAction) -> Unit,
+    onContinue: () -> Unit,
+) {
     val tokens = SimpliPayTheme.tokens
     val clipboard = LocalClipboardManager.current
-    // Phase 0: capture the raw PDF417 payload from the back of the SA smart ID so we
-    // can reverse-engineer the field layout. A later phase parses this into the
-    // SignUpState fields; for now we surface the raw string for inspection.
+    // The PDF417 on the back of the SA Smart ID is a plaintext, pipe-delimited payload.
+    // We parse it into the identity fields and jump straight to the details screen,
+    // prefilled. If parsing fails (unexpected format) we fall back to showing the raw
+    // string for inspection.
     var rawPayload by rememberSaveable { mutableStateOf<String?>(null) }
+    // Dev OCR mode: read the printed front of a driver's licence / Smart ID with Apple
+    // Vision and dump the recognised text, to build the fixed-format field parser.
+    var ocrMode by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
@@ -266,7 +355,18 @@ private fun KycScanningStep(onContinue: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Spacer(Modifier.height(12.dp))
-        if (rawPayload == null) {
+        if (ocrMode) {
+            Text(
+                text = "← Back to barcode scan",
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                color = tokens.jade,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .clickable { ocrMode = false }
+                    .padding(vertical = 4.dp),
+            )
+            IdOcrDebugContent(modifier = Modifier.fillMaxWidth().weight(1f))
+        } else if (rawPayload == null) {
             Text(
                 text = "Scan the barcode on the back of your ID",
                 style = MaterialTheme.typography.bodyLarge,
@@ -290,11 +390,36 @@ private fun KycScanningStep(onContinue: () -> Unit) {
                     types = listOf(CodeType.PDF417),
                     modifier = Modifier.fillMaxSize(),
                     onScanned = { code ->
-                        rawPayload = code
+                        val parsed = parseSaSmartIdBarcode(code)
+                        if (parsed != null) {
+                            onAction(
+                                SignUpAction.IdScanPrefill(
+                                    firstName = parsed.firstNames,
+                                    lastName = parsed.surname,
+                                    idNumber = parsed.idNumber,
+                                    dob = parsed.birthDate,
+                                    gender = parsed.genderLabel,
+                                    nationality = parsed.nationality,
+                                    citizenship = parsed.citizenshipStatus,
+                                ),
+                            )
+                            onContinue()
+                        } else {
+                            // Unexpected format — keep the raw payload visible for inspection.
+                            rawPayload = code
+                        }
                         true // stop scanning once we have a payload
                     },
                 )
             }
+            Text(
+                text = "Or OCR a photo of the front instead",
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                color = tokens.jade,
+                modifier = Modifier
+                    .clickable { ocrMode = true }
+                    .padding(vertical = 4.dp),
+            )
         } else {
             Text(
                 text = "ID barcode captured ✓",
@@ -351,10 +476,10 @@ private fun KycScanningStep(onContinue: () -> Unit) {
     }
 }
 
-/* ----------------------------- Step 3: Details ----------------------------- */
+/* ----------------------------- Step: Personal details ----------------------------- */
 
 @Composable
-private fun KycDetailsStep(
+private fun KycPersonalStep(
     state: SignUpState,
     onAction: (SignUpAction) -> Unit,
     onContinue: () -> Unit,
@@ -367,6 +492,11 @@ private fun KycDetailsStep(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Spacer(Modifier.height(4.dp))
+        Text(
+            text = "The details we read from your ID. Check they match your document.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = SimpliPayTheme.tokens.sub,
+        )
         MifosOutlinedTextField(
             value = state.firstNameInput,
             label = stringResource(Res.string.feature_auth_first_name),
@@ -382,12 +512,58 @@ private fun KycDetailsStep(
             onValueChange = { onAction(SignUpAction.LastNameInputChange(it)) },
         )
         MifosOutlinedTextField(
-            value = state.userNameInput,
-            label = stringResource(Res.string.feature_auth_username),
+            value = state.idNumberInput,
+            label = "ID number",
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
-            onValueChange = { onAction(SignUpAction.UserNameInputChange(it)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            onValueChange = { onAction(SignUpAction.IdNumberInputChange(it)) },
         )
+        MifosOutlinedTextField(
+            value = state.dobInput,
+            label = "Date of birth",
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { onAction(SignUpAction.DobInputChange(it)) },
+        )
+        MifosOutlinedTextField(
+            value = state.genderInput,
+            label = "Gender",
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { onAction(SignUpAction.GenderInputChange(it)) },
+        )
+        MifosOutlinedTextField(
+            value = state.nationalityInput,
+            label = "Nationality",
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { onAction(SignUpAction.NationalityInputChange(it)) },
+        )
+        MifosOutlinedTextField(
+            value = state.citizenshipInput,
+            label = "Citizenship status",
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { onAction(SignUpAction.CitizenshipInputChange(it)) },
+        )
+        Spacer(Modifier.height(8.dp))
+        JadeButton(label = "Continue", enabled = true, onClick = onContinue)
+        Spacer(Modifier.height(20.dp))
+    }
+}
+
+/* ----------------------------- Step: Contact details ----------------------------- */
+
+@Composable
+private fun KycContactStep(
+    state: SignUpState,
+    onAction: (SignUpAction) -> Unit,
+    onContinue: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Spacer(Modifier.height(4.dp))
         MifosOutlinedTextField(
             value = state.emailInput,
             label = stringResource(Res.string.feature_auth_email),
@@ -402,39 +578,6 @@ private fun KycDetailsStep(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             onValueChange = { onAction(SignUpAction.MobileNumberInputChange(it)) },
         )
-        Column {
-            var showPassword by rememberSaveable { mutableStateOf(false) }
-            val interactionSource = remember { MutableInteractionSource() }
-            val isFocused by interactionSource.collectIsFocusedAsState()
-            MifosPasswordField(
-                value = state.passwordInput,
-                label = stringResource(Res.string.feature_auth_password),
-                modifier = Modifier.fillMaxWidth(),
-                onValueChange = { onAction(SignUpAction.PasswordInputChange(it)) },
-                showPassword = showPassword,
-                showPasswordChange = { showPassword = !showPassword },
-                interactionSource = interactionSource,
-            )
-            Spacer(Modifier.height(4.dp))
-            CombinedPasswordErrorCard(
-                modifier = Modifier.fillMaxWidth(),
-                errors = state.passwordFeedback,
-                passwordStrengthState = state.passwordStrengthState,
-                currentCharacterCount = state.passwordInput.length,
-                isPasswordFieldFocused = isFocused,
-            )
-        }
-        run {
-            var showConfirm by rememberSaveable { mutableStateOf(false) }
-            MifosPasswordField(
-                value = state.confirmPasswordInput,
-                label = stringResource(Res.string.feature_auth_confirm_password),
-                modifier = Modifier.fillMaxWidth(),
-                onValueChange = { onAction(SignUpAction.ConfirmPasswordInputChange(it)) },
-                showPassword = showConfirm,
-                showPasswordChange = { showConfirm = !showConfirm },
-            )
-        }
         MifosOutlinedTextField(
             value = state.addressLine1Input,
             label = stringResource(Res.string.feature_auth_address_line_1),
@@ -511,6 +654,90 @@ private fun KycDetailsStep(
     }
 }
 
+/* ----------------------------- Step: App details ----------------------------- */
+
+@Composable
+private fun KycAppStep(
+    state: SignUpState,
+    onAction: (SignUpAction) -> Unit,
+    onContinue: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Choose how you'll sign in. You'll set your PIN next.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = SimpliPayTheme.tokens.sub,
+        )
+        MifosOutlinedTextField(
+            value = state.userNameInput,
+            label = stringResource(Res.string.feature_auth_username),
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
+            onValueChange = { onAction(SignUpAction.UserNameInputChange(it)) },
+        )
+        Column {
+            var showPassword by rememberSaveable { mutableStateOf(false) }
+            val interactionSource = remember { MutableInteractionSource() }
+            val isFocused by interactionSource.collectIsFocusedAsState()
+            MifosPasswordField(
+                value = state.passwordInput,
+                label = stringResource(Res.string.feature_auth_password),
+                modifier = Modifier.fillMaxWidth(),
+                onValueChange = { onAction(SignUpAction.PasswordInputChange(it)) },
+                showPassword = showPassword,
+                showPasswordChange = { showPassword = !showPassword },
+                interactionSource = interactionSource,
+            )
+            Spacer(Modifier.height(4.dp))
+            CombinedPasswordErrorCard(
+                modifier = Modifier.fillMaxWidth(),
+                errors = state.passwordFeedback,
+                passwordStrengthState = state.passwordStrengthState,
+                currentCharacterCount = state.passwordInput.length,
+                isPasswordFieldFocused = isFocused,
+            )
+        }
+        run {
+            var showConfirm by rememberSaveable { mutableStateOf(false) }
+            MifosPasswordField(
+                value = state.confirmPasswordInput,
+                label = stringResource(Res.string.feature_auth_confirm_password),
+                modifier = Modifier.fillMaxWidth(),
+                onValueChange = { onAction(SignUpAction.ConfirmPasswordInputChange(it)) },
+                showPassword = showConfirm,
+                showPasswordChange = { showConfirm = !showConfirm },
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        JadeButton(label = "Continue", enabled = true, onClick = onContinue)
+        Spacer(Modifier.height(20.dp))
+    }
+}
+
+/* ----------------------------- Step: PIN ----------------------------- */
+
+/**
+ * Sets the user's real app-unlock PIN via the shared passcode keypad. On a fresh device
+ * this runs the create → confirm flow and fires on creation; if a passcode already
+ * exists it verifies instead. Either outcome advances to the review step.
+ */
+@Composable
+private fun KycPinStep(onPinReady: () -> Unit) {
+    MifosPasscode(
+        onAuthenticationSuccess = onPinReady,
+        onPasscodeCreation = onPinReady,
+        allowBackNavigation = false,
+        allowBiometricAuth = false,
+    )
+}
+
 /* ----------------------------- Step 4: Review ----------------------------- */
 
 @Composable
@@ -542,6 +769,11 @@ private fun KycReviewStep(
                 .padding(horizontal = 16.dp, vertical = 4.dp),
         ) {
             SummaryRow("Full name", "${state.firstNameInput} ${state.lastNameInput}".trim())
+            SummaryRow("ID number", state.idNumberInput, mono = true)
+            SummaryRow("Date of birth", state.dobInput)
+            SummaryRow("Gender", state.genderInput)
+            SummaryRow("Nationality", state.nationalityInput)
+            SummaryRow("Citizenship status", state.citizenshipInput)
             SummaryRow("Username", state.userNameInput)
             SummaryRow("Email", state.emailInput)
             SummaryRow("Mobile number", state.mobileNumberInput, mono = true)

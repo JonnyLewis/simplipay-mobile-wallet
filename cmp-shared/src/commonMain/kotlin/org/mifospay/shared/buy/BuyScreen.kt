@@ -34,8 +34,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,13 +52,36 @@ import org.mifospay.core.model.savingsaccount.TransactionType
 private val TileChip = Color(0xFFEFEDE6)
 private val TileGlyph = Color(0xFF3F4B57)
 
+/** Shared height so the "Pay from" balance card lines up with the VAS service tiles. */
+private val VasTileHeight = 94.dp
+
 /** A single row in the Buy hub's "Recent" list (decoupled from the data model). */
 internal data class BuyRecentItem(
     val title: String,
     val date: String,
     val amountText: String,
     val credit: Boolean,
+    val icon: ImageVector,
 )
+
+/**
+ * Picks a VAS service glyph for a recent-activity row from its description, so the list
+ * reads as service purchases (airtime/electricity/data…) like the design — falling back
+ * to a receipt glyph when the description doesn't name a known service.
+ */
+private fun iconForDescription(description: String): ImageVector {
+    val d = description.lowercase()
+    return when {
+        "airtime" in d -> MifosIcons.Airtime
+        "data" in d -> MifosIcons.Data
+        "electric" in d || "power" in d -> MifosIcons.Electricity
+        "water" in d -> MifosIcons.Water
+        "dstv" in d || "tv" in d -> MifosIcons.TvCable
+        "voucher" in d -> MifosIcons.GiftCard
+        "bet" in d -> MifosIcons.Betting
+        else -> MifosIcons.Receipt
+    }
+}
 
 /**
  * Buy / Value-Added Services hub (design frame 14): a "pay from" balance card, a
@@ -84,6 +107,7 @@ internal fun BuyScreen(
             date = txn.date,
             amountText = "$sign$symbol ${CurrencyFormatter.format(txn.amount, 2)}",
             credit = credit,
+            icon = iconForDescription(txn.description),
         )
     }
 
@@ -196,6 +220,7 @@ private fun PayFromCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .height(VasTileHeight)
             .clip(shape)
             .background(brush = tokens.ivoryGradient)
             .border(1.dp, tokens.ivoryBorder, shape),
@@ -283,13 +308,14 @@ private fun ServiceTile(
     val shape = RoundedCornerShape(16.dp)
     Column(
         modifier = modifier
+            .height(VasTileHeight)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surface)
             .border(width = 1.dp, color = tokens.border, shape = shape)
             .clickable(onClick = onClick)
             .padding(vertical = 14.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(9.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp, Alignment.CenterVertically),
     ) {
         Box(
             modifier = Modifier
@@ -333,23 +359,14 @@ private fun RecentRow(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(if (item.credit) tokens.creditTint else MaterialTheme.colorScheme.surface)
-                    .then(
-                        if (item.credit) {
-                            Modifier
-                        } else {
-                            Modifier.border(1.dp, tokens.border, RoundedCornerShape(14.dp))
-                        },
-                    ),
+                    .background(TileChip),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = MifosIcons.SendRightTilted,
+                    imageVector = item.icon,
                     contentDescription = null,
-                    tint = if (item.credit) tokens.credit else tokens.sub,
-                    modifier = Modifier
-                        .size(18.dp)
-                        .rotate(if (item.credit) 180f else 0f),
+                    tint = TileGlyph,
+                    modifier = Modifier.size(18.dp),
                 )
             }
             Column(modifier = Modifier.weight(1f)) {

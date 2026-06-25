@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.mifos.authenticator.passcode.PasscodeManager
+import org.mifospay.passcode.PasscodeManager
 import org.mifos.authenticator.passcode.PasscodeStorageAdapter
 import org.mifospay.core.data.repository.AppLockRepository
 import org.mifospay.core.datastore.UserPreferencesRepository
@@ -82,6 +82,10 @@ class MifosPayViewModel(
      */
     fun logOut() {
         viewModelScope.launch {
+            // Explicitly drop the stored auth token first (defence-in-depth with the
+            // blanket settings clear in logOut()) so a stale token can never be replayed
+            // as a Basic header on the next login attempt.
+            userDataRepository.updateToken("")
             userDataRepository.logOut()
             appLockRepository.deleteLock()
             passcodeManager.logOut()
