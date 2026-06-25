@@ -18,11 +18,12 @@ import org.mifospay.core.network.model.entity.user.User
 
 private const val OFFICE_ID = 1
 
-// Role 2 = "Self Service User" on the backend. New wallet users get ONLY this role — never
-// the super-user role (1), which previously gave every signup full admin permissions.
-private const val SELF_SERVICE_USER_ROLE_ID = 2
+// Wallet role ids on the backend: new signups start with "wallet-no-access" (login works but
+// no data access → the app shows a locked/dummy home). They are later swapped to wallet-kyc1
+// or wallet-kyc2 to unlock real data.
+private const val WALLET_NO_ACCESS_ROLE_ID = 5
 
-val NEW_USER_ROLE_IDS: ArrayList<Int> = arrayListOf(SELF_SERVICE_USER_ROLE_ID)
+val NEW_USER_ROLE_IDS: ArrayList<Int> = arrayListOf(WALLET_NO_ACCESS_ROLE_ID)
 
 fun NewUser.toEntity(): NewUserEntity {
     return NewUserEntity(

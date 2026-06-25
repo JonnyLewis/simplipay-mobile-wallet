@@ -46,6 +46,7 @@ fun TransferOptionsBottomSheet(
     onSendToBank: () -> Unit,
     onSendToBarcode: () -> Unit,
     onProximityPayment: () -> Unit,
+    onAutoPay: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -94,6 +95,12 @@ fun TransferOptionsBottomSheet(
                     title = "Proximity payment",
                     subtitle = "Coming soon",
                     onClick = onProximityPayment,
+                )
+                TransferOptionRow(
+                    icon = MifosIcons.Payment,
+                    title = "AutoPay",
+                    subtitle = "Schedule and manage recurring payments",
+                    onClick = onAutoPay,
                 )
             }
         },
@@ -156,6 +163,7 @@ fun TransferOptionsBottomSheetPreview() {
             onSendToBank = {},
             onSendToBarcode = {},
             onProximityPayment = {},
+            onAutoPay = {},
             onDismiss = {},
         )
     }

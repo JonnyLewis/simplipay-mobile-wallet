@@ -56,8 +56,10 @@ import org.mifospay.feature.faq.navigation.navigateToFAQ
 import org.mifospay.feature.fastmpay.navigation.FAST_MPAY_ROUTE
 import org.mifospay.feature.fastmpay.navigation.fastMpayScreen
 import org.mifospay.feature.fastmpay.navigation.navigateToFastMpay
+import org.mifospay.feature.finance.buckets.SavingsBucketsScreen
 import org.mifospay.feature.finance.navigation.FINANCE_ROUTE
 import org.mifospay.feature.finance.navigation.financeScreen
+import org.mifospay.feature.finance.spend.SpendInsightsScreen
 import org.mifospay.feature.history.HistoryScreen
 import org.mifospay.feature.history.navigation.historyNavigation
 import org.mifospay.feature.history.navigation.navigateToHistory
@@ -282,6 +284,14 @@ internal fun MifosNavHost(
                 onAddOrEditBeneficiary = navController::navigateToBeneficiaryAddEdit,
             )
         },
+
+        TabContent("Buckets") {
+            SavingsBucketsScreen()
+        },
+
+        TabContent("Spend Insights") {
+            SpendInsightsScreen()
+        },
 //        TabContent(FinanceScreenContents.CARDS.name) {
 //            CardsScreen(
 //                navigateToViewDetail = navController::navigateToCardDetails,
@@ -345,8 +355,8 @@ internal fun MifosNavHost(
                 navController.navigateToReceiveOptions()
             },
             onPay = navController::navigateToTransferOptions,
-            onAutoPay = {
-                navController.navigateToAutoPay()
+            onTopUp = {
+                navController.navigateToTopUpWallet()
             },
             onBuy = navController::navigateToBuy,
             navigateToTransactionDetail = navController::navigateToSpecificTransaction,
@@ -355,6 +365,10 @@ internal fun MifosNavHost(
         )
 
         buyGraph(navController = navController)
+
+        topUpWalletScreen(
+            onBackClick = { navController.popBackStack() },
+        )
 
         settingsScreen(
             onBackPress = navController::navigateUp,
@@ -394,7 +408,14 @@ internal fun MifosNavHost(
             viewTransactionDetail = navController::navigateToSpecificTransaction,
         )
 
-        paymentsScreen(tabContents = paymentsTabContents)
+        paymentsScreen(
+            tabContents = paymentsTabContents,
+            onPayLinkClick = navController::navigateToPayLink,
+        )
+
+        payLinkScreen(
+            onBackClick = { navController.popBackStack() },
+        )
 
         financeScreen(tabContents = tabContents)
 
@@ -966,6 +987,9 @@ internal fun MifosNavHost(
             onProximityPayment = {
                 // Proximity / tap payment is not wired yet — dismiss for now.
                 navController.popBackStack()
+            },
+            onAutoPay = {
+                navController.navigateToAutoPay()
             },
             onDismiss = {
                 navController.popBackStack()

@@ -48,8 +48,8 @@ private class Particle(
  * - particle count = `round(width * height / 16000 * density)` from the measured size
  * - velocity per axis ∈ `[-0.3024, +0.3024]` px/frame
  * - particles bounce off the edges (velocity inverts; no wrap-around)
- * - dots drawn at [dotAlpha] (`0.30`); a line is drawn between any two within
- *   [linkDistancePx] (`120`), its alpha `(1 - d²/max²) * 0.28` — quadratic fade
+ * - dots drawn at [dotAlpha] (`0.60`); a line is drawn between any two within
+ *   [linkDistancePx] (`120`), its alpha `(1 - d²/max²) * 0.56` — quadratic fade
  *
  * The field is purely decorative; place it behind content and do not let it take
  * pointer input. The animation loop is tied to composition, so it stops when the
@@ -61,8 +61,10 @@ fun ParticleField(
     color: Color = androidx.compose.ui.graphics.lerp(SimpliPayTheme.tokens.jade, Color.Black, 0.3f),
     density: Float = 1.62f,
     linkDistancePx: Float = 120f,
-    dotAlpha: Float = 0.30f,
-    maxLinkAlpha: Float = 0.28f,
+    // Dots and links rendered ~100% bigger/bolder than the original design tuning
+    // (dot alpha 0.30->0.60, link alpha 0.28->0.56, radius and stroke width doubled below).
+    dotAlpha: Float = 0.60f,
+    maxLinkAlpha: Float = 0.56f,
     // The particle count is derived from pixel area, so on a @3x screen it can balloon to ~300,
     // and the per-frame neighbour linking is O(n^2). Cap it so the field stays cheap (the visual
     // is barely affected). Tune 80-120 on-device if it looks sparse.
@@ -89,7 +91,7 @@ fun ParticleField(
                     y = Random.nextFloat() * h,
                     vx = Random.nextFloat() * 0.6048f - 0.3024f,
                     vy = Random.nextFloat() * 0.6048f - 0.3024f,
-                    radius = Random.nextFloat() * 1.3f + 0.5f,
+                    radius = Random.nextFloat() * 2.6f + 1.0f,
                 ),
             )
         }
@@ -139,7 +141,7 @@ fun ParticleField(
                         color = color,
                         start = Offset(pa.x, pa.y),
                         end = Offset(pb.x, pb.y),
-                        strokeWidth = 1f,
+                        strokeWidth = 2f,
                         alpha = alpha,
                     )
                 }

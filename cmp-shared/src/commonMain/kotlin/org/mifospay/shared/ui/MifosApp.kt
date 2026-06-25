@@ -54,8 +54,10 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import mobile_wallet.cmp_shared.generated.resources.Res
 import mobile_wallet.cmp_shared.generated.resources.not_connected
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.mifospay.core.data.util.NetworkMonitor
 import org.mifospay.core.data.util.TimeZoneMonitor
+import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.designsystem.component.IconBox
 import org.mifospay.core.designsystem.component.MifosGradientBackground
 import org.mifospay.core.designsystem.component.MifosNavigationBar
@@ -66,6 +68,7 @@ import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.LocalGradientColors
 import org.mifospay.feature.mpay.qr.scan.navigation.navigateToScanQr
 import org.mifospay.feature.profile.navigation.navigateToEditProfile
+import org.mifospay.feature.profile.navigation.navigateToProfile
 import org.mifospay.feature.settings.navigation.navigateToSettings
 import org.mifospay.shared.navigation.MifosNavHost
 import org.mifospay.shared.utils.TopLevelDestination
@@ -90,6 +93,21 @@ internal fun MifosApp(
         val snackbarHostState = remember { SnackbarHostState() }
         val destination = appState.currentTopLevelDestination
 
+        // A wallet-no-access user has no real client (stored client defaults to id == 0). They may
+        // only see the locked Home; the other tabs/QR depend on a real client and would 404, so
+        // navigation away from Home is suppressed until they're KYC-activated.
+        val preferencesRepository = koinInject<UserPreferencesRepository>()
+        val client by preferencesRepository.client.collectAsStateWithLifecycle()
+        val isLocked = client == null || client?.id == 0L
+        val onNavigateToDestination: (TopLevelDestination) -> Unit = { dest ->
+            if (!isLocked || dest == TopLevelDestination.HOME) {
+                appState.navigateToTopLevelDestination(dest)
+            }
+        }
+        val onScanQrClick: () -> Unit = {
+            if (!isLocked) appState.navController.navigateToScanQr()
+        }
+
         val isOffline by appState.isOffline.collectAsStateWithLifecycle()
 
         // If user is not connected to the internet show a snack bar to inform them.
@@ -113,9 +131,9 @@ internal fun MifosApp(
                     MifosBottomBar(
                         destinations = appState.topLevelDestinations,
                         destinationsWithUnreadResources = emptySet(),
-                        onNavigateToDestination = appState::navigateToTopLevelDestination,
+                        onNavigateToDestination = onNavigateToDestination,
                         currentDestination = appState.currentDestination,
-                        onScanQrClick = { appState.navController.navigateToScanQr() },
+                        onScanQrClick = onScanQrClick,
                         modifier = Modifier.testTag("NiaBottomBar"),
                     )
                 }
@@ -136,9 +154,9 @@ internal fun MifosApp(
                     MifosNavRail(
                         destinations = appState.topLevelDestinations,
                         destinationsWithUnreadResources = emptySet(),
-                        onNavigateToDestination = appState::navigateToTopLevelDestination,
+                        onNavigateToDestination = onNavigateToDestination,
                         currentDestination = appState.currentDestination,
-                        onScanQrClick = { appState.navController.navigateToScanQr() },
+                        onScanQrClick = onScanQrClick,
                         modifier = Modifier
                             .testTag("NiaNavRail")
                             .safeDrawingPadding(),
@@ -157,6 +175,9 @@ internal fun MifosApp(
                             },
                             onNavigateToEditProfile = {
                                 appState.navController.navigateToEditProfile()
+                            },
+                            onNavigateToProfile = {
+                                appState.navController.navigateToProfile()
                             },
 //                            onNavigateToNotification = {
 //                                appState.navController.navigateToNotification()
@@ -186,12 +207,22 @@ private fun MifosAppBar(
     onNavigateToFaq: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToProfile: () -> Unit,
 //    onNavigateToNotification: () -> Unit,
     destination: TopLevelDestination?,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = { Text(text = title) },
+        title = {
+            if (destination == TopLevelDestination.HOME) {
+                IconBox(
+                    icon = MifosIcons.Profile,
+                    onClick = onNavigateToProfile,
+                )
+            } else {
+                Text(text = title)
+            }
+        },
         actions = {
             Box {
                 when (destination) {

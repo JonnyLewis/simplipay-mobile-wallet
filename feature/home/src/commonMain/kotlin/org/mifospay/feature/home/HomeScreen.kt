@@ -75,13 +75,8 @@ import kotlinx.coroutines.launch
 import mobile_wallet.feature.home.generated.resources.Res
 import mobile_wallet.feature.home.generated.resources.arrow_backward
 import mobile_wallet.feature.home.generated.resources.feature_home_account_number
-import mobile_wallet.feature.home.generated.resources.feature_home_autopay
 import mobile_wallet.feature.home.generated.resources.feature_home_mark_default
 import mobile_wallet.feature.home.generated.resources.feature_home_no_account
-import mobile_wallet.feature.home.generated.resources.feature_home_request
-import mobile_wallet.feature.home.generated.resources.feature_home_request_money
-import mobile_wallet.feature.home.generated.resources.feature_home_send
-import mobile_wallet.feature.home.generated.resources.feature_home_send_money
 import mobile_wallet.feature.home.generated.resources.feature_home_view_more
 import mobile_wallet.feature.home.generated.resources.feature_home_wallet_balance
 import mobile_wallet.feature.home.generated.resources.home_no_transactions_found
@@ -132,7 +127,7 @@ internal fun HomeScreen(
     onNavigateBack: () -> Unit,
     onRequest: (String) -> Unit,
     onPay: () -> Unit,
-    onAutoPay: () -> Unit,
+    onTopUp: () -> Unit,
     onBuy: () -> Unit,
     navigateToTransactionDetail: (Long, Long) -> Unit,
     navigateToAccountDetail: (Long) -> Unit,
@@ -155,7 +150,7 @@ internal fun HomeScreen(
             is HomeEvent.NavigateBack -> onNavigateBack()
             is HomeEvent.NavigateToRequestScreen -> onRequest(event.vpa)
             is HomeEvent.NavigateToSendScreen -> onPay()
-            is HomeEvent.NavigateToAutoPayScreen -> onAutoPay.invoke()
+            is HomeEvent.NavigateToTopUpScreen -> onTopUp.invoke()
             is HomeEvent.NavigateToBuyScreen -> onBuy()
             is HomeEvent.NavigateToClientDetailScreen -> {}
             is HomeEvent.NavigateToTransactionDetail -> {
@@ -316,6 +311,9 @@ private fun HomeScreenContent(
                     onPageChanged = {
                         onAction(HomeAction.OnSelectedAccountChanged(accounts[it]))
                     },
+                    onTopUp = {
+                        onAction(HomeAction.TopUpClicked)
+                    },
                 )
             }
 
@@ -334,8 +332,8 @@ private fun HomeScreenContent(
                     onBuy = {
                         onAction(HomeAction.BuyClicked)
                     },
-                    onAutoPay = {
-                        onAction(HomeAction.AutoPayClicked)
+                    onTopUp = {
+                        onAction(HomeAction.TopUpClicked)
                     },
                 )
             }
@@ -403,6 +401,7 @@ private fun AccountList(
     onMarkAsDefault: (Long, String) -> Unit,
     onClick: (Long) -> Unit,
     onPageChanged: (Int) -> Unit,
+    onTopUp: () -> Unit,
 ) {
     val pagerState = rememberPagerState { accounts.size }
 
@@ -424,6 +423,7 @@ private fun AccountList(
             defaultAccountId = defaultAccountId,
             onMarkAsDefault = onMarkAsDefault,
             onClick = onClick,
+            onTopUp = onTopUp,
         )
     }
 }
@@ -435,6 +435,7 @@ private fun AccountCard(
     onMarkAsDefault: (Long, String) -> Unit,
     modifier: Modifier = Modifier,
     onClick: (Long) -> Unit,
+    onTopUp: () -> Unit,
 ) {
     val tokens = SimpliPayTheme.tokens
     val cardShape = RoundedCornerShape(22.dp)
@@ -537,6 +538,28 @@ private fun AccountCard(
                 )
             }
         }
+
+        // Zero-balance prompt: overlay a green "Top up wallet" pill on the card.
+        if (account.balance == 0.0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = KptTheme.spacing.lg)
+                    .clip(RoundedCornerShape(50))
+                    .background(tokens.jade)
+                    .clickable(onClick = onTopUp)
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Top up wallet",
+                    style = KptTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    color = Color(0xFFFBFAF6),
+                )
+            }
+        }
     }
 }
 
@@ -603,7 +626,7 @@ private fun PayRequestScreen(
     onRequest: () -> Unit,
     onSend: () -> Unit,
     onBuy: () -> Unit,
-    onAutoPay: () -> Unit,
+    onTopUp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -612,7 +635,7 @@ private fun PayRequestScreen(
     ) {
         ActionTile(
             modifier = Modifier.weight(1f),
-            text = stringResource(Res.string.feature_home_send),
+            text = "Send Money",
             onClick = onSend,
             icon = {
                 Icon(
@@ -620,46 +643,46 @@ private fun PayRequestScreen(
                         .size(22.dp)
                         .graphicsLayer(rotationZ = 180f),
                     imageVector = vectorResource(Res.drawable.arrow_backward),
-                    contentDescription = stringResource(Res.string.feature_home_send_money),
+                    contentDescription = "Send Money",
                     tint = SimpliPayTheme.tokens.jade,
                 )
             },
         )
         ActionTile(
             modifier = Modifier.weight(1f),
-            text = stringResource(Res.string.feature_home_request),
+            text = "Receive Money",
             onClick = onRequest,
             icon = {
                 Icon(
                     modifier = Modifier.size(22.dp),
                     imageVector = vectorResource(Res.drawable.arrow_backward),
-                    contentDescription = stringResource(Res.string.feature_home_request_money),
+                    contentDescription = "Receive Money",
                     tint = SimpliPayTheme.tokens.jade,
                 )
             },
         )
         ActionTile(
             modifier = Modifier.weight(1f),
-            text = "Buy",
+            text = "Buy VAS",
             onClick = onBuy,
             icon = {
                 Icon(
                     modifier = Modifier.size(22.dp),
-                    imageVector = MifosIcons.Airtime,
-                    contentDescription = "Buy",
+                    imageVector = MifosIcons.Storefront,
+                    contentDescription = "Buy VAS",
                     tint = SimpliPayTheme.tokens.jade,
                 )
             },
         )
         ActionTile(
             modifier = Modifier.weight(1f),
-            text = stringResource(Res.string.feature_home_autopay),
-            onClick = onAutoPay,
+            text = "Top-Up Wallet",
+            onClick = onTopUp,
             icon = {
                 Icon(
                     modifier = Modifier.size(22.dp),
-                    imageVector = MifosIcons.Payment,
-                    contentDescription = stringResource(Res.string.feature_home_autopay),
+                    imageVector = MifosIcons.Wallet,
+                    contentDescription = "Top-Up Wallet",
                     tint = SimpliPayTheme.tokens.jade,
                 )
             },

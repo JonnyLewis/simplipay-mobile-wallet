@@ -36,11 +36,13 @@ import org.mifospay.core.data.util.NetworkMonitor
 import org.mifospay.core.data.util.TimeZoneMonitor
 import org.mifospay.core.designsystem.component.MifosDialogBox
 import org.mifospay.core.designsystem.theme.MifosTheme
+import org.mifospay.core.model.user.WalletAccessState
 import org.mifospay.passcode.PasscodeManager
 import org.mifospay.passcode.PasscodeStep
 import org.mifospay.shared.UserState.Authenticated
 import org.mifospay.shared.navigation.MifosNavGraph.LOGIN_GRAPH
 import org.mifospay.shared.navigation.RootNavGraph
+import org.mifospay.shared.ui.BlockedScreen
 import template.core.base.designsystem.theme.KptTheme
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -118,6 +120,7 @@ private fun MifosPayApp(
     viewModel: MifosPayViewModel = koinViewModel(),
 ) {
     val userState by viewModel.userState.collectAsStateWithLifecycle()
+    val walletAccess by viewModel.walletAccessState.collectAsStateWithLifecycle()
     val navController = rememberNavController()
 
     val showErrorDialog = remember { mutableStateOf<Boolean>(false) }
@@ -148,6 +151,15 @@ private fun MifosPayApp(
             viewModel.isPasscodeNotCreated()
         ) {
             viewModel.logOut()
+        }
+    }
+
+    // On every authenticated entry (fresh login OR resume from a stored session),
+    // re-probe wallet access so a backend role upgrade (no-access → KYC1/KYC2)
+    // unlocks the full wallet without the user having to log out and back in.
+    LaunchedEffect(userState) {
+        (userState as? Authenticated)?.let { authed ->
+            if (authed.userData.authenticated) viewModel.refreshWalletAccess()
         }
     }
 
@@ -201,6 +213,10 @@ private fun MifosPayApp(
                         }
                     }
                     onStopMark.value = null
+                    // Warm-resume case (process still alive, so the LaunchedEffect above
+                    // won't re-fire): re-probe wallet access so an upgrade applied while
+                    // the app was backgrounded unlocks the wallet on return.
+                    viewModel.refreshWalletAccess()
                 }
                 Lifecycle.Event.ON_STOP -> {
                     onStopMark.value = TimeSource.Monotonic.markNow()
@@ -238,6 +254,23 @@ private fun MifosPayApp(
                     }
                 },
             )
+
+            // Full-screen block for a revoked user — drawn on top of the whole shell (covering
+            // the bottom nav) once they're authenticated. Resolved reactively, so a mid-session
+            // revocation detected by refreshWalletAccess() drops it over the wallet immediately.
+            val authed = (userState as? Authenticated)?.userData?.authenticated == true
+            if (authed && walletAccess == WalletAccessState.REVOKED) {
+                BlockedScreen(
+                    onLogout = {
+                        viewModel.logOut()
+                        navController.navigate(LOGIN_GRAPH) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                )
+            }
         }
     }
 }

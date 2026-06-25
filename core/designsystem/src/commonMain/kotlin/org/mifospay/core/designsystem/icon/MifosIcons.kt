@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.Rule
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Badge
@@ -73,6 +74,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -185,6 +187,8 @@ object MifosIcons {
     val Internet = Icons.Filled.Router
     val Betting = Icons.Filled.SportsEsports
     val GiftCard = Icons.Filled.CardGiftcard
+    val Storefront = Icons.Filled.Storefront
+    val Wallet = Icons.Filled.AccountBalanceWallet
 
     // Send / transfer options
     val SendToMobile = Icons.Filled.Smartphone

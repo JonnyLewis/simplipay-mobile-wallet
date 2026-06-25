@@ -32,6 +32,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(compose.components.resources)
             implementation(libs.window.size)
+            implementation(libs.qrose)
 
             implementation(projects.feature.auth)
             implementation(projects.feature.home)

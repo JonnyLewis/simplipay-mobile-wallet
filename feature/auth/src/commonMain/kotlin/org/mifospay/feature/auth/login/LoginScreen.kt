@@ -47,13 +47,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import mobile_wallet.feature.auth.generated.resources.Res
-import mobile_wallet.feature.auth.generated.resources.feature_auth_connected_to
 import mobile_wallet.feature.auth.generated.resources.feature_auth_login
 import mobile_wallet.feature.auth.generated.resources.feature_auth_password
 import mobile_wallet.feature.auth.generated.resources.feature_auth_sign_up
@@ -71,7 +69,6 @@ import org.mifospay.core.designsystem.theme.MifosTheme
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.ui.MifosProgressIndicatorOverlay
 import org.mifospay.core.ui.utils.EventsEffect
-import template.core.base.platform.PlatformBuildConfig
 import template.core.base.ui.detectMultiTapGesture
 
 @Composable
@@ -257,14 +254,6 @@ private fun LoginScreenContent(
         )
 
         Spacer(modifier = Modifier.weight(1f))
-
-        // Server Instance Info at bottom - only visible in debug builds
-        if (PlatformBuildConfig.isDebug) {
-            ServerInstanceInfo(
-                endpoint = state.selectedInstanceEndpoint ?: "",
-                modifier = Modifier.padding(bottom = 24.dp),
-            )
-        }
     }
 }
 
@@ -371,23 +360,6 @@ private fun SignupRow(
             text = stringResource(Res.string.feature_auth_sign_up),
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
             color = tokens.jade,
-        )
-    }
-}
-
-@Composable
-private fun ServerInstanceInfo(
-    endpoint: String,
-    modifier: Modifier = Modifier,
-) {
-    val tokens = SimpliPayTheme.tokens
-    if (endpoint.isNotEmpty()) {
-        Text(
-            text = stringResource(Res.string.feature_auth_connected_to, endpoint),
-            style = MaterialTheme.typography.labelSmall.copy(fontFamily = tokens.monoFontFamily),
-            color = tokens.faint,
-            modifier = modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
         )
     }
 }

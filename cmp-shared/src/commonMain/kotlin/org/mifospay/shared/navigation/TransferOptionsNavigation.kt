@@ -27,6 +27,7 @@ fun NavGraphBuilder.transferOptionsDialog(
     onSendToBank: () -> Unit,
     onSendToBarcode: () -> Unit,
     onProximityPayment: () -> Unit,
+    onAutoPay: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     dialog<TransferOptionsRoute> {
@@ -35,6 +36,7 @@ fun NavGraphBuilder.transferOptionsDialog(
             onSendToBank = onSendToBank,
             onSendToBarcode = onSendToBarcode,
             onProximityPayment = onProximityPayment,
+            onAutoPay = onAutoPay,
             onDismiss = onDismiss,
         )
     }
