@@ -85,7 +85,7 @@ private val unconfined = named(MifosDispatchers.Unconfined.name)
 val RepositoryModule = module {
     single<Json> { Json { ignoreUnknownKeys = true } }
 
-    single<AssetRepository> { AssetRepositoryImpl() }
+    single<AssetRepository> { AssetRepositoryImpl(get(ioDispatcher)) }
     single<AccountRepository> { AccountRepositoryImpl(get(), get(), get(ioDispatcher)) }
     single<AuthenticationRepository> {
         AuthenticationRepositoryImpl(get(), get(ioDispatcher))

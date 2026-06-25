@@ -16,11 +16,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.mifospay.passcode.PasscodeManager
 import org.mifos.authenticator.passcode.PasscodeStorageAdapter
 import org.mifospay.core.data.repository.AppLockRepository
 import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.model.user.UserInfo
+import org.mifospay.passcode.PasscodeManager
 
 /**
  * Root ViewModel scoped to [org.mifospay.shared.MifosPayApp].

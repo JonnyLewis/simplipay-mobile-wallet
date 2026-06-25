@@ -69,6 +69,7 @@ import mobile_wallet.feature.auth.generated.resources.feature_auth_state
 import mobile_wallet.feature.auth.generated.resources.feature_auth_username
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.mifos.feature.passcode.MifosPasscode
 import org.mifospay.core.designsystem.component.BasicDialogState
 import org.mifospay.core.designsystem.component.LoadingDialogState
 import org.mifospay.core.designsystem.component.MifosBasicDialog
@@ -87,7 +88,6 @@ import org.mifospay.feature.auth.signup.SignUpAction
 import org.mifospay.feature.auth.signup.SignUpEvent
 import org.mifospay.feature.auth.signup.SignUpState
 import org.mifospay.feature.auth.signup.SignupViewModel
-import org.mifos.feature.passcode.MifosPasscode
 import org.mifospay.feature.mpay.qr.scan.CodeType
 import org.mifospay.feature.mpay.qr.scan.QrScannerWithPermissions
 import org.mifospay.feature.mpay.qr.scan.ocr.IdOcrDebugContent

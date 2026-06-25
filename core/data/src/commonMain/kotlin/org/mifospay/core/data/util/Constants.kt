@@ -13,6 +13,7 @@ object Constants {
     const val BASIC = "Basic "
     const val SAVINGS = "savingsAccounts"
     const val TRANSACTIONS = "transactions"
+
     // Backend-specific: the savings product id new wallet clients are opened against.
     // On wallet.simplipay.co.za this is product 6 ("SA SimpliWallet", ZAR); product 1 does
     // not exist there (createClient 404s with "Saving product 1 does not exist").

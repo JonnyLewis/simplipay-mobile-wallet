@@ -19,10 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import org.mifospay.core.designsystem.icon.MifosIcons
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.mifospay.core.designsystem.component.Rosette
+import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.MifosTheme
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.ui.MifosProgressIndicator

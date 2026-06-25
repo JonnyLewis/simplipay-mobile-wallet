@@ -9,6 +9,8 @@
  */
 package org.mifospay.shared.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,7 +100,14 @@ internal fun RootNavGraph(
         route = MifosNavGraph.ROOT_GRAPH,
         modifier = modifier,
     ) {
-        composable(MifosNavGraph.SPLASH_ROUTE) {
+        composable(
+            route = MifosNavGraph.SPLASH_ROUTE,
+            // Short cross-fade off the splash so it doesn't co-exist with the landing screen
+            // (and its particle field) for the full 700ms default. Scoped to this edge only —
+            // passcode/biometric/reAuth transitions keep their defaults.
+            exitTransition = { fadeOut(tween(140)) },
+            popExitTransition = { fadeOut(tween(140)) },
+        ) {
             SplashScreen(
                 onTimeout = {
                     navHostController.navigate(currentStartDestination) {

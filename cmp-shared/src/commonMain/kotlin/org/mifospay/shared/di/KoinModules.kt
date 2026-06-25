@@ -14,7 +14,6 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
-import org.mifospay.passcode.PasscodeManager
 import org.mifos.feature.passcode.MifosAuthenticatorModule
 import org.mifospay.core.common.di.DispatchersModule
 import org.mifospay.core.common.di.stringProviderModule
@@ -48,6 +47,7 @@ import org.mifospay.feature.standing.instruction.di.StandingInstructionModule
 import org.mifospay.feature.transfer.interbank.di.interbankTransferModule
 import org.mifospay.feature.transfer.intrabank.di.IntraBankModule
 import org.mifospay.feature.upi.setup.di.UpiSetupModule
+import org.mifospay.passcode.PasscodeManager
 import org.mifospay.shared.MifosPayViewModel
 import org.mifospay.shared.TransferOptionsViewModel
 import org.mifospay.shared.buy.BuyViewModel

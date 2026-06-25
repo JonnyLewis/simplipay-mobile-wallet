@@ -24,7 +24,6 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.mifos.authenticator.biometrics.platformAuthenticator.PlatformAuthenticationProvider
 import org.mifos.authenticator.biometrics.platformAuthenticator.RegistrationResult
-import org.mifospay.passcode.PasscodeManager
 import org.mifos.feature.passcode.BiometricErrorMessages
 import org.mifos.feature.passcode.BiometricPromptStrings
 import org.mifospay.core.common.DataState
@@ -37,6 +36,7 @@ import org.mifospay.core.model.user.LanguageConfig
 import org.mifospay.core.model.user.toLanguage
 import org.mifospay.core.ui.utils.BaseViewModel
 import org.mifospay.feature.settings.SettingsAction.Internal.DisableAccountResult
+import org.mifospay.passcode.PasscodeManager
 
 /**
  * `SavedStateHandle` key written by `internalMifosPasscodeScreen` and read by

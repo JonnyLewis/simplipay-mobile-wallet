@@ -63,6 +63,10 @@ fun ParticleField(
     linkDistancePx: Float = 120f,
     dotAlpha: Float = 0.30f,
     maxLinkAlpha: Float = 0.28f,
+    // The particle count is derived from pixel area, so on a @3x screen it can balloon to ~300,
+    // and the per-frame neighbour linking is O(n^2). Cap it so the field stays cheap (the visual
+    // is barely affected). Tune 80-120 on-device if it looks sparse.
+    maxParticles: Int = 80,
 ) {
     var size by remember { mutableStateOf(IntSize.Zero) }
     val particles = remember { mutableStateListOf<Particle>() }
@@ -76,7 +80,7 @@ fun ParticleField(
         if (w <= 0f || h <= 0f) return@LaunchedEffect
 
         // Seed once for this size: count = round(W*H/16000 * density).
-        val n = (w * h / 16000f * density).roundToInt().coerceAtLeast(1)
+        val n = (w * h / 16000f * density).roundToInt().coerceIn(1, maxParticles)
         particles.clear()
         repeat(n) {
             particles.add(
