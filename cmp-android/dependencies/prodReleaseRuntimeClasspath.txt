@@ -32,6 +32,7 @@
 :feature:passcode
 :feature:payments
 :feature:profile
+:feature:proximity
 :feature:receipt
 :feature:savedcards
 :feature:send-money
