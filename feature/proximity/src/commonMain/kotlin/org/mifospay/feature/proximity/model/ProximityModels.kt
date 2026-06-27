@@ -93,6 +93,7 @@ enum class ProximityBand { VeryClose, Nearby, InTheRoom, Unknown }
 data class NearbyDevice(
     val id: String,
     val rssi: Int,
+    val name: String? = null,
 ) {
     /** Coarse RSSI → band (spec §6.5); never a precise/metric or security claim. */
     val band: ProximityBand

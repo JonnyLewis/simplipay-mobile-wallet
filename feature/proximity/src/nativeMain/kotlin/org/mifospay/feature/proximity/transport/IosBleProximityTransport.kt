@@ -13,6 +13,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import platform.CoreBluetooth.CBAdvertisementDataLocalNameKey
 import platform.CoreBluetooth.CBAdvertisementDataServiceUUIDsKey
 import platform.CoreBluetooth.CBCentralManager
 import platform.CoreBluetooth.CBCentralManagerDelegateProtocol
@@ -66,7 +67,13 @@ class IosBleProximityTransport : BleProximityTransport {
         val delegate = AdvertiseDelegate(
             onPoweredOn = { manager ->
                 manager.startAdvertising(
-                    mapOf(CBAdvertisementDataServiceUUIDsKey to listOf(serviceUuid)),
+                    mapOf(
+                        CBAdvertisementDataServiceUUIDsKey to listOf(serviceUuid),
+                        // Foreground-only local name so it's easy to spot in a BLE
+                        // scanner (e.g. LightBlue) as "SimpliPay" during testing.
+                        // iOS drops this in the background by design.
+                        CBAdvertisementDataLocalNameKey to ADVERTISED_NAME,
+                    ),
                 )
             },
         )
@@ -93,8 +100,14 @@ class IosBleProximityTransport : BleProximityTransport {
             onPoweredOn = { manager ->
                 manager.scanForPeripheralsWithServices(listOf(serviceUuid), null)
             },
-            onDiscover = { peripheral, rssi ->
-                trySend(BleDiscovery(deviceId = peripheral.identifier.UUIDString, rssi = rssi))
+            onDiscover = { peripheral, rssi, advertisedName ->
+                trySend(
+                    BleDiscovery(
+                        deviceId = peripheral.identifier.UUIDString,
+                        rssi = rssi,
+                        name = advertisedName,
+                    ),
+                )
             },
         )
         val manager = CBCentralManager(delegate, null)
@@ -119,12 +132,15 @@ class IosBleProximityTransport : BleProximityTransport {
     override suspend fun disconnect(deviceId: String) = Unit
 }
 
-/** Fixed 128-bit discovery service UUID (spec §4.3). The only thing in the advertisement. */
+/** Fixed 128-bit discovery service UUID (spec §4.3). */
 private const val PROXIMITY_SERVICE_UUID = "9F1B0001-7C3A-4D2E-9A1F-2B6C8D0E5A77"
+
+/** Foreground-only advertised local name (testing aid). */
+private const val ADVERTISED_NAME = "SimpliPay"
 
 private class ScanDelegate(
     val onPoweredOn: (CBCentralManager) -> Unit,
-    val onDiscover: (CBPeripheral, Int) -> Unit,
+    val onDiscover: (CBPeripheral, Int, String?) -> Unit,
 ) : NSObject(), CBCentralManagerDelegateProtocol {
 
     override fun centralManagerDidUpdateState(central: CBCentralManager) {
@@ -137,7 +153,8 @@ private class ScanDelegate(
         advertisementData: Map<Any?, *>,
         RSSI: NSNumber,
     ) {
-        onDiscover(didDiscoverPeripheral, RSSI.intValue)
+        val name = advertisementData[CBAdvertisementDataLocalNameKey] as? String
+        onDiscover(didDiscoverPeripheral, RSSI.intValue, name)
     }
 }
 

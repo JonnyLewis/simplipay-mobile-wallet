@@ -82,8 +82,9 @@ class ProximityViewModel(
             transport.scanForReceivers().collect { discovery ->
                 mutableStateFlow.update { st ->
                     val others = st.discoveries.filterNot { it.id == discovery.deviceId }
-                    val merged = (others + NearbyDevice(discovery.deviceId, discovery.rssi))
-                        .sortedByDescending { it.rssi }
+                    val merged = (
+                        others + NearbyDevice(discovery.deviceId, discovery.rssi, discovery.name)
+                        ).sortedByDescending { it.rssi }
                     st.copy(discoveries = merged)
                 }
             }

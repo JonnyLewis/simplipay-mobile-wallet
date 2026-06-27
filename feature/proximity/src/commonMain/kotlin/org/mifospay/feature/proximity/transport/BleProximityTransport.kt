@@ -81,6 +81,9 @@ data class BleCapabilities(
 data class BleDiscovery(
     val deviceId: String,
     val rssi: Int,
+    // Advertised local name if present (a testing aid — real display name comes
+    // from the server resolve, not the air, spec §5.4).
+    val name: String? = null,
 )
 
 /** Result of a sender-side connect + commit/reveal handshake + payload read. */

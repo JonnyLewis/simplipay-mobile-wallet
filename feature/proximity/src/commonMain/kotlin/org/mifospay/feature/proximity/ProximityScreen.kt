@@ -269,7 +269,7 @@ private fun SendContent(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Nearby device",
+                                text = device.name ?: "Nearby device",
                                 style = KptTheme.typography.titleSmall,
                             )
                             Text(
