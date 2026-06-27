@@ -9,24 +9,23 @@
  */
 package org.mifospay.feature.proximity.di
 
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.mifospay.feature.proximity.ProximityViewModel
-import org.mifospay.feature.proximity.transport.BleProximityTransport
-import org.mifospay.feature.proximity.transport.NoopBleProximityTransport
 
 /**
  * Koin wiring for the proximity feature.
  *
- * The transport binding is currently the capability-less
- * [NoopBleProximityTransport] on every platform. When the real Android
- * (`BluetoothLe*`) and iOS (`CoreBluetooth`) transports land, this binding
- * moves to an `expect val proximityPlatformModule` with per-platform `actual`s
- * (mirroring `core/common`'s `ioDispatcherModule`), and `ProximityModule`
- * pulls it in via `includes(proximityPlatformModule)` — see the implementation
- * plan, tasks T1/T4.
+ * The platform-specific BLE transport is bound by [proximityPlatformModule]
+ * (an `expect/actual` per source set, mirroring `core/common`'s
+ * `ioDispatcherModule`): iOS binds the real CoreBluetooth transport, while
+ * Android/Desktop/Web bind the capability-less Noop for now (Android real BLE
+ * is the next increment — plan T4).
  */
 val ProximityModule = module {
-    single<BleProximityTransport> { NoopBleProximityTransport() }
+    includes(proximityPlatformModule)
     viewModelOf(::ProximityViewModel)
 }
+
+expect val proximityPlatformModule: Module

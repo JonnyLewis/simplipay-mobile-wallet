@@ -84,3 +84,22 @@ data class DistanceEstimate(
 )
 
 enum class ProximityBand { VeryClose, Nearby, InTheRoom, Unknown }
+
+/**
+ * A nearby receiver as seen on the radar before connecting — identified only by
+ * the ephemeral scan id, with signal strength. Name/amount come later (after
+ * GATT + resolve). [rssi] is in dBm (higher = closer).
+ */
+data class NearbyDevice(
+    val id: String,
+    val rssi: Int,
+) {
+    /** Coarse RSSI → band (spec §6.5); never a precise/metric or security claim. */
+    val band: ProximityBand
+        get() = when {
+            rssi >= -55 -> ProximityBand.VeryClose
+            rssi >= -75 -> ProximityBand.Nearby
+            rssi >= -90 -> ProximityBand.InTheRoom
+            else -> ProximityBand.Unknown
+        }
+}

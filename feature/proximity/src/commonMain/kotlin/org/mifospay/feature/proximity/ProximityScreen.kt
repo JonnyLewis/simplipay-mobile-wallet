@@ -36,6 +36,8 @@ import org.mifospay.core.designsystem.component.MifosTopBar
 import org.mifospay.core.ui.utils.EventsEffect
 import org.mifospay.feature.proximity.component.SlideToConfirm
 import org.mifospay.feature.proximity.model.AmountMode
+import org.mifospay.feature.proximity.model.NearbyDevice
+import org.mifospay.feature.proximity.model.ProximityBand
 import org.mifospay.feature.proximity.navigation.ProximityEntryMode
 import template.core.base.designsystem.theme.KptTheme
 
@@ -88,12 +90,17 @@ fun ProximityScreen(
                         amountMode = state.amountMode,
                         amountInput = state.amountInput,
                         enabled = state.capable,
+                        advertising = state.advertising,
                         onAmountMode = { viewModel.trySendAction(ProximityAction.SetAmountMode(it)) },
                         onAmountChange = { viewModel.trySendAction(ProximityAction.AmountChanged(it)) },
                         onStart = { viewModel.trySendAction(ProximityAction.StartReceiving) },
+                        onStop = { viewModel.trySendAction(ProximityAction.StopReceiving) },
                     )
 
-                    ProximityEntryMode.Send -> SendContent(enabled = state.capable)
+                    ProximityEntryMode.Send -> SendContent(
+                        enabled = state.capable,
+                        discoveries = state.discoveries,
+                    )
                 }
             }
         }
@@ -142,15 +149,46 @@ private fun ReceiveContent(
     amountMode: AmountMode,
     amountInput: String,
     enabled: Boolean,
+    advertising: Boolean,
     onAmountMode: (AmountMode) -> Unit,
     onAmountChange: (String) -> Unit,
     onStart: () -> Unit,
+    onStop: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
     ) {
+        if (advertising) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(KptTheme.spacing.md),
+                colors = CardDefaults.cardColors(containerColor = KptTheme.colorScheme.primaryContainer),
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(KptTheme.spacing.xl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+                ) {
+                    Text(
+                        text = "📡 You're discoverable",
+                        style = KptTheme.typography.titleMedium,
+                        color = KptTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Text(
+                        text = "Keep this screen open. Nearby SimpliPay users can find you.",
+                        style = KptTheme.typography.bodyMedium,
+                        color = KptTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+            OutlinedButton(onClick = onStop, modifier = Modifier.fillMaxWidth()) {
+                Text("Stop receiving")
+            }
+            return@Column
+        }
+
         Text(
             text = "How much do you want to receive?",
             style = KptTheme.typography.titleMedium,
@@ -188,27 +226,73 @@ private fun ReceiveContent(
 @Composable
 private fun SendContent(
     enabled: Boolean,
+    discoveries: List<NearbyDevice>,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(KptTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(KptTheme.spacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
-        ) {
-            Text(
-                text = if (enabled) "Searching for people nearby…" else "Nearby unavailable",
-                style = KptTheme.typography.titleMedium,
-            )
-            Text(
-                text = "Both of you need this screen open and to be close together. " +
-                    "Ask them to tap \"Get paid nearby\".",
-                style = KptTheme.typography.bodyMedium,
-                color = KptTheme.colorScheme.onSurfaceVariant,
-            )
+        if (!enabled) {
+            Text("Nearby unavailable", style = KptTheme.typography.titleMedium)
+            return@Column
+        }
+        if (discoveries.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(KptTheme.spacing.md),
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(KptTheme.spacing.xl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+                ) {
+                    Text("📡 Searching for people nearby…", style = KptTheme.typography.titleMedium)
+                    Text(
+                        text = "Both of you need this screen open and to be close together. " +
+                            "Ask them to tap \"Get paid nearby\".",
+                        style = KptTheme.typography.bodyMedium,
+                        color = KptTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        } else {
+            Text("Nearby (${discoveries.size})", style = KptTheme.typography.titleMedium)
+            discoveries.forEach { device ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(KptTheme.spacing.md),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(KptTheme.spacing.lg),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Nearby device",
+                                style = KptTheme.typography.titleSmall,
+                            )
+                            Text(
+                                text = device.id.take(8),
+                                style = KptTheme.typography.bodySmall,
+                                color = KptTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = bandLabel(device.band) + "  ·  ${device.rssi} dBm",
+                            style = KptTheme.typography.bodyMedium,
+                            color = KptTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
         }
     }
+}
+
+private fun bandLabel(band: ProximityBand): String = when (band) {
+    ProximityBand.VeryClose -> "very close"
+    ProximityBand.Nearby -> "nearby"
+    ProximityBand.InTheRoom -> "in the room"
+    ProximityBand.Unknown -> "far"
 }

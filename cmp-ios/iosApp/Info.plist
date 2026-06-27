@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>This app does not use Bluetooth. This message is required for compliance only.</string>
+	<string>SimpliPay uses Bluetooth to discover nearby people and terminals so you can pay or get paid in person. We never send your name, account, or location over Bluetooth.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We use the camera to scan QR codes to send and receive payments.</string>
 	<key>NSContactsUsageDescription</key>
