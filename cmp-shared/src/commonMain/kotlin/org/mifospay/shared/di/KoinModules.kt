@@ -39,6 +39,7 @@ import org.mifospay.feature.mpay.qr.scan.di.MpayQrScanModule
 import org.mifospay.feature.notification.di.NotificationModule
 import org.mifospay.feature.payments.di.PaymentsModule
 import org.mifospay.feature.profile.di.ProfileModule
+import org.mifospay.feature.proximity.di.ProximityModule
 import org.mifospay.feature.receipt.di.ReceiptModule
 import org.mifospay.feature.savedcards.di.SavedCardsModule
 import org.mifospay.feature.send.money.di.SendMoneyModule
@@ -120,6 +121,7 @@ object KoinModules {
             MifosAuthenticatorModule,
             AutoPayModule,
             SendMoneyModule,
+            ProximityModule,
         )
     }
 

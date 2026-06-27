@@ -61,6 +61,7 @@ kotlin {
             implementation(projects.feature.passcode)
             implementation(projects.feature.autopay)
             implementation(projects.feature.sendMoney)
+            implementation(projects.feature.proximity)
         }
 
         desktopMain.dependencies {
