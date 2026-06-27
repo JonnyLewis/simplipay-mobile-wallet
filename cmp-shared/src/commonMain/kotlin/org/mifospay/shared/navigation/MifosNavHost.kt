@@ -90,6 +90,9 @@ import org.mifospay.feature.payments.paymentsScreen
 import org.mifospay.feature.payments.selectTransferType.SelectTransferTypeScreen
 import org.mifospay.feature.profile.navigation.navigateToProfile
 import org.mifospay.feature.profile.navigation.profileNavGraph
+import org.mifospay.feature.proximity.navigation.ProximityEntryMode
+import org.mifospay.feature.proximity.navigation.navigateToProximity
+import org.mifospay.feature.proximity.navigation.proximityScreen
 import org.mifospay.feature.receipt.navigation.receiptScreen
 import org.mifospay.feature.savedcards.createOrUpdate.addEditCardScreen
 import org.mifospay.feature.savedcards.details.cardDetailRoute
@@ -985,8 +988,8 @@ internal fun MifosNavHost(
             onSendToBank = navController::navigateToIntraBankHub,
             onSendToBarcode = navController::navigateToScanQr,
             onProximityPayment = {
-                // Proximity / tap payment is not wired yet — dismiss for now.
                 navController.popBackStack()
+                navController.navigateToProximity(ProximityEntryMode.Send)
             },
             onAutoPay = {
                 navController.navigateToAutoPay()
@@ -1007,11 +1010,19 @@ internal fun MifosNavHost(
                 navController.popBackStack()
             },
             onProximityPayment = {
-                // Proximity / tap payment is not wired yet — dismiss for now.
                 navController.popBackStack()
+                navController.navigateToProximity(ProximityEntryMode.Receive)
             },
             onDismiss = {
                 navController.popBackStack()
+            },
+        )
+
+        proximityScreen(
+            onNavigateBack = navController::popBackStack,
+            onNavigateToQrFallback = {
+                navController.popBackStack()
+                navController.navigateToMpayQrScreen()
             },
         )
 

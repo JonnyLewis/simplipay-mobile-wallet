@@ -9,7 +9,9 @@
  */
 package org.mifospay.feature.proximity.di
 
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import org.mifospay.feature.proximity.ProximityViewModel
 import org.mifospay.feature.proximity.transport.BleProximityTransport
 import org.mifospay.feature.proximity.transport.NoopBleProximityTransport
 
@@ -26,4 +28,5 @@ import org.mifospay.feature.proximity.transport.NoopBleProximityTransport
  */
 val ProximityModule = module {
     single<BleProximityTransport> { NoopBleProximityTransport() }
+    viewModelOf(::ProximityViewModel)
 }
