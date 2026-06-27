@@ -1,6 +1,6 @@
 # Features Index — Design Spec Layer
 
-**Last Updated**: 2026-06-23
+**Last Updated**: 2026-06-27
 
 ---
 
@@ -8,7 +8,7 @@
 
 | Total Features | SPEC Complete | API Complete | Mockups Complete |
 |:-:|:-:|:-:|:-:|
-| 29 | 0 | 0 | 0 |
+| 30 | 1 | 1 | 0 |
 
 ---
 
@@ -45,6 +45,9 @@
 | 27 | mpay-qr-scan | ❌ | ❌ | ❌ | ❌ | `/design mpay-qr-scan` |
 | 28 | fast-mpay | ❌ | ❌ | ❌ | ❌ | `/design fast-mpay` |
 | 29 | passcode | ❌ | ❌ | ❌ | ❌ | `/design passcode` |
+| 30 | **proximity** | ✅ | ✅ | ✅ | ➖ | `/design proximity` |
+
+> **proximity** (Proximity Payment) — new BLE-based feature. SPEC is the engineer-ready `proximity-payment.md` (+ companion `API.md`), not the default `SPEC.md` filename. Status: **READY FOR IMPLEMENTATION (v5)** — passed a 5-generation research+review loop (iOS CoreBluetooth / Android BLE / KMP transport / security protocol). Mockups are ASCII-only in-spec; no Figma/Stitch generated yet.
 
 ---
 
