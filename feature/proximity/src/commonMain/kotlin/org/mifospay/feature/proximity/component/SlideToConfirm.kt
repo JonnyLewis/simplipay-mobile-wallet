@@ -69,7 +69,6 @@ fun SlideToConfirm(
     var confirmed by remember { mutableStateOf(false) }
 
     val maxOffset = (trackWidthPx - thumbSizePx).coerceAtLeast(0f)
-    val progress = if (maxOffset > 0f) offsetX.value / maxOffset else 0f
 
     LaunchedEffect(enabled) {
         if (!enabled) offsetX.snapTo(0f)
@@ -110,7 +109,11 @@ fun SlideToConfirm(
                     if (!enabled || maxOffset <= 0f) return@pointerInput
                     detectHorizontalDragGestures(
                         onDragEnd = {
-                            if (progress >= CONFIRM_THRESHOLD) {
+                            // Compute progress live here — the pointerInput block only
+                            // re-runs on key change, so closing over the composition-time
+                            // `progress` val would read a stale 0f and never confirm.
+                            val endProgress = offsetX.value / maxOffset
+                            if (endProgress >= CONFIRM_THRESHOLD) {
                                 confirmed = true
                                 scope.launch { offsetX.animateTo(maxOffset) }
                                 onConfirmed()

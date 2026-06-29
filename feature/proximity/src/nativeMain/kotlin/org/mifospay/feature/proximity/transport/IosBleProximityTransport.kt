@@ -12,12 +12,18 @@ package org.mifospay.feature.proximity.transport
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import platform.CoreBluetooth.CBAdvertisementDataLocalNameKey
 import platform.CoreBluetooth.CBAdvertisementDataServiceUUIDsKey
 import platform.CoreBluetooth.CBCentralManager
 import platform.CoreBluetooth.CBCentralManagerDelegateProtocol
+import platform.CoreBluetooth.CBManagerState
 import platform.CoreBluetooth.CBManagerStatePoweredOn
+import platform.CoreBluetooth.CBManagerStateUnauthorized
+import platform.CoreBluetooth.CBManagerStateUnsupported
 import platform.CoreBluetooth.CBPeripheral
 import platform.CoreBluetooth.CBPeripheralManager
 import platform.CoreBluetooth.CBPeripheralManagerDelegateProtocol
@@ -53,13 +59,26 @@ class IosBleProximityTransport : BleProximityTransport {
     private var peripheralManager: CBPeripheralManager? = null
     private var peripheralDelegate: AdvertiseDelegate? = null
 
-    override val capabilities: BleCapabilities = BleCapabilities(
-        canAdvertise = true,
-        canScan = true,
-        // iOS doesn't expose adapter state synchronously; refined when a manager powers on.
-        isBluetoothOn = true,
-        supportsPreciseRanging = false,
+    // Persistent probe manager whose only job is to learn the real radio /
+    // permission state. iOS reports it asynchronously via didUpdateState, so we
+    // start optimistic-but-not-ready (isBluetoothOn=false) and correct within
+    // milliseconds. Held strongly — a released CB delegate silently stops firing.
+    private val capabilitiesState = MutableStateFlow(
+        BleCapabilities(
+            canAdvertise = true,
+            canScan = true,
+            isBluetoothOn = false,
+            supportsPreciseRanging = false,
+        ),
     )
+    private val probeDelegate = CapabilityProbeDelegate { state ->
+        capabilitiesState.value = capabilitiesFor(state)
+    }
+    private val probeManager: CBCentralManager = CBCentralManager(probeDelegate, null)
+
+    override val capabilities: BleCapabilities get() = capabilitiesState.value
+
+    override fun observeCapabilities(): StateFlow<BleCapabilities> = capabilitiesState.asStateFlow()
 
     override suspend fun startAdvertising(
         peripheral: PeripheralHandshake,
@@ -137,6 +156,49 @@ private const val PROXIMITY_SERVICE_UUID = "9F1B0001-7C3A-4D2E-9A1F-2B6C8D0E5A77
 
 /** Foreground-only advertised local name (testing aid). */
 private const val ADVERTISED_NAME = "SimpliPay"
+
+/**
+ * Maps a CoreBluetooth manager state to honest capabilities. `Unsupported`
+ * (e.g. the iOS simulator, which has no BLE radio) means the device genuinely
+ * can't do proximity → not capable. Every other non-powered-on state
+ * (off / unauthorized / resetting / unknown) keeps the role capabilities but
+ * reports the radio as not ready, so the UI gates the slide and never claims
+ * "You're discoverable" while nothing is actually being broadcast.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private fun capabilitiesFor(state: CBManagerState): BleCapabilities = when (state) {
+    CBManagerStatePoweredOn -> BleCapabilities(
+        canAdvertise = true,
+        canScan = true,
+        isBluetoothOn = true,
+        supportsPreciseRanging = false,
+    )
+    CBManagerStateUnsupported -> BleCapabilities.NONE
+    CBManagerStateUnauthorized -> BleCapabilities(
+        canAdvertise = true,
+        canScan = true,
+        isBluetoothOn = false,
+        supportsPreciseRanging = false,
+        permissionDenied = true,
+    )
+    else -> BleCapabilities(
+        canAdvertise = true,
+        canScan = true,
+        isBluetoothOn = false,
+        supportsPreciseRanging = false,
+    )
+}
+
+/** Strong-held central delegate that reports radio/permission state transitions. */
+@OptIn(ExperimentalForeignApi::class)
+private class CapabilityProbeDelegate(
+    val onState: (CBManagerState) -> Unit,
+) : NSObject(), CBCentralManagerDelegateProtocol {
+
+    override fun centralManagerDidUpdateState(central: CBCentralManager) {
+        onState(central.state)
+    }
+}
 
 private class ScanDelegate(
     val onPoweredOn: (CBCentralManager) -> Unit,

@@ -1001,10 +1001,7 @@ internal fun MifosNavHost(
 
         receiveOptionsDialog(
             onReceiveByBarcode = navController::navigateToMpayQrScreen,
-            onReceiveByPayLink = {
-                // Pay-link generation is not wired yet — dismiss for now.
-                navController.popBackStack()
-            },
+            onReceiveByPayLink = navController::navigateToPayLink,
             onReceiveByMobile = {
                 // Receive-by-mobile is not wired yet — dismiss for now.
                 navController.popBackStack()

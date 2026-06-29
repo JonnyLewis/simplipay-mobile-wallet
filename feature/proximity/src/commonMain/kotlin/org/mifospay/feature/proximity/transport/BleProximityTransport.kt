@@ -10,6 +10,7 @@
 package org.mifospay.feature.proximity.transport
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * The single platform seam for BLE proximity (spec §4.2). A plain interface,
@@ -27,6 +28,17 @@ import kotlinx.coroutines.flow.Flow
 interface BleProximityTransport {
 
     val capabilities: BleCapabilities
+
+    /**
+     * Live capability/radio state. The radio (and BLE permission) state isn't
+     * known synchronously on every platform — iOS only learns it asynchronously
+     * via `CBManagerDidUpdateState` — so callers should observe this rather than
+     * trust the one-shot [capabilities] snapshot, which may start optimistic.
+     *
+     * Default: a single static emission of [capabilities], for platforms whose
+     * capabilities never change (Noop on Desktop/Web/Android).
+     */
+    fun observeCapabilities(): Flow<BleCapabilities> = flowOf(capabilities)
 
     // ---- RECEIVER role ------------------------------------------------------
 
@@ -63,6 +75,12 @@ data class BleCapabilities(
     val canScan: Boolean,
     val isBluetoothOn: Boolean,
     val supportsPreciseRanging: Boolean,
+    /**
+     * The OS BLE permission has been explicitly denied. Distinct from
+     * [isBluetoothOn]=false (radio off): toggling Bluetooth won't help — the
+     * user must grant the permission in Settings, so the UI says so.
+     */
+    val permissionDenied: Boolean = false,
 ) {
     /** Neither role available → feature is grayed out as "Device not capable". */
     val isCapable: Boolean get() = canAdvertise || canScan

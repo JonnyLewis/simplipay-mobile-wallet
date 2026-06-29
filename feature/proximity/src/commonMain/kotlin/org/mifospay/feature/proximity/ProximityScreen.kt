@@ -50,6 +50,8 @@ fun ProximityScreen(
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val entryMode = state.entryMode
+    // A BLE role can only run with capable hardware AND the radio actually on.
+    val ready = state.capable && state.bluetoothOn
 
     EventsEffect(viewModel) { event ->
         when (event) {
@@ -78,9 +80,13 @@ fun ProximityScreen(
                     .padding(horizontal = KptTheme.spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
             ) {
-                if (!state.capable) {
+                if (!ready) {
                     DeviceNotCapableBanner(
-                        bluetoothOff = !state.bluetoothOn,
+                        reason = when {
+                            !state.capable -> UnavailableReason.NotCapable
+                            state.permissionDenied -> UnavailableReason.PermissionDenied
+                            else -> UnavailableReason.BluetoothOff
+                        },
                         onUseQr = { viewModel.trySendAction(ProximityAction.UseQrInstead) },
                     )
                 }
@@ -89,7 +95,7 @@ fun ProximityScreen(
                     ProximityEntryMode.Receive -> ReceiveContent(
                         amountMode = state.amountMode,
                         amountInput = state.amountInput,
-                        enabled = state.capable,
+                        enabled = ready,
                         advertising = state.advertising,
                         onAmountMode = { viewModel.trySendAction(ProximityAction.SetAmountMode(it)) },
                         onAmountChange = { viewModel.trySendAction(ProximityAction.AmountChanged(it)) },
@@ -98,7 +104,7 @@ fun ProximityScreen(
                     )
 
                     ProximityEntryMode.Send -> SendContent(
-                        enabled = state.capable,
+                        enabled = ready,
                         discoveries = state.discoveries,
                     )
                 }
@@ -107,9 +113,12 @@ fun ProximityScreen(
     }
 }
 
+/** Why proximity can't run right now — each needs different remediation guidance. */
+private enum class UnavailableReason { NotCapable, BluetoothOff, PermissionDenied }
+
 @Composable
 private fun DeviceNotCapableBanner(
-    bluetoothOff: Boolean,
+    reason: UnavailableReason,
     onUseQr: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -123,16 +132,23 @@ private fun DeviceNotCapableBanner(
             verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
         ) {
             Text(
-                text = if (bluetoothOff) "Bluetooth is off" else "Device not capable",
+                text = when (reason) {
+                    UnavailableReason.NotCapable -> "Device not capable"
+                    UnavailableReason.BluetoothOff -> "Bluetooth is off"
+                    UnavailableReason.PermissionDenied -> "Bluetooth permission needed"
+                },
                 style = KptTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = KptTheme.colorScheme.onErrorContainer,
             )
             Text(
-                text = if (bluetoothOff) {
-                    "Turn on Bluetooth to pay or get paid nearby."
-                } else {
-                    "This device can't use proximity payments. You can use a QR code instead."
+                text = when (reason) {
+                    UnavailableReason.NotCapable ->
+                        "This device can't use proximity payments. You can use a QR code instead."
+                    UnavailableReason.BluetoothOff ->
+                        "Turn on Bluetooth to pay or get paid nearby."
+                    UnavailableReason.PermissionDenied ->
+                        "Allow Bluetooth for SimpliPay in Settings to pay or get paid nearby."
                 },
                 style = KptTheme.typography.bodyMedium,
                 color = KptTheme.colorScheme.onErrorContainer,

@@ -731,7 +731,7 @@ platform :ios do
         block: proc do |plist|
           plist['NSContactsUsageDescription'] = 'This app does not access your contacts. This message is required for compliance only.'
           plist['NSLocationWhenInUseUsageDescription'] = 'This app does not access your location. This message is required for compliance only.'
-          plist['NSBluetoothAlwaysUsageDescription'] = 'This app does not use Bluetooth. This message is required for compliance only.'
+          plist['NSBluetoothAlwaysUsageDescription'] = 'SimpliPay uses Bluetooth to discover nearby people and terminals so you can pay or get paid in person. We never send your name, account, or location over Bluetooth.'
         end
       )
 

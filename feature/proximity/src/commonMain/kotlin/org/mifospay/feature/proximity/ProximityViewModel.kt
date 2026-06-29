@@ -44,15 +44,49 @@ class ProximityViewModel(
         capable = transport.capabilities.isCapable,
         bluetoothOn = transport.capabilities.isBluetoothOn,
         supportsPreciseRanging = transport.capabilities.supportsPreciseRanging,
+        permissionDenied = transport.capabilities.permissionDenied,
     ),
 ) {
     private var scanJob: Job? = null
     private var advertiseJob: Job? = null
 
     init {
-        // Sender radar starts scanning as soon as the screen opens.
-        if (state.entryMode == ProximityEntryMode.Send && state.capable) {
-            startScanning()
+        // Radio/permission state on iOS is only known asynchronously, so the
+        // initial snapshot is optimistic. Observe the real capabilities and keep
+        // the UI honest — drive the sender radar and tear down advertising when
+        // Bluetooth actually becomes (un)available.
+        viewModelScope.launch {
+            transport.observeCapabilities().collect { caps ->
+                mutableStateFlow.update {
+                    it.copy(
+                        capable = caps.isCapable,
+                        bluetoothOn = caps.isBluetoothOn,
+                        supportsPreciseRanging = caps.supportsPreciseRanging,
+                        permissionDenied = caps.permissionDenied,
+                    )
+                }
+                reconcileRadios()
+            }
+        }
+    }
+
+    /** Whether a BLE role can actually run right now (capable hardware + radio on). */
+    private val ProximityState.ready: Boolean get() = capable && bluetoothOn
+
+    /** Start/stop scanning and advertising to match the live readiness + mode. */
+    private fun reconcileRadios() {
+        val ready = state.ready
+        if (state.entryMode == ProximityEntryMode.Send) {
+            if (ready && scanJob == null) {
+                startScanning()
+            } else if (!ready) {
+                stopScanning()
+            }
+        }
+        // If the radio dropped while we were advertising, stop and tell the UI
+        // truthfully that it's no longer discoverable.
+        if (state.advertising && !ready) {
+            stopAdvertising()
         }
     }
 
@@ -76,6 +110,11 @@ class ProximityViewModel(
         }
     }
 
+    private fun stopScanning() {
+        scanJob?.cancel()
+        scanJob = null
+    }
+
     private fun startScanning() {
         scanJob?.cancel()
         scanJob = viewModelScope.launch {
@@ -92,7 +131,7 @@ class ProximityViewModel(
     }
 
     private fun startAdvertising() {
-        if (!state.capable) return
+        if (!state.ready) return
         mutableStateFlow.update { it.copy(advertising = true) }
         advertiseJob?.cancel()
         advertiseJob = viewModelScope.launch {
@@ -126,6 +165,7 @@ data class ProximityState(
     val capable: Boolean,
     val bluetoothOn: Boolean,
     val supportsPreciseRanging: Boolean,
+    val permissionDenied: Boolean = false,
     val amountMode: AmountMode = AmountMode.Open,
     val amountInput: String = "",
     val advertising: Boolean = false,
