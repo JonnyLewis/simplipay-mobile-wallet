@@ -12,7 +12,9 @@ package org.mifospay.feature.payments.di
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import org.mifospay.feature.payments.TransferViewModel
+import org.mifospay.feature.payments.pay.PayViewModel
 
 val PaymentsModule = module {
     viewModelOf(::TransferViewModel)
+    viewModelOf(::PayViewModel)
 }

@@ -85,9 +85,9 @@ import org.mifospay.feature.notification.navigateToNotification
 import org.mifospay.feature.notification.notificationScreen
 import org.mifospay.feature.payments.PAYMENTS_ROUTE
 import org.mifospay.feature.payments.PaymentsScreenContents
+import org.mifospay.feature.payments.pay.PayScreen
 import org.mifospay.feature.payments.RequestScreen
 import org.mifospay.feature.payments.paymentsScreen
-import org.mifospay.feature.payments.selectTransferType.SelectTransferTypeScreen
 import org.mifospay.feature.profile.navigation.navigateToProfile
 import org.mifospay.feature.profile.navigation.profileNavGraph
 import org.mifospay.feature.proximity.navigation.ProximityEntryMode
@@ -192,14 +192,9 @@ internal fun MifosNavHost(
 
     val paymentsTabContents = listOf(
         TabContent(stringResource(Res.string.feature_payments_send)) {
-            SelectTransferTypeScreen(
-                onIntraBankTransferClick = {
-                    navController.navigateToIntraBankHub()
-                },
-                onInterBankTransferClick = {
-                    navController.navigateToInterbankTransfer()
-                },
-            )
+            // Pay to a phone number (on-us / PayShap) or a bank account (EFT), wired to the
+            // SimpliPay Payments API via PayViewModel.
+            PayScreen()
         },
         // from send money pr
         TabContent(PaymentsScreenContents.SEND.name) {

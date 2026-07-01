@@ -25,10 +25,12 @@ import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.network.FineractApiManager
 import org.mifospay.core.network.InterBankApiManager
 import org.mifospay.core.network.KtorfitClient
+import org.mifospay.core.network.PaymentsApiManager
 import org.mifospay.core.network.SelfServiceApiManager
 import org.mifospay.core.network.SupabaseApiManager
 import org.mifospay.core.network.config.InstanceConfigLoader
 import org.mifospay.core.network.config.InstanceConfigManager
+import org.mifospay.core.network.config.PaymentsApiConfig
 import org.mifospay.core.network.config.ServiceAccountConfig
 import org.mifospay.core.network.config.SupabaseCredentialsImpl
 import org.mifospay.core.network.config.SupabaseInstanceConfigLoader
@@ -171,8 +173,38 @@ val NetworkModule = module {
         )
     }
 
+    // SimpliPay Payments API client — a *separate* service from Fineract. Fixed base URL
+    // (build config, not the dynamic per-instance config), no Fineract Basic auth /
+    // KtorInterceptor. Auth is the `Platform-TenantId` header (below) plus a per-request
+    // `?token=` query the repository injects. Swap the base URL for a non-prod flavour via
+    // PaymentsApiConfig.baseUrl(isProduction) once flavour plumbing exists.
+    single<KtorfitClient>(qualifier = PaymentsClient) {
+        KtorfitClient(
+            Ktorfit.Builder()
+                .httpClient(
+                    client = httpClient(
+                        config = setupDefaultHttpClient(
+                            baseUrl = PaymentsApiConfig.BASE_URL,
+                            defaultHeaders = mapOf(
+                                BaseURL.HEADER_CONTENT_TYPE to BaseURL.HEADER_CONTENT_TYPE_VALUE,
+                                BaseURL.HEADER_ACCEPT to BaseURL.HEADER_ACCEPT_VALUE,
+                                PaymentsApiConfig.HEADER_TENANT_ID to PaymentsApiConfig.TENANT_ID,
+                            ),
+                            loggableHosts = listOf("api.simplipay.co.za"),
+                        ),
+                    ),
+                )
+                .converterFactories(FlowConverterFactory())
+                .build(),
+        )
+    }
+
     single {
         FineractApiManager(ktorfitClient = get(BaseClient))
+    }
+
+    single {
+        PaymentsApiManager(ktorfitClient = get(PaymentsClient))
     }
 
     single {
