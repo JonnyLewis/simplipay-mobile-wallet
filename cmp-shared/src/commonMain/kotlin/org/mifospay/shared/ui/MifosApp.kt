@@ -92,6 +92,8 @@ internal fun MifosApp(
 
         val snackbarHostState = remember { SnackbarHostState() }
         val destination = appState.currentTopLevelDestination
+        // Pay (Send-money) detail screen keeps its own back bar but should still show the bottom nav.
+        val onPayScreen = appState.isPayRoute
 
         // A wallet-no-access user has no real client (stored client defaults to id == 0). They may
         // only see the locked Home; the other tabs/QR depend on a real client and would 404, so
@@ -127,7 +129,7 @@ internal fun MifosApp(
             contentColor = KptTheme.colorScheme.onBackground,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                if (appState.shouldShowBottomBar && destination != null) {
+                if (appState.shouldShowBottomBar && (destination != null || onPayScreen)) {
                     MifosBottomBar(
                         destinations = appState.topLevelDestinations,
                         destinationsWithUnreadResources = emptySet(),
