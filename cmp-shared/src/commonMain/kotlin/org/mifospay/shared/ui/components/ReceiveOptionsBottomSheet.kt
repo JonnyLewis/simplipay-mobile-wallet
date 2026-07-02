@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,20 +81,22 @@ fun ReceiveOptionsBottomSheet(
                 ReceiveOptionRow(
                     icon = MifosIcons.PayLink,
                     title = "Receive using pay link",
-                    subtitle = "Coming soon",
+                    subtitle = "Share a link or QR to get paid",
                     onClick = onReceiveByPayLink,
                 )
                 ReceiveOptionRow(
                     icon = MifosIcons.SendToMobile,
                     title = "Receive using mobile number",
-                    subtitle = "Coming soon",
+                    subtitle = "Get paid to your number",
                     onClick = onReceiveByMobile,
+                    comingSoon = true,
                 )
                 ReceiveOptionRow(
                     icon = MifosIcons.Proximity,
                     title = "Proximity payment",
-                    subtitle = "Coming soon",
+                    subtitle = "Tap to get paid nearby",
                     onClick = onProximityPayment,
+                    comingSoon = true,
                 )
             }
         },
@@ -107,12 +110,14 @@ private fun ReceiveOptionRow(
     subtitle: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    comingSoon: Boolean = false,
 ) {
     val tokens = SimpliPayTheme.tokens
+    val a = if (comingSoon) 0.5f else 1f
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = !comingSoon, onClick = onClick)
             .padding(horizontal = KptTheme.spacing.lg, vertical = KptTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
@@ -121,28 +126,42 @@ private fun ReceiveOptionRow(
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(tokens.jadeTint),
+                .background(tokens.jadeTint.copy(alpha = a)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = tokens.jade,
+                tint = tokens.jade.copy(alpha = a),
                 modifier = Modifier.size(22.dp),
             )
         }
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = KptTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = tokens.ink,
+                color = tokens.ink.copy(alpha = a),
             )
             Text(
                 text = subtitle,
                 style = KptTheme.typography.bodySmall,
-                color = tokens.sub,
+                color = tokens.sub.copy(alpha = a),
             )
+        }
+        if (comingSoon) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(tokens.jadeTint)
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = "Coming soon",
+                    style = KptTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = tokens.jade,
+                )
+            }
         }
     }
 }

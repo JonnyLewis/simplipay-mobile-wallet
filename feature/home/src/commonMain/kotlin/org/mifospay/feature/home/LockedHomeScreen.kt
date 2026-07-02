@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
+import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 
@@ -142,8 +143,8 @@ private fun LockCard(onVerify: () -> Unit) {
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Verify your number to activate your wallet. Until then your balance and " +
-                "transactions are just a preview.",
+            text = "Verify your number to activate your wallet and start sending, " +
+                "receiving, and paying.",
             style = MaterialTheme.typography.bodyMedium,
             color = tokens.sub,
         )
@@ -370,10 +371,11 @@ private fun DummyHomeBackdrop(modifier: Modifier = Modifier) {
                 .border(1.dp, tokens.ivoryBorder, RoundedCornerShape(20.dp))
                 .padding(20.dp),
         ) {
-            Text("Available balance", style = MaterialTheme.typography.labelMedium, color = tokens.cardLabel)
+            Text("Wallet balance", style = MaterialTheme.typography.labelMedium, color = tokens.cardLabel)
             Spacer(Modifier.height(6.dp))
+            // Real zero balance — never a fabricated preview amount (misleading for an e-money wallet).
             Text(
-                text = "R 12,480.50",
+                text = MoneyFormat.zar(0.0),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontFamily = tokens.monoFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -401,16 +403,12 @@ private fun DummyHomeBackdrop(modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.height(2.dp))
         Text("Recent", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold), color = tokens.ink)
-        listOf("MTN Airtime" to "−R 50.00", "Salary credit" to "+R 12,000.00", "City Power" to "−R 200.00").forEach { (title, amount) ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).border(1.dp, tokens.border, RoundedCornerShape(14.dp)))
-                Text(title, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold), color = tokens.ink, modifier = Modifier.weight(1f))
-                Text(amount, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = tokens.monoFontFamily), color = tokens.sub)
-            }
-        }
+        // No fabricated transactions — a neutral empty hint until the wallet is activated.
+        Text(
+            text = "Your activity will appear here once your wallet is active.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = tokens.sub,
+            modifier = Modifier.padding(vertical = 10.dp),
+        )
     }
 }
