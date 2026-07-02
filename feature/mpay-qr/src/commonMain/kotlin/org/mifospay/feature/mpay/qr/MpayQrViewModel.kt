@@ -37,9 +37,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import mobile_wallet.feature.mpay_qr.generated.resources.Res
-import mobile_wallet.feature.mpay_qr.generated.resources.logo
-import org.jetbrains.compose.resources.painterResource
 import org.mifospay.core.common.DataState
 import org.mifospay.core.common.getSerialized
 import org.mifospay.core.common.setSerialized
@@ -47,6 +44,7 @@ import org.mifospay.core.data.repository.AccountRepository
 import org.mifospay.core.data.repository.LocalAssetRepository
 import org.mifospay.core.data.util.MpayQrCodeProcessor
 import org.mifospay.core.datastore.UserPreferencesRepository
+import org.mifospay.core.designsystem.component.rememberWalletWordmarkPainter
 import org.mifospay.core.model.account.Account
 import org.mifospay.core.model.account.DefaultAccount
 import org.mifospay.core.model.client.Client
@@ -460,7 +458,7 @@ data class MpayQrState(
             private val logo: QrLogo
                 @Composable
                 get() = QrLogo(
-                    painter = painterResource(Res.drawable.logo),
+                    painter = rememberWalletWordmarkPainter(),
                     padding = QrLogoPadding.Natural(.1f),
                     shape = QrLogoShape.circle(),
                     size = 0.2f,
