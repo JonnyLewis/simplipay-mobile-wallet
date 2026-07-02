@@ -103,6 +103,10 @@ internal fun MifosApp(
         val isLocked = client == null || client?.id == 0L
         val onNavigateToDestination: (TopLevelDestination) -> Unit = { dest ->
             if (!isLocked || dest == TopLevelDestination.HOME) {
+                // PayRoute is a pushed detail screen in MAIN_GRAPH. Tab navigation uses
+                // saveState/restoreState, which would otherwise save PayRoute into Home's back-stack
+                // state and restore it when returning to Home (landing back on Pay). Pop it first.
+                if (onPayScreen) appState.navController.popBackStack()
                 appState.navigateToTopLevelDestination(dest)
             }
         }
