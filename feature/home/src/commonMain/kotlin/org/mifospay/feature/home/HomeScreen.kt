@@ -788,7 +788,7 @@ private fun HomeTransactionHistoryCard(
                         Spacer(Modifier.width(KptTheme.spacing.xs))
                         Icon(
                             imageVector = MifosIcons.OpenInNew,
-                            contentDescription = null,
+                            contentDescription = "See all transactions",
                             modifier = Modifier.size(16.dp).clickable {
                                 onAction(HomeAction.OnClickSeeAllTransactions)
                             },
@@ -823,7 +823,7 @@ private fun HomeTransactionHistoryCard(
                     ) {
                         Icon(
                             imageVector = MifosIcons.Filter,
-                            contentDescription = null,
+                            contentDescription = "Filter transactions",
                             tint = KptTheme.colorScheme.onSurface,
                         )
                     }

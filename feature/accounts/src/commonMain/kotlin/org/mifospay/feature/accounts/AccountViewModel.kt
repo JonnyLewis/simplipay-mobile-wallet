@@ -228,7 +228,9 @@ data class AccountState(
             val accounts: List<Account>,
             val beneficiaries: List<Beneficiary>,
         ) : ViewState {
-            override val hasFab: Boolean get() = true
+            // Consumer model: one main wallet (multiple savings buckets, not multiple accounts), so the
+            // add-account FAB is hidden. Buckets have their own add flow in the Buckets tab.
+            override val hasFab: Boolean get() = false
             override val isPullToRefreshEnabled: Boolean get() = true
         }
     }
