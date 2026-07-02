@@ -10,6 +10,7 @@
 package org.mifospay.feature.payments.pay
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -126,6 +127,11 @@ private fun PayScreenContent(
             readOnly = state.isSubmitting,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             leadingIcon = { Text("R", color = KptTheme.colorScheme.onSurfaceVariant) },
+        )
+        Spacer(Modifier.height(KptTheme.spacing.sm))
+        QuickAmountRow(
+            enabled = !state.isSubmitting,
+            onSelect = { onAction(PayAction.AmountChanged(it)) },
         )
         Spacer(Modifier.height(KptTheme.spacing.md))
 
@@ -253,6 +259,30 @@ private fun PayScreenContent(
     }
 }
 
+/** Quick-amount chips (consistent with the Buy flow) that fill the amount field on tap. */
+@Composable
+private fun QuickAmountRow(
+    enabled: Boolean,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val amounts = listOf("50", "100", "200", "500")
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+    ) {
+        amounts.forEach { value ->
+            ChoiceChip(
+                label = "R$value",
+                selected = false,
+                enabled = enabled,
+                onClick = { onSelect(value) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
 /**
  * Horizontal bank picker. Selecting a bank auto-populates the universal branch code, so the user
  * never types it. The chosen bank is highlighted (matched by its branch code held in state).
@@ -323,7 +353,15 @@ private fun RailCard(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(if (selected) KptTheme.colorScheme.primary else KptTheme.colorScheme.surfaceVariant)
+            .background(if (selected) KptTheme.colorScheme.primary else KptTheme.colorScheme.surface)
+            .then(
+                // Unselected card gets a visible outline so it doesn't read as grey-on-grey.
+                if (selected) {
+                    Modifier
+                } else {
+                    Modifier.border(1.dp, KptTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                },
+            )
             .clickable(enabled = enabled, onClick = onClick)
             .padding(KptTheme.spacing.md),
     ) {

@@ -41,7 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
+import org.mifospay.core.common.TransactionText
+import org.mifospay.core.common.WalletNaming
 import org.mifospay.core.designsystem.component.MifosScaffold
 import org.mifospay.core.designsystem.component.Rosette
 import org.mifospay.core.designsystem.icon.MifosIcons
@@ -100,21 +102,19 @@ internal fun BuyScreen(
 
     val recent = state.transactions.take(3).map { txn ->
         val credit = txn.transactionType == TransactionType.CREDIT
-        val sign = if (credit) "+" else "−"
-        val symbol = txn.currency.displaySymbol
         BuyRecentItem(
-            title = txn.description.ifBlank { if (credit) "Money in" else "Money out" },
+            title = TransactionText.humanize(txn.description) ?: if (credit) "Money in" else "Money out",
             date = txn.date,
-            amountText = "$sign$symbol ${CurrencyFormatter.format(txn.amount, 2)}",
+            amountText = MoneyFormat.zarSigned(txn.amount, isCredit = credit),
             credit = credit,
             icon = iconForDescription(txn.description),
         )
     }
 
     BuyScreenContent(
-        accountName = account?.name,
+        accountName = account?.name?.let { WalletNaming.friendly(it) },
         accountMask = account?.number?.let { "•• ${it.takeLast(4)}" },
-        balanceText = account?.let { "${it.currency.displaySymbol} ${CurrencyFormatter.format(it.balance, 2)}" },
+        balanceText = account?.let { MoneyFormat.zar(it.balance) },
         recent = recent,
         onBack = onBack,
         onServiceClick = onServiceClick,
