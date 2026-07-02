@@ -25,6 +25,7 @@ import org.mifospay.core.network.model.payments.PaymentReasonCode
 import org.mifospay.core.network.model.payments.PaymentState
 import org.mifospay.core.network.model.payments.PaymentTarget
 import org.mifospay.core.network.model.payments.PayoutRail
+import org.mifospay.core.network.model.payments.SaBank
 import org.mifospay.core.network.model.payments.ZarAmount
 import org.mifospay.core.ui.utils.BaseViewModel
 import kotlin.uuid.ExperimentalUuidApi
@@ -67,11 +68,9 @@ class PayViewModel(
             is PayAction.HolderNameChanged -> mutableStateFlow.update {
                 it.copy(accountHolderName = action.value, error = null)
             }
-            is PayAction.BankNameChanged -> mutableStateFlow.update {
-                it.copy(bankName = action.value, error = null)
-            }
-            is PayAction.BranchCodeChanged -> mutableStateFlow.update {
-                it.copy(branchCode = action.value.trim(), error = null)
+            // Selecting a bank auto-populates the universal branch code (the user never types it).
+            is PayAction.BankSelected -> mutableStateFlow.update {
+                it.copy(bankName = action.bank.name, branchCode = action.bank.universalBranchCode, error = null)
             }
             is PayAction.AccountNumberChanged -> mutableStateFlow.update {
                 it.copy(accountNumber = action.value.trim(), error = null)
@@ -124,10 +123,12 @@ class PayViewModel(
                 }
             }
             PayMode.BANK -> {
-                if (current.accountHolderName.isBlank() || current.bankName.isBlank() ||
-                    current.branchCode.isBlank() || current.accountNumber.isBlank()
-                ) {
-                    mutableStateFlow.update { it.copy(error = "Complete all bank details.") }
+                if (current.bankName.isBlank() || current.branchCode.isBlank()) {
+                    mutableStateFlow.update { it.copy(error = "Select the recipient's bank.") }
+                    return
+                }
+                if (current.accountHolderName.isBlank() || current.accountNumber.isBlank()) {
+                    mutableStateFlow.update { it.copy(error = "Enter the account holder name and number.") }
                     return
                 }
                 // Mirror the server's PayShap cap for the Instant rail.
@@ -318,8 +319,7 @@ sealed interface PayAction {
     data class AmountChanged(val value: String) : PayAction
     data class PhoneChanged(val value: String) : PayAction
     data class HolderNameChanged(val value: String) : PayAction
-    data class BankNameChanged(val value: String) : PayAction
-    data class BranchCodeChanged(val value: String) : PayAction
+    data class BankSelected(val bank: SaBank) : PayAction
     data class AccountTypeChanged(val value: String) : PayAction
     data class AccountNumberChanged(val value: String) : PayAction
     data class RailChanged(val rail: String) : PayAction

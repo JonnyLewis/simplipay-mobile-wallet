@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -44,6 +46,8 @@ import org.mifospay.core.designsystem.component.MifosOutlinedTextField
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.network.model.payments.PaymentRoute
 import org.mifospay.core.network.model.payments.PayoutRail
+import org.mifospay.core.network.model.payments.SaBank
+import org.mifospay.core.network.model.payments.SouthAfricanBanks
 import template.core.base.designsystem.theme.KptTheme
 
 @Composable
@@ -153,22 +157,25 @@ private fun PayScreenContent(
                     readOnly = state.isSubmitting,
                 )
                 Spacer(Modifier.height(KptTheme.spacing.md))
-                MifosOutlinedTextField(
-                    value = state.bankName,
-                    label = "Bank name",
-                    onValueChange = { onAction(PayAction.BankNameChanged(it)) },
-                    singleLine = true,
-                    readOnly = state.isSubmitting,
+                Text(
+                    text = "Recipient's bank",
+                    style = KptTheme.typography.bodyMedium,
+                    color = KptTheme.colorScheme.onSurfaceVariant,
                 )
-                Spacer(Modifier.height(KptTheme.spacing.md))
-                MifosOutlinedTextField(
-                    value = state.branchCode,
-                    label = "Universal branch code",
-                    onValueChange = { onAction(PayAction.BranchCodeChanged(it)) },
-                    singleLine = true,
-                    readOnly = state.isSubmitting,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                Spacer(Modifier.height(KptTheme.spacing.sm))
+                BankCarousel(
+                    selectedBranchCode = state.branchCode,
+                    enabled = !state.isSubmitting,
+                    onSelect = { onAction(PayAction.BankSelected(it)) },
                 )
+                if (state.branchCode.isNotBlank()) {
+                    Spacer(Modifier.height(KptTheme.spacing.sm))
+                    Text(
+                        text = "Universal branch code ${state.branchCode} (auto-filled)",
+                        style = KptTheme.typography.bodySmall,
+                        color = KptTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Spacer(Modifier.height(KptTheme.spacing.md))
                 MifosOutlinedTextField(
                     value = state.accountNumber,
@@ -230,6 +237,32 @@ private fun PayScreenContent(
                 }
             },
         )
+    }
+}
+
+/**
+ * Horizontal bank picker. Selecting a bank auto-populates the universal branch code, so the user
+ * never types it. The chosen bank is highlighted (matched by its branch code held in state).
+ */
+@Composable
+private fun BankCarousel(
+    selectedBranchCode: String,
+    enabled: Boolean,
+    onSelect: (SaBank) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+    ) {
+        items(SouthAfricanBanks.ALL) { bank ->
+            ChoiceChip(
+                label = bank.name,
+                selected = bank.universalBranchCode == selectedBranchCode,
+                enabled = enabled,
+                onClick = { onSelect(bank) },
+            )
+        }
     }
 }
 
@@ -354,7 +387,7 @@ private fun ChoiceChip(
             .clip(RoundedCornerShape(10.dp))
             .background(if (selected) KptTheme.colorScheme.primary else KptTheme.colorScheme.surfaceVariant)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
