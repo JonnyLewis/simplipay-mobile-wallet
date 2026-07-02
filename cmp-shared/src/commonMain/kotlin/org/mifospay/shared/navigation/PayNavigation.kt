@@ -34,7 +34,10 @@ fun NavController.navigateToPay(mode: PayMode) {
     this.navigate(PayRoute(mode.name))
 }
 
-fun NavGraphBuilder.payScreen(onBackClick: () -> Unit) {
+fun NavGraphBuilder.payScreen(
+    onBackClick: () -> Unit,
+    navigateForPasscodeVerification: (verificationKey: String) -> Unit,
+) {
     composable<PayRoute> { entry ->
         val mode = runCatching { PayMode.valueOf(entry.toRoute<PayRoute>().mode) }
             .getOrDefault(PayMode.NUMBER)
@@ -46,6 +49,9 @@ fun NavGraphBuilder.payScreen(onBackClick: () -> Unit) {
             PayScreen(
                 modifier = Modifier.padding(padding),
                 startMode = mode,
+                navigateForPasscodeVerification = navigateForPasscodeVerification,
+                // The passcode gate writes its result onto this (PayRoute) destination's handle.
+                entryStateHandle = entry.savedStateHandle,
             )
         }
     }

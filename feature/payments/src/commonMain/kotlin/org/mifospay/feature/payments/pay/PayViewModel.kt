@@ -11,12 +11,15 @@ package org.mifospay.feature.payments.pay
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.mifospay.core.common.DataState
 import org.mifospay.core.data.repository.PaymentsRepository
+import org.mifospay.core.data.repository.UserVerificationRepository
 import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.network.model.payments.BankAccount
 import org.mifospay.core.network.model.payments.BankAccountType
@@ -49,7 +52,8 @@ import kotlin.uuid.Uuid
 class PayViewModel(
     private val paymentsRepository: PaymentsRepository,
     private val preferencesRepository: UserPreferencesRepository,
-) : BaseViewModel<PayState, Unit, PayAction>(
+    private val userVerificationRepository: UserVerificationRepository,
+) : BaseViewModel<PayState, PayEvent, PayAction>(
     initialState = PayState(),
 ) {
     // Stable per confirmed payment; regenerated only after success or an explicit reset.
@@ -114,6 +118,10 @@ class PayViewModel(
                 clientRefId = null
                 mutableStateFlow.update { PayState(mode = it.mode) }
             }
+            // Round-trip result from the passcode/biometric gate (screen-observed saved-state-handle).
+            is PayAction.UpdateUserVerificationResult -> mutableStateFlow.update {
+                it.copy(userVerificationResult = action.result, isAwaitingPasscodeVerification = false)
+            }
         }
     }
 
@@ -165,61 +173,96 @@ class PayViewModel(
         return amount
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun performSend() {
         val current = state
         val amount = validate() ?: return
-        val ref = clientRefId ?: Uuid.randomRef().also { clientRefId = it }
 
         viewModelScope.launch {
-            mutableStateFlow.update { it.copy(isSubmitting = true, error = null, statusText = "Sending…") }
-
-            // defaultAccountId is DataStore-backed and resolves asynchronously — await the
-            // first real (non-null) value instead of reading .value synchronously, which
-            // returns the flow's null initial value even when a default account exists.
-            val payerAccountId = withTimeoutOrNull(PAYER_LOOKUP_TIMEOUT_MS) {
-                preferencesRepository.defaultAccountId.first { it != null }
-            }?.toString()
-            if (payerAccountId.isNullOrEmpty()) {
+            // Step-up auth: a send at or above the threshold must be re-authenticated (passcode or
+            // biometric) right before it leaves the wallet, even though the session is already unlocked.
+            if (amount.minorUnits >= REAUTH_THRESHOLD_MINOR_UNITS && !verifyUser()) {
                 mutableStateFlow.update {
                     it.copy(
                         isSubmitting = false,
                         statusText = null,
-                        error = "No wallet account is selected. Open Home once to load your wallet, then try again.",
+                        error = "We couldn't verify it's you. Please try again.",
                     )
                 }
                 return@launch
             }
+            executeSend(current, amount)
+        }
+    }
 
-            val initiate = when (current.mode) {
-                PayMode.NUMBER -> paymentsRepository.payOnUs(
-                    payerAccountId = payerAccountId,
-                    target = PaymentTarget.Phone(current.phone),
-                    amount = amount,
-                    clientRefId = ref,
-                )
-                PayMode.BANK -> paymentsRepository.payoutToBank(
-                    payerAccountId = payerAccountId,
-                    bankAccount = BankAccount(
-                        accountHolderName = current.accountHolderName.trim(),
-                        bankName = current.bankName.trim(),
-                        universalBranchCode = current.branchCode,
-                        accountNumber = current.accountNumber,
-                        accountType = current.accountType,
-                    ),
-                    amount = amount,
-                    clientRefId = ref,
-                    rail = current.bankRail,
-                )
-            }.first { it !is DataState.Loading }
+    /**
+     * Suspends until the passcode/biometric gate round trip completes. Emits
+     * [PayEvent.NavigateForPasscodeVerification], waits for the screen to write the boolean back via
+     * [PayAction.UpdateUserVerificationResult], then confirms the 30 s token with
+     * [UserVerificationRepository.consumeVerification]. Returns true only when both pass.
+     */
+    private suspend fun verifyUser(): Boolean {
+        mutableStateFlow.update {
+            it.copy(userVerificationResult = null, isAwaitingPasscodeVerification = true)
+        }
+        sendEvent(PayEvent.NavigateForPasscodeVerification)
+        val result = stateFlow
+            .map { it.userVerificationResult }
+            .filter { it != null }
+            .first()
+        return result == true && userVerificationRepository.consumeVerification()
+    }
 
-            when (initiate) {
-                is DataState.Error -> mutableStateFlow.update {
-                    it.copy(isSubmitting = false, statusText = null, error = initiate.message)
-                }
-                is DataState.Success -> pollUntilTerminal(initiate.data.transactionId)
-                DataState.Loading -> Unit
+    @OptIn(ExperimentalUuidApi::class)
+    private suspend fun executeSend(current: PayState, amount: ZarAmount) {
+        val ref = clientRefId ?: Uuid.randomRef().also { clientRefId = it }
+
+        mutableStateFlow.update { it.copy(isSubmitting = true, error = null, statusText = "Sending…") }
+
+        // defaultAccountId is DataStore-backed and resolves asynchronously — await the
+        // first real (non-null) value instead of reading .value synchronously, which
+        // returns the flow's null initial value even when a default account exists.
+        val payerAccountId = withTimeoutOrNull(PAYER_LOOKUP_TIMEOUT_MS) {
+            preferencesRepository.defaultAccountId.first { it != null }
+        }?.toString()
+        if (payerAccountId.isNullOrEmpty()) {
+            mutableStateFlow.update {
+                it.copy(
+                    isSubmitting = false,
+                    statusText = null,
+                    error = "No wallet account is selected. Open Home once to load your wallet, then try again.",
+                )
             }
+            return
+        }
+
+        val initiate = when (current.mode) {
+            PayMode.NUMBER -> paymentsRepository.payOnUs(
+                payerAccountId = payerAccountId,
+                target = PaymentTarget.Phone(current.phone),
+                amount = amount,
+                clientRefId = ref,
+            )
+            PayMode.BANK -> paymentsRepository.payoutToBank(
+                payerAccountId = payerAccountId,
+                bankAccount = BankAccount(
+                    accountHolderName = current.accountHolderName.trim(),
+                    bankName = current.bankName.trim(),
+                    universalBranchCode = current.branchCode,
+                    accountNumber = current.accountNumber,
+                    accountType = current.accountType,
+                ),
+                amount = amount,
+                clientRefId = ref,
+                rail = current.bankRail,
+            )
+        }.first { it !is DataState.Loading }
+
+        when (initiate) {
+            is DataState.Error -> mutableStateFlow.update {
+                it.copy(isSubmitting = false, statusText = null, error = initiate.message)
+            }
+            is DataState.Success -> pollUntilTerminal(initiate.data.transactionId)
+            DataState.Loading -> Unit
         }
     }
 
@@ -282,8 +325,14 @@ class PayViewModel(
         private const val MAX_POLLS = 20
         private const val POLL_INTERVAL_MS = 2_000L
         private const val PAYER_LOOKUP_TIMEOUT_MS = 3_000L
+
+        /** Sends at or above R1,000.00 require a step-up passcode/biometric re-auth before leaving. */
+        const val REAUTH_THRESHOLD_MINOR_UNITS: Long = 1_000_00L
     }
 }
+
+/** SavedStateHandle key the Pay screen observes for the passcode-gate round-trip boolean. */
+const val PAY_VERIFICATION_KEY = "pay_send_verification_key"
 
 @OptIn(ExperimentalUuidApi::class)
 private fun Uuid.Companion.randomRef(): String = random().toString()
@@ -327,6 +376,10 @@ data class PayState(
     val statusText: String? = null,
     val error: String? = null,
     val result: PayResult? = null,
+    // Step-up auth round-trip: null until the passcode gate returns; true = verified, false = cancelled/rejected.
+    val userVerificationResult: Boolean? = null,
+    // True between emitting NavigateForPasscodeVerification and receiving the result (drives the cancel guard).
+    val isAwaitingPasscodeVerification: Boolean = false,
 ) {
     val payButtonLabel: String
         get() = when (mode) {
@@ -394,4 +447,12 @@ sealed interface PayAction {
     /** Resend the failed instant attempt as a Standard (EFT) payment — new clientRefId. */
     data object SendAsEft : PayAction
     data object DismissResult : PayAction
+
+    /** Result of the passcode/biometric gate, written back by the screen from its saved-state-handle. */
+    data class UpdateUserVerificationResult(val result: Boolean) : PayAction
+}
+
+sealed interface PayEvent {
+    /** Ask the host to push the internal passcode gate; the screen forwards [PAY_VERIFICATION_KEY]. */
+    data object NavigateForPasscodeVerification : PayEvent
 }

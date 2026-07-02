@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +42,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.compose.viewmodel.koinViewModel
 import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.designsystem.component.MifosButton
@@ -50,12 +56,18 @@ import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.network.model.payments.PaymentRoute
 import org.mifospay.core.network.model.payments.PayoutRail
 import org.mifospay.core.network.model.payments.SaBank
+import org.mifospay.core.ui.utils.EventsEffect
 import template.core.base.designsystem.theme.KptTheme
 
 @Composable
 fun PayScreen(
     modifier: Modifier = Modifier,
     startMode: PayMode? = null,
+    // Push the internal passcode gate for a step-up re-auth; the screen forwards PAY_VERIFICATION_KEY.
+    // Both Send hosts wire this to navController::navigateToInternalMifosPasscodeScreen.
+    navigateForPasscodeVerification: ((verificationKey: String) -> Unit)? = null,
+    // The host destination's SavedStateHandle — where the passcode screen writes the verified boolean.
+    entryStateHandle: SavedStateHandle? = null,
     viewModel: PayViewModel = koinViewModel(),
 ) {
     // Deep-link entry (Send sheet): open directly on the requested destination type.
@@ -63,6 +75,38 @@ fun PayScreen(
         startMode?.let { viewModel.trySendAction(PayAction.ModeChanged(it)) }
     }
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+
+    // Observe the passcode-gate round-trip boolean written back onto this destination's handle.
+    val authResult by (
+        entryStateHandle?.getStateFlow<Boolean?>(PAY_VERIFICATION_KEY, null)
+            ?: remember { MutableStateFlow<Boolean?>(null) }
+        ).collectAsStateWithLifecycle()
+
+    LaunchedEffect(authResult) {
+        authResult?.let { result ->
+            entryStateHandle?.remove<Boolean>(PAY_VERIFICATION_KEY)
+            viewModel.trySendAction(PayAction.UpdateUserVerificationResult(result))
+        }
+    }
+
+    // Cancel guard: if the user backs out of the passcode screen without a result, resume the
+    // suspended send with a failure so the VM doesn't wait forever.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            if (authResult == null && state.isAwaitingPasscodeVerification) {
+                viewModel.trySendAction(PayAction.UpdateUserVerificationResult(false))
+            }
+        }
+    }
+
+    EventsEffect(viewModel) { event ->
+        when (event) {
+            PayEvent.NavigateForPasscodeVerification ->
+                navigateForPasscodeVerification?.invoke(PAY_VERIFICATION_KEY)
+        }
+    }
+
     PayScreenContent(
         state = state,
         onAction = viewModel::trySendAction,

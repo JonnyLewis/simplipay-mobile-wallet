@@ -192,7 +192,14 @@ internal fun MifosNavHost(
         TabContent(stringResource(Res.string.feature_payments_send)) {
             // Pay to a phone number (on-us / PayShap) or a bank account (EFT), wired to the
             // SimpliPay Payments API via PayViewModel.
-            PayScreen()
+            PayScreen(
+                navigateForPasscodeVerification = { verificationKey ->
+                    navController.navigateToInternalMifosPasscodeScreen(verificationKey)
+                },
+                // On the Payments tab the hosting destination is PAYMENTS_ROUTE, so the passcode
+                // screen writes its result onto that entry's handle — observe the same one here.
+                entryStateHandle = navController.getBackStackEntry(PAYMENTS_ROUTE).savedStateHandle,
+            )
         },
         TabContent(stringResource(Res.string.feature_payments_request)) {
             RequestScreen(
@@ -358,6 +365,9 @@ internal fun MifosNavHost(
 
         payScreen(
             onBackClick = { navController.popBackStack() },
+            navigateForPasscodeVerification = { verificationKey ->
+                navController.navigateToInternalMifosPasscodeScreen(verificationKey)
+            },
         )
 
         receiveScreen(
