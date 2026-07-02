@@ -96,14 +96,19 @@ class PayViewModel(
             is PayAction.RailChanged -> mutableStateFlow.update {
                 it.copy(bankRail = action.rail, error = null)
             }
-            PayAction.Submit -> submit()
-            PayAction.Retry -> submit()
+            // Tapping the pay button REVIEWS the payment (shows the confirm step); it does not send.
+            PayAction.Submit -> review()
+            PayAction.Retry -> review()
+            // The user confirmed on the review screen — this is the only path that actually sends money.
+            PayAction.ConfirmSend -> performSend()
+            // Back out of the confirm step to edit the payment.
+            PayAction.EditPayment -> mutableStateFlow.update { it.copy(showConfirm = false) }
             PayAction.SendAsEft -> {
                 // The instant attempt is terminally FAILED server-side — this is a NEW payment
                 // on the Standard rail, so it needs a fresh idempotency key.
                 clientRefId = null
-                mutableStateFlow.update { it.copy(result = null, bankRail = PayoutRail.EFT) }
-                submit()
+                mutableStateFlow.update { it.copy(result = null, showConfirm = false, bankRail = PayoutRail.EFT) }
+                review()
             }
             PayAction.DismissResult -> {
                 clientRefId = null
@@ -112,50 +117,58 @@ class PayViewModel(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
-    private fun submit() {
+    /** Validate the form and, if valid, show the confirm step. Does NOT send. */
+    private fun review() {
+        if (validate() == null) return
+        mutableStateFlow.update { it.copy(showConfirm = true, error = null) }
+    }
+
+    /** Returns the parsed amount if the form is valid, else null (and sets an error). */
+    private fun validate(): ZarAmount? {
         val current = state
         val amount = try {
             ZarAmount.fromRands(current.amount)
         } catch (e: Exception) {
             mutableStateFlow.update { it.copy(error = "Enter a valid amount.") }
-            return
+            return null
         }
-
-        // Validate per mode.
         when (current.mode) {
             PayMode.NUMBER -> {
                 if (current.phone.isBlank()) {
                     mutableStateFlow.update { it.copy(error = "Enter a phone number.") }
-                    return
+                    return null
                 }
-                // Mirror the server's PayShap cap: a phone payout must be below R50,000.
                 if (!PayShapLimits.isWithinPayShapCap(amount)) {
                     mutableStateFlow.update {
                         it.copy(error = "Amounts of R50,000 or more must be paid to a bank account.")
                     }
-                    return
+                    return null
                 }
             }
             PayMode.BANK -> {
                 if (current.bankName.isBlank() || current.branchCode.isBlank()) {
                     mutableStateFlow.update { it.copy(error = "Select the recipient's bank.") }
-                    return
+                    return null
                 }
                 if (current.accountHolderName.isBlank() || current.accountNumber.isBlank()) {
                     mutableStateFlow.update { it.copy(error = "Enter the account holder name and number.") }
-                    return
+                    return null
                 }
-                // Mirror the server's PayShap cap for the Instant rail.
                 if (current.bankRail == PayoutRail.PAYSHAP && !PayShapLimits.isWithinPayShapCap(amount)) {
                     mutableStateFlow.update {
                         it.copy(error = "Instant payments must be under R50,000 — switch to Standard (EFT).")
                     }
-                    return
+                    return null
                 }
             }
         }
+        return amount
+    }
 
+    @OptIn(ExperimentalUuidApi::class)
+    private fun performSend() {
+        val current = state
+        val amount = validate() ?: return
         val ref = clientRefId ?: Uuid.randomRef().also { clientRefId = it }
 
         viewModelScope.launch {
@@ -308,6 +321,8 @@ data class PayState(
     val banks: List<SaBank> = SouthAfricanBanks.ALL,
     // Instant (PayShap) is the preferred default for bank payouts; Standard (EFT) is the fallback.
     val bankRail: String = PayoutRail.PAYSHAP,
+    // True once the form is validated and the user is on the Confirm/review step (before sending).
+    val showConfirm: Boolean = false,
     val isSubmitting: Boolean = false,
     val statusText: String? = null,
     val error: String? = null,
@@ -318,6 +333,31 @@ data class PayState(
             PayMode.NUMBER -> "Pay to number"
             PayMode.BANK -> if (bankRail == PayoutRail.PAYSHAP) "Pay instantly" else "Pay by EFT"
         }
+
+    /** Confirm-step: who the money is going to. */
+    val confirmRecipient: String
+        get() = when (mode) {
+            PayMode.NUMBER -> phone
+            PayMode.BANK -> buildString {
+                append(accountHolderName.trim().ifBlank { "Bank account" })
+                if (bankName.isNotBlank()) append(" · $bankName")
+                if (accountNumber.length >= 4) append(" ••${accountNumber.takeLast(4)}")
+            }
+        }
+
+    /** Confirm-step: how it will be sent + timing. */
+    val confirmMethod: String
+        get() = when (mode) {
+            PayMode.NUMBER -> "To mobile number · instant if they're a SimpliPay user"
+            PayMode.BANK -> if (bankRail == PayoutRail.PAYSHAP) {
+                "Instant (PayShap) · arrives in seconds"
+            } else {
+                "Standard (EFT) · 1–2 business days"
+            }
+        }
+
+    /** Confirm-step: fee. On-us and current payouts are free; the receipt confirms any fee applied. */
+    val confirmFee: String get() = "Free"
 }
 
 sealed interface PayResult {
@@ -340,8 +380,16 @@ sealed interface PayAction {
     data class AccountTypeChanged(val value: String) : PayAction
     data class AccountNumberChanged(val value: String) : PayAction
     data class RailChanged(val rail: String) : PayAction
+
+    /** Review the payment (validate + show the confirm step). Does not send. */
     data object Submit : PayAction
     data object Retry : PayAction
+
+    /** Confirm on the review step — the only action that actually sends money. */
+    data object ConfirmSend : PayAction
+
+    /** Return from the confirm step to the form. */
+    data object EditPayment : PayAction
 
     /** Resend the failed instant attempt as a Standard (EFT) payment — new clientRefId. */
     data object SendAsEft : PayAction

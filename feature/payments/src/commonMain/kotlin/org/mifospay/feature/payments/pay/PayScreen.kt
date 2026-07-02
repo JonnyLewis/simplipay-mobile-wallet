@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
+import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.designsystem.component.MifosButton
 import org.mifospay.core.designsystem.component.MifosOutlinedTextField
 import org.mifospay.core.designsystem.icon.MifosIcons
@@ -79,6 +81,17 @@ private fun PayScreenContent(
             result = result,
             onDone = { onAction(PayAction.DismissResult) },
             onSendAsEft = { onAction(PayAction.SendAsEft) },
+            modifier = modifier,
+        )
+        return
+    }
+
+    // Review/confirm step before any money leaves.
+    if (state.showConfirm) {
+        PayConfirmContent(
+            state = state,
+            onConfirm = { onAction(PayAction.ConfirmSend) },
+            onEdit = { onAction(PayAction.EditPayment) },
             modifier = modifier,
         )
         return
@@ -396,6 +409,113 @@ private fun ChoiceChip(
             style = KptTheme.typography.labelMedium,
             textAlign = TextAlign.Center,
             color = if (selected) KptTheme.colorScheme.onPrimary else KptTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+/** Review-before-send: shows exactly who/how much/how/fee, and only sends on explicit Confirm. */
+@Composable
+private fun PayConfirmContent(
+    state: PayState,
+    onConfirm: () -> Unit,
+    onEdit: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(KptTheme.spacing.lg),
+    ) {
+        Text(
+            text = "Review payment",
+            style = KptTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = KptTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(KptTheme.spacing.md))
+
+        Text(
+            text = MoneyFormat.zar(state.amount.toDoubleOrNull() ?: 0.0),
+            style = KptTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            color = KptTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(KptTheme.spacing.lg))
+
+        ConfirmRow(label = "To", value = state.confirmRecipient)
+        ConfirmRow(label = "How", value = state.confirmMethod)
+        ConfirmRow(label = "Fee", value = state.confirmFee)
+
+        state.error?.let { err ->
+            Spacer(Modifier.height(KptTheme.spacing.md))
+            Text(text = err, style = KptTheme.typography.bodyMedium, color = KptTheme.colorScheme.error)
+        }
+
+        Spacer(Modifier.height(KptTheme.spacing.xl))
+        MifosButton(
+            onClick = onConfirm,
+            enabled = !state.isSubmitting,
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            text = {
+                if (state.isSubmitting) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = KptTheme.colorScheme.onPrimary,
+                        )
+                        Spacer(Modifier.size(KptTheme.spacing.sm))
+                        Text(state.statusText ?: "Sending…")
+                    }
+                } else {
+                    Text("Confirm & pay")
+                }
+            },
+        )
+        Spacer(Modifier.height(KptTheme.spacing.sm))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(enabled = !state.isSubmitting) { onEdit() }
+                .padding(vertical = 12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "Edit",
+                style = KptTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium,
+                color = KptTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConfirmRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = KptTheme.spacing.sm),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.width(64.dp),
+            style = KptTheme.typography.bodyMedium,
+            color = KptTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            modifier = Modifier.weight(1f),
+            style = KptTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = KptTheme.colorScheme.onSurface,
         )
     }
 }
