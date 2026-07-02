@@ -134,7 +134,6 @@ import org.mifospay.feature.standing.instruction.details.siDetailsScreen
 import org.mifospay.feature.transfer.interbank.navigation.interbankTransferScreen
 import org.mifospay.feature.transfer.interbank.navigation.navigateToInterbankTransfer
 import org.mifospay.feature.transfer.intrabank.navigation.intraBankHubScreen
-import org.mifospay.feature.transfer.intrabank.navigation.navigateToIntraBankHub
 import org.mifospay.feature.transfer.intrabank.navigation.navigateToTransferConfirm
 import org.mifospay.feature.transfer.intrabank.navigation.transferConfirmScreen
 import org.mifospay.feature.transfer.intrabank.selectScreen.navigateToSelectAccountScreen
