@@ -44,7 +44,8 @@ import mobile_wallet.feature.history.generated.resources.feature_history_descrip
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
+import org.mifospay.core.common.TransactionText
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.savingsaccount.Transaction
 import org.mifospay.core.model.savingsaccount.TransactionType
@@ -135,8 +136,14 @@ internal fun TransactionItem(
                     }
 
                     Column {
+                        val title = TransactionText.humanize(transaction.transfer?.transferDescription)
+                            ?: when (transaction.transactionType) {
+                                TransactionType.DEBIT -> "Money out"
+                                TransactionType.CREDIT -> "Money in"
+                                else -> "Transaction"
+                            }
                         Text(
-                            text = transaction.transactionType.name,
+                            text = title,
                             fontWeight = FontWeight(500),
                             style = KptTheme.typography.bodySmall,
                             color = tokens.ink,
@@ -170,11 +177,7 @@ internal fun TransactionItem(
                         tint = accentColor,
                         contentDescription = null,
                     )
-                    val amount = CurrencyFormatter.format(
-                        balance = transaction.amount,
-                        currencyCode = transaction.currency.code,
-                        maximumFractionDigits = 2,
-                    )
+                    val amount = MoneyFormat.zar(transaction.amount)
                     Text(
                         modifier = Modifier,
                         text = amount,

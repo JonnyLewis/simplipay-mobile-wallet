@@ -35,16 +35,23 @@ import mobile_wallet.core.ui.generated.resources.core_ui_money_in
 import mobile_wallet.core.ui.generated.resources.core_ui_money_out
 import org.jetbrains.compose.resources.painterResource
 import org.mifospay.core.common.MoneyFormat
+import org.mifospay.core.common.TransactionText
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.savingsaccount.Transaction
 import org.mifospay.core.model.savingsaccount.TransactionType
 import template.core.base.designsystem.theme.KptTheme
 
-/** Human-readable row title (no raw "DEBIT"/"CREDIT"). Full counterparty label lands with the backend enricher. */
-private fun Transaction.rowTitle(): String = when (transactionType) {
-    TransactionType.DEBIT -> "Money out"
-    TransactionType.CREDIT -> "Money in"
-    else -> "Transaction"
+/**
+ * Human-readable row title: the connector-written narrative (e.g. "PayShap to Capitec ••0777") when present,
+ * else a plain direction label. Never raw "DEBIT"/"CREDIT".
+ */
+private fun Transaction.rowTitle(): String {
+    TransactionText.humanize(transfer?.transferDescription)?.let { return it }
+    return when (transactionType) {
+        TransactionType.DEBIT -> "Money out"
+        TransactionType.CREDIT -> "Money in"
+        else -> "Transaction"
+    }
 }
 
 @Composable
