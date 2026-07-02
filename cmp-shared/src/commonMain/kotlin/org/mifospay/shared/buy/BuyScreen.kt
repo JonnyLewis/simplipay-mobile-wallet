@@ -80,7 +80,6 @@ private fun iconForDescription(description: String): ImageVector {
         "water" in d -> MifosIcons.Water
         "dstv" in d || "tv" in d -> MifosIcons.TvCable
         "voucher" in d -> MifosIcons.GiftCard
-        "bet" in d -> MifosIcons.Betting
         else -> MifosIcons.Receipt
     }
 }

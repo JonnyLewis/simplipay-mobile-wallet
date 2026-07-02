@@ -73,7 +73,6 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Smartphone
-import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Visibility
@@ -185,7 +184,6 @@ object MifosIcons {
     val TvCable = Icons.Filled.Tv
     val Water = Icons.Filled.WaterDrop
     val Internet = Icons.Filled.Router
-    val Betting = Icons.Filled.SportsEsports
     val GiftCard = Icons.Filled.CardGiftcard
     val Storefront = Icons.Filled.Storefront
     val Wallet = Icons.Filled.AccountBalanceWallet

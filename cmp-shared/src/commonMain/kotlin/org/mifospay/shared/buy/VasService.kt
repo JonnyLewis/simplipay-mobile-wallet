@@ -15,7 +15,7 @@ import org.mifospay.core.designsystem.icon.MifosIcons
 /**
  * The catalogue of Value-Added Services offered on the Buy hub. Order and tile
  * labels mirror the "Buy · VAS" frame of the SimpliPay design (Airtime, Data,
- * Electric, Water, DStv/TV, Vouchers, Betting, Bills).
+ * Electric, Water, DStv/TV, Vouchers, Bills).
  *
  * @property tileLabel short label shown on the grid tile.
  * @property label full display name used as the purchase-screen title.
@@ -37,7 +37,6 @@ enum class VasService(
     WATER("Water", "Water", MifosIcons.Water, "Account number", "ACC-000000"),
     TV("DStv/TV", "DStv / TV", MifosIcons.TvCable, "Smartcard number", "1234 5678 90"),
     VOUCHERS("Vouchers", "Vouchers", MifosIcons.GiftCard, "Recipient email", "name@example.com"),
-    BETTING("Betting", "Betting", MifosIcons.Betting, "Betting ID", "ID-000000"),
     BILLS("Bills", "Bills", MifosIcons.Receipt, "Account number", "ACC-000000"),
     ;
 
