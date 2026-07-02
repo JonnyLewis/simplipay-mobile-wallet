@@ -86,7 +86,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
+import org.mifospay.core.common.WalletNaming
 import org.mifospay.core.designsystem.component.BasicDialogState
 import org.mifospay.core.designsystem.component.LoadingDialogState
 import org.mifospay.core.designsystem.component.MifosBasicDialog
@@ -508,10 +509,7 @@ private fun AccountCard(
                 }
             }
 
-            val accountBalance = "${account.currency.displaySymbol} ${CurrencyFormatter.format(
-                balance = account.balance,
-                maximumFractionDigits = 2,
-            )}"
+            val accountBalance = MoneyFormat.zar(account.balance)
 
             Text(
                 text = accountBalance,
@@ -528,7 +526,7 @@ private fun AccountCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                SavingsChip(label = account.name)
+                SavingsChip(label = WalletNaming.friendly(account.name))
                 Text(
                     text = "•••• ${account.number.takeLast(4)}",
                     style = KptTheme.typography.bodyMedium.copy(

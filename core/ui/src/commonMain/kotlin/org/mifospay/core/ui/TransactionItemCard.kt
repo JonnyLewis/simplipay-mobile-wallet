@@ -34,11 +34,18 @@ import mobile_wallet.core.ui.generated.resources.Res
 import mobile_wallet.core.ui.generated.resources.core_ui_money_in
 import mobile_wallet.core.ui.generated.resources.core_ui_money_out
 import org.jetbrains.compose.resources.painterResource
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.savingsaccount.Transaction
 import org.mifospay.core.model.savingsaccount.TransactionType
 import template.core.base.designsystem.theme.KptTheme
+
+/** Human-readable row title (no raw "DEBIT"/"CREDIT"). Full counterparty label lands with the backend enricher. */
+private fun Transaction.rowTitle(): String = when (transactionType) {
+    TransactionType.DEBIT -> "Money out"
+    TransactionType.CREDIT -> "Money in"
+    else -> "Transaction"
+}
 
 @Composable
 fun TransactionItemCard(
@@ -64,7 +71,7 @@ fun TransactionItemCard(
                 modifier = Modifier,
             ) {
                 Text(
-                    text = transaction.transactionType.toString(),
+                    text = transaction.rowTitle(),
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight(500),
@@ -80,15 +87,10 @@ fun TransactionItemCard(
                     ),
                 )
             }
-            val formattedAmount = CurrencyFormatter.format(
-                balance = transaction.amount,
-                currencyCode = transaction.currency.code,
-                maximumFractionDigits = 2,
-            )
             val amount = when (transaction.transactionType) {
-                TransactionType.DEBIT -> "- $formattedAmount"
-                TransactionType.CREDIT -> "+ $formattedAmount"
-                else -> formattedAmount
+                TransactionType.DEBIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = false)
+                TransactionType.CREDIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = true)
+                else -> MoneyFormat.zar(transaction.amount)
             }
             Text(
                 modifier = Modifier,
@@ -155,7 +157,7 @@ fun TransactionItem(
 
                 Column {
                     Text(
-                        text = transaction.transactionType.name.uppercase(),
+                        text = transaction.rowTitle(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight(500),
                         style = KptTheme.typography.bodySmall,
@@ -173,18 +175,10 @@ fun TransactionItem(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val formattedAmount =
-                    "${transaction.currency.displaySymbol}${
-                        CurrencyFormatter.format(
-                            balance = transaction.amount,
-                            maximumFractionDigits = 2,
-                        )
-                    }"
-
                 val amount = when (transaction.transactionType) {
-                    TransactionType.DEBIT -> "- $formattedAmount"
-                    TransactionType.CREDIT -> "+ $formattedAmount"
-                    else -> formattedAmount
+                    TransactionType.DEBIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = false)
+                    TransactionType.CREDIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = true)
+                    else -> MoneyFormat.zar(transaction.amount)
                 }
 
                 Text(

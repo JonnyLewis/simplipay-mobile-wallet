@@ -50,7 +50,7 @@ import mobile_wallet.feature.history.generated.resources.feature_history_header_
 import mobile_wallet.feature.history.generated.resources.feature_history_header_debit
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.designsystem.component.MifosScaffold
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.MifosTheme
@@ -140,7 +140,6 @@ internal fun HistoryScreenContent(
                     )
                     HistorySummaryRow(
                         transactions = state.transactions,
-                        currencySymbol = state.selectedAccount?.currency?.displaySymbol ?: "",
                     )
                     HistoryFilterChips(
                         selected = state.selectedTransactionType,
@@ -315,7 +314,6 @@ private fun HistoryScreenHeader(
 @Composable
 private fun HistorySummaryRow(
     transactions: List<Transaction>,
-    currencySymbol: String,
     modifier: Modifier = Modifier,
 ) {
     val tokens = SimpliPayTheme.tokens
@@ -335,13 +333,13 @@ private fun HistorySummaryRow(
         SummaryCard(
             modifier = Modifier.weight(1f),
             label = stringResource(Res.string.feature_history_header_credit).uppercase(),
-            amount = "$currencySymbol${CurrencyFormatter.format(totalIn, maximumFractionDigits = 2)}",
+            amount = MoneyFormat.zar(totalIn),
             amountColor = tokens.credit,
         )
         SummaryCard(
             modifier = Modifier.weight(1f),
             label = stringResource(Res.string.feature_history_header_debit).uppercase(),
-            amount = "$currencySymbol${CurrencyFormatter.format(totalOut, maximumFractionDigits = 2)}",
+            amount = MoneyFormat.zar(totalOut),
             amountColor = tokens.debit,
         )
     }
