@@ -16,23 +16,39 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import org.mifospay.core.designsystem.component.MifosScaffold
+import org.mifospay.feature.payments.ReceiveDetailScreen
+import org.mifospay.feature.payments.ReceiveMethod
 import org.mifospay.feature.payments.RequestScreen
 
 /**
  * Standalone "Receive" screen — the SAME [RequestScreen] shown in the Payments → Request tab, reached from
- * the home "Receive Money" quick action. One receive experience (Payment QR + mobile number) instead of the
- * old divergent bottom sheet. Keeps its own back bar; the app chrome adds the bottom nav (see isReceiveRoute).
+ * the home "Receive Money" quick action. It lists receive methods (Payment QR + mobile number + EFT); each
+ * opens its own detail screen ([ReceiveDetailRoute]) instead of dumping every method's metadata inline.
+ * Keeps its own back bar; the app chrome adds the bottom nav (see isReceiveRoute).
  */
 @Serializable
 data object ReceiveRoute
+
+/** Per-method receive detail screen (mobile number / EFT bank-transfer details). */
+@Serializable
+data class ReceiveDetailRoute(val method: String)
 
 fun NavController.navigateToReceive() {
     this.navigate(ReceiveRoute)
 }
 
-fun NavGraphBuilder.receiveScreen(onBackClick: () -> Unit, onShowQr: () -> Unit) {
+fun NavController.navigateToReceiveDetail(method: ReceiveMethod) {
+    this.navigate(ReceiveDetailRoute(method.name))
+}
+
+fun NavGraphBuilder.receiveScreen(
+    onBackClick: () -> Unit,
+    onShowQr: () -> Unit,
+    onShowDetail: (ReceiveMethod) -> Unit,
+) {
     composable<ReceiveRoute> {
         MifosScaffold(
             modifier = Modifier.fillMaxSize(),
@@ -42,7 +58,19 @@ fun NavGraphBuilder.receiveScreen(onBackClick: () -> Unit, onShowQr: () -> Unit)
             RequestScreen(
                 modifier = Modifier.padding(padding),
                 showQr = onShowQr,
+                onShowDetail = onShowDetail,
             )
         }
+    }
+}
+
+fun NavGraphBuilder.receiveDetailScreen(onBackClick: () -> Unit) {
+    composable<ReceiveDetailRoute> { entry ->
+        val method = runCatching { ReceiveMethod.valueOf(entry.toRoute<ReceiveDetailRoute>().method) }
+            .getOrDefault(ReceiveMethod.EFT)
+        ReceiveDetailScreen(
+            method = method,
+            onBack = onBackClick,
+        )
     }
 }

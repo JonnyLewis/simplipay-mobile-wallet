@@ -204,6 +204,7 @@ internal fun MifosNavHost(
         TabContent(stringResource(Res.string.feature_payments_request)) {
             RequestScreen(
                 showQr = navController::navigateToMpayQrScreen,
+                onShowDetail = navController::navigateToReceiveDetail,
             )
         },
         TabContent(stringResource(Res.string.feature_payments_history)) {
@@ -373,6 +374,11 @@ internal fun MifosNavHost(
         receiveScreen(
             onBackClick = { navController.popBackStack() },
             onShowQr = navController::navigateToMpayQrScreen,
+            onShowDetail = navController::navigateToReceiveDetail,
+        )
+
+        receiveDetailScreen(
+            onBackClick = { navController.popBackStack() },
         )
 
         settingsScreen(
