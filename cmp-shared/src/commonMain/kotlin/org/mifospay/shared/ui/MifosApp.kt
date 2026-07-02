@@ -92,8 +92,9 @@ internal fun MifosApp(
 
         val snackbarHostState = remember { SnackbarHostState() }
         val destination = appState.currentTopLevelDestination
-        // Pay (Send-money) detail screen keeps its own back bar but should still show the bottom nav.
+        // Pay/Receive detail screens keep their own back bar but should still show the bottom nav.
         val onPayScreen = appState.isPayRoute
+        val onReceiveScreen = appState.isReceiveRoute
 
         // A wallet-no-access user has no real client (stored client defaults to id == 0). They may
         // only see the locked Home; the other tabs/QR depend on a real client and would 404, so
@@ -103,10 +104,10 @@ internal fun MifosApp(
         val isLocked = client == null || client?.id == 0L
         val onNavigateToDestination: (TopLevelDestination) -> Unit = { dest ->
             if (!isLocked || dest == TopLevelDestination.HOME) {
-                // PayRoute is a pushed detail screen in MAIN_GRAPH. Tab navigation uses
-                // saveState/restoreState, which would otherwise save PayRoute into Home's back-stack
-                // state and restore it when returning to Home (landing back on Pay). Pop it first.
-                if (onPayScreen) appState.navController.popBackStack()
+                // Pay/Receive are pushed detail screens in MAIN_GRAPH. Tab navigation uses
+                // saveState/restoreState, which would otherwise save the detail into Home's back-stack
+                // state and restore it when returning to Home. Pop it first so tabs switch cleanly.
+                if (onPayScreen || onReceiveScreen) appState.navController.popBackStack()
                 appState.navigateToTopLevelDestination(dest)
             }
         }
@@ -133,7 +134,7 @@ internal fun MifosApp(
             contentColor = KptTheme.colorScheme.onBackground,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                if (appState.shouldShowBottomBar && (destination != null || onPayScreen)) {
+                if (appState.shouldShowBottomBar && (destination != null || onPayScreen || onReceiveScreen)) {
                     MifosBottomBar(
                         destinations = appState.topLevelDestinations,
                         destinationsWithUnreadResources = emptySet(),

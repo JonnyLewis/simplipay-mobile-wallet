@@ -94,10 +94,17 @@ internal class MifosAppState(
      * by route name so no chrome-level dependency on the route type is needed.
      */
     val isPayRoute: Boolean
-        @Composable get() = currentDestination?.route
-            ?.substringBefore('/')
-            ?.substringBefore('?')
-            ?.endsWith("PayRoute") == true
+        @Composable get() = matchesRoute("PayRoute")
+
+    /** The standalone Receive screen — also a pushed detail that should keep the bottom nav. */
+    val isReceiveRoute: Boolean
+        @Composable get() = matchesRoute("ReceiveRoute")
+
+    @Composable
+    private fun matchesRoute(name: String): Boolean = currentDestination?.route
+        ?.substringBefore('/')
+        ?.substringBefore('?')
+        ?.endsWith(name) == true
 
     val shouldShowBottomBar: Boolean
         get() = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact

@@ -337,7 +337,8 @@ internal fun MifosNavHost(
         homeScreen(
             onNavigateBack = navController::popBackStack,
             onRequest = {
-                navController.navigateToReceiveOptions()
+                // Unified Receive: the same screen as the Payments → Request tab (was a divergent sheet).
+                navController.navigateToReceive()
             },
             onPay = navController::navigateToTransferOptions,
             onTopUp = {
@@ -357,6 +358,11 @@ internal fun MifosNavHost(
 
         payScreen(
             onBackClick = { navController.popBackStack() },
+        )
+
+        receiveScreen(
+            onBackClick = { navController.popBackStack() },
+            onShowQr = navController::navigateToMpayQrScreen,
         )
 
         settingsScreen(
