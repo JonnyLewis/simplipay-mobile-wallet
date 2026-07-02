@@ -28,10 +28,20 @@ import org.mifospay.feature.payments.pay.PayScreen
  * [PayMode.NUMBER] (on-us / PayShap by phone) or [PayMode.BANK] (Instant PayShap / Standard EFT).
  */
 @Serializable
-data class PayRoute(val mode: String)
+data class PayRoute(
+    val mode: String,
+    // Optional prefill (used by the proximity flow: pay the receiver we discovered over BLE).
+    val phone: String? = null,
+    val amount: String? = null,
+)
 
 fun NavController.navigateToPay(mode: PayMode) {
     this.navigate(PayRoute(mode.name))
+}
+
+/** Open Pay prefilled — e.g. proximity Send hands off the discovered receiver's phone + amount. */
+fun NavController.navigateToPayPrefilled(mode: PayMode, phone: String?, amount: String?) {
+    this.navigate(PayRoute(mode.name, phone = phone, amount = amount))
 }
 
 fun NavGraphBuilder.payScreen(
@@ -39,8 +49,8 @@ fun NavGraphBuilder.payScreen(
     navigateForPasscodeVerification: (verificationKey: String) -> Unit,
 ) {
     composable<PayRoute> { entry ->
-        val mode = runCatching { PayMode.valueOf(entry.toRoute<PayRoute>().mode) }
-            .getOrDefault(PayMode.NUMBER)
+        val route = entry.toRoute<PayRoute>()
+        val mode = runCatching { PayMode.valueOf(route.mode) }.getOrDefault(PayMode.NUMBER)
         MifosScaffold(
             modifier = Modifier.fillMaxSize(),
             backPress = onBackClick,
@@ -49,6 +59,8 @@ fun NavGraphBuilder.payScreen(
             PayScreen(
                 modifier = Modifier.padding(padding),
                 startMode = mode,
+                startPhone = route.phone,
+                startAmount = route.amount,
                 navigateForPasscodeVerification = navigateForPasscodeVerification,
                 // The passcode gate writes its result onto this (PayRoute) destination's handle.
                 entryStateHandle = entry.savedStateHandle,

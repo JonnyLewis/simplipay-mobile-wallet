@@ -1037,6 +1037,12 @@ internal fun MifosNavHost(
                 navController.popBackStack()
                 navController.navigateToMpayQrScreen()
             },
+            // Proximity Send discovered a receiver over BLE → pay them via the normal Pay flow,
+            // prefilled with their phone + amount. Pop proximity so back returns to the wallet.
+            onNavigateToPay = { phone, amount ->
+                navController.popBackStack()
+                navController.navigateToPayPrefilled(PayMode.NUMBER, phone, amount)
+            },
         )
 
         interbankTransferScreen(

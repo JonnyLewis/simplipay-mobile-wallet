@@ -63,6 +63,9 @@ import template.core.base.designsystem.theme.KptTheme
 fun PayScreen(
     modifier: Modifier = Modifier,
     startMode: PayMode? = null,
+    // Optional prefill (proximity Send hands off the discovered receiver's phone + amount).
+    startPhone: String? = null,
+    startAmount: String? = null,
     // Push the internal passcode gate for a step-up re-auth; the screen forwards PAY_VERIFICATION_KEY.
     // Both Send hosts wire this to navController::navigateToInternalMifosPasscodeScreen.
     navigateForPasscodeVerification: ((verificationKey: String) -> Unit)? = null,
@@ -70,9 +73,11 @@ fun PayScreen(
     entryStateHandle: SavedStateHandle? = null,
     viewModel: PayViewModel = koinViewModel(),
 ) {
-    // Deep-link entry (Send sheet): open directly on the requested destination type.
-    LaunchedEffect(startMode) {
+    // Deep-link entry (Send sheet / proximity): open on the requested destination, prefilled.
+    LaunchedEffect(startMode, startPhone, startAmount) {
         startMode?.let { viewModel.trySendAction(PayAction.ModeChanged(it)) }
+        startPhone?.let { viewModel.trySendAction(PayAction.PhoneChanged(it)) }
+        startAmount?.let { viewModel.trySendAction(PayAction.AmountChanged(it)) }
     }
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 

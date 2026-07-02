@@ -34,6 +34,7 @@ fun NavController.navigateToProximity(
 fun NavGraphBuilder.proximityScreen(
     onNavigateBack: () -> Unit,
     onNavigateToQrFallback: () -> Unit,
+    onNavigateToPay: (phone: String, amount: String?) -> Unit,
 ) {
     composableWithSlideTransitions(
         route = PROXIMITY_ROUTE,
@@ -42,6 +43,7 @@ fun NavGraphBuilder.proximityScreen(
         ProximityScreen(
             onNavigateBack = onNavigateBack,
             onNavigateToQrFallback = onNavigateToQrFallback,
+            onNavigateToPay = onNavigateToPay,
         )
     }
 }

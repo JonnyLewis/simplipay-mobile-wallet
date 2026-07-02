@@ -96,7 +96,6 @@ fun TransferOptionsBottomSheet(
                     title = "Proximity payment",
                     subtitle = "Tap to pay someone nearby",
                     onClick = onProximityPayment,
-                    comingSoon = true,
                 )
                 TransferOptionRow(
                     icon = MifosIcons.Payment,

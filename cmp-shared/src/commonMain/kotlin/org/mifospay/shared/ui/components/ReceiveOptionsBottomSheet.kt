@@ -96,7 +96,6 @@ fun ReceiveOptionsBottomSheet(
                     title = "Proximity payment",
                     subtitle = "Tap to get paid nearby",
                     onClick = onProximityPayment,
-                    comingSoon = true,
                 )
             }
         },
