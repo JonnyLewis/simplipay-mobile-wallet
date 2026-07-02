@@ -38,12 +38,19 @@ interface PaymentsRepository {
         clientRefId: String,
     ): Flow<DataState<TransferResponse>>
 
-    /** Payout to a bank account (EFT). Use for amounts at/above the PayShap cap. */
+    /**
+     * Payout to a bank account on the user-chosen [rail]:
+     * [org.mifospay.core.network.model.payments.PayoutRail.PAYSHAP] (instant — sub-R50,000,
+     * participating bank; an infeasible request comes back FAILED with a
+     * [org.mifospay.core.network.model.payments.PaymentReasonCode]) or
+     * [org.mifospay.core.network.model.payments.PayoutRail.EFT] (standard, always available).
+     */
     fun payoutToBank(
         payerAccountId: String,
         bankAccount: BankAccount,
         amount: ZarAmount,
         clientRefId: String,
+        rail: String,
     ): Flow<DataState<TransferResponse>>
 
     /**

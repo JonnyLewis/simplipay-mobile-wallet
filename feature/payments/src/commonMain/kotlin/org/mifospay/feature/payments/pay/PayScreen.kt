@@ -28,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,13 +42,20 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.mifospay.core.designsystem.component.MifosButton
 import org.mifospay.core.designsystem.component.MifosOutlinedTextField
 import org.mifospay.core.designsystem.icon.MifosIcons
+import org.mifospay.core.network.model.payments.PaymentRoute
+import org.mifospay.core.network.model.payments.PayoutRail
 import template.core.base.designsystem.theme.KptTheme
 
 @Composable
 fun PayScreen(
     modifier: Modifier = Modifier,
+    startMode: PayMode? = null,
     viewModel: PayViewModel = koinViewModel(),
 ) {
+    // Deep-link entry (Send sheet): open directly on the requested destination type.
+    LaunchedEffect(startMode) {
+        startMode?.let { viewModel.trySendAction(PayAction.ModeChanged(it)) }
+    }
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     PayScreenContent(
         state = state,
@@ -64,7 +72,12 @@ private fun PayScreenContent(
 ) {
     // Terminal result takes over the surface.
     state.result?.let { result ->
-        PayResultContent(result = result, onDone = { onAction(PayAction.DismissResult) }, modifier = modifier)
+        PayResultContent(
+            result = result,
+            onDone = { onAction(PayAction.DismissResult) },
+            onSendAsEft = { onAction(PayAction.SendAsEft) },
+            modifier = modifier,
+        )
         return
     }
 
@@ -120,6 +133,18 @@ private fun PayScreenContent(
             }
 
             PayMode.BANK -> {
+                Text(
+                    text = "How fast should it arrive?",
+                    style = KptTheme.typography.bodyMedium,
+                    color = KptTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(KptTheme.spacing.sm))
+                RailSelector(
+                    selected = state.bankRail,
+                    enabled = !state.isSubmitting,
+                    onSelect = { onAction(PayAction.RailChanged(it)) },
+                )
+                Spacer(Modifier.height(KptTheme.spacing.md))
                 MifosOutlinedTextField(
                     value = state.accountHolderName,
                     label = "Account holder name",
@@ -208,6 +233,68 @@ private fun PayScreenContent(
     }
 }
 
+/** Instant (PayShap) vs Standard (EFT) rail choice for a bank-account payout. */
+@Composable
+private fun RailSelector(
+    selected: String,
+    enabled: Boolean,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+    ) {
+        RailCard(
+            title = "Instant",
+            subtitle = "Arrives in seconds via PayShap. Under R50,000.",
+            selected = selected == PayoutRail.PAYSHAP,
+            enabled = enabled,
+            onClick = { onSelect(PayoutRail.PAYSHAP) },
+            modifier = Modifier.weight(1f),
+        )
+        RailCard(
+            title = "Standard",
+            subtitle = "EFT, typically 1–2 business days. Any amount.",
+            selected = selected == PayoutRail.EFT,
+            enabled = enabled,
+            onClick = { onSelect(PayoutRail.EFT) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun RailCard(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (selected) KptTheme.colorScheme.primary else KptTheme.colorScheme.surfaceVariant)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(KptTheme.spacing.md),
+    ) {
+        Text(
+            text = title,
+            style = KptTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = if (selected) KptTheme.colorScheme.onPrimary else KptTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            style = KptTheme.typography.bodySmall,
+            color = if (selected) KptTheme.colorScheme.onPrimary else KptTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 @Composable
 private fun ModeToggle(
     selected: PayMode,
@@ -283,6 +370,7 @@ private fun ChoiceChip(
 private fun PayResultContent(
     result: PayResult,
     onDone: () -> Unit,
+    onSendAsEft: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val (icon, tint, title, subtitle) = when (result) {
@@ -290,7 +378,7 @@ private fun PayResultContent(
             MifosIcons.CheckCircle,
             KptTheme.colorScheme.primary,
             "Payment sent",
-            result.route?.let { "Settled via $it" } ?: "Your payment was successful.",
+            routeDescription(result.route),
         )
         is PayResult.Pending -> ResultVisual(
             MifosIcons.Info,
@@ -319,12 +407,28 @@ private fun PayResultContent(
         Spacer(Modifier.height(KptTheme.spacing.sm))
         Text(subtitle, style = KptTheme.typography.bodyMedium, color = KptTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         Spacer(Modifier.height(KptTheme.spacing.xl))
+        if (result is PayResult.Failure && result.canSendAsEft) {
+            MifosButton(
+                onClick = onSendAsEft,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                text = { Text("Send as standard EFT instead") },
+            )
+            Spacer(Modifier.height(KptTheme.spacing.sm))
+        }
         MifosButton(
             onClick = onDone,
             modifier = Modifier.fillMaxWidth().height(52.dp),
             text = { Text("Done") },
         )
     }
+}
+
+/** Friendly explanation of the rail the server settled the payment on. */
+private fun routeDescription(route: String?): String = when (route) {
+    PaymentRoute.ON_US -> "Paid instantly — free between SimpliPay wallets."
+    PaymentRoute.PAYSHAP -> "Sent instantly via PayShap."
+    PaymentRoute.EFT -> "Sent as a standard EFT — typically arrives in 1–2 business days."
+    else -> "Your payment was successful."
 }
 
 private data class ResultVisual(

@@ -20,9 +20,11 @@ import org.mifospay.core.data.repository.PaymentsRepository
 import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.network.model.payments.BankAccount
 import org.mifospay.core.network.model.payments.BankAccountType
+import org.mifospay.core.network.model.payments.PayShapLimits
+import org.mifospay.core.network.model.payments.PaymentReasonCode
 import org.mifospay.core.network.model.payments.PaymentState
 import org.mifospay.core.network.model.payments.PaymentTarget
-import org.mifospay.core.network.model.payments.PayShapLimits
+import org.mifospay.core.network.model.payments.PayoutRail
 import org.mifospay.core.network.model.payments.ZarAmount
 import org.mifospay.core.ui.utils.BaseViewModel
 import kotlin.uuid.ExperimentalUuidApi
@@ -32,11 +34,15 @@ import kotlin.uuid.Uuid
  * Drives the "Pay" screen against the SimpliPay Payments API. Two destinations:
  *  - [PayMode.NUMBER] — pay a phone (MSISDN). The server decides on-us vs PayShap; the app
  *    mirrors the PayShap sub-R50,000 cap in the UI.
- *  - [PayMode.BANK]   — pay a bank account (EFT) via [PaymentsRepository.payoutToBank].
+ *  - [PayMode.BANK]   — pay a bank account on the USER-chosen rail: Instant
+ *    ([PayoutRail.PAYSHAP], the preferred default) or Standard ([PayoutRail.EFT]).
  *
  * Initiate (`POST /channel/transfer`) is *accepted, not settled*; the VM then polls
- * `GET /payments/{id}` until a terminal state. [clientRefId] is generated once per confirmed
- * payment and reused on retry so a resend never double-charges.
+ * `GET /payments/{id}` until a terminal state. A FAILED payment carries a machine-readable
+ * [PaymentReasonCode]; `BANK_NOT_ON_PAYSHAP` / `AMOUNT_OVER_PAYSHAP_CAP` offer a one-tap
+ * resend on the Standard (EFT) rail — with a NEW clientRefId, since the original payment is
+ * terminally FAILED. [clientRefId] is otherwise generated once per confirmed payment and
+ * reused on retry so a resend never double-charges.
  */
 class PayViewModel(
     private val paymentsRepository: PaymentsRepository,
@@ -73,8 +79,18 @@ class PayViewModel(
             is PayAction.AccountTypeChanged -> mutableStateFlow.update {
                 it.copy(accountType = action.value, error = null)
             }
+            is PayAction.RailChanged -> mutableStateFlow.update {
+                it.copy(bankRail = action.rail, error = null)
+            }
             PayAction.Submit -> submit()
             PayAction.Retry -> submit()
+            PayAction.SendAsEft -> {
+                // The instant attempt is terminally FAILED server-side — this is a NEW payment
+                // on the Standard rail, so it needs a fresh idempotency key.
+                clientRefId = null
+                mutableStateFlow.update { it.copy(result = null, bankRail = PayoutRail.EFT) }
+                submit()
+            }
             PayAction.DismissResult -> {
                 clientRefId = null
                 mutableStateFlow.update { PayState(mode = it.mode) }
@@ -112,6 +128,13 @@ class PayViewModel(
                     current.branchCode.isBlank() || current.accountNumber.isBlank()
                 ) {
                     mutableStateFlow.update { it.copy(error = "Complete all bank details.") }
+                    return
+                }
+                // Mirror the server's PayShap cap for the Instant rail.
+                if (current.bankRail == PayoutRail.PAYSHAP && !PayShapLimits.isWithinPayShapCap(amount)) {
+                    mutableStateFlow.update {
+                        it.copy(error = "Instant payments must be under R50,000 — switch to Standard (EFT).")
+                    }
                     return
                 }
             }
@@ -157,6 +180,7 @@ class PayViewModel(
                     ),
                     amount = amount,
                     clientRefId = ref,
+                    rail = current.bankRail,
                 )
             }.first { it !is DataState.Loading }
 
@@ -179,6 +203,7 @@ class PayViewModel(
                 val paymentState = status.data.state
                 if (PaymentState.isTerminal(paymentState)) {
                     clientRefId = null
+                    val reasonCode = status.data.reasonCode
                     mutableStateFlow.update {
                         it.copy(
                             isSubmitting = false,
@@ -186,7 +211,12 @@ class PayViewModel(
                             result = if (paymentState == PaymentState.SUCCESS) {
                                 PayResult.Success(paymentId, status.data.route)
                             } else {
-                                PayResult.Failure("Payment $paymentState.")
+                                PayResult.Failure(
+                                    message = failureMessage(paymentState, reasonCode, status.data.reasonMessage),
+                                    reasonCode = reasonCode,
+                                    canSendAsEft = state.mode == PayMode.BANK &&
+                                        PaymentReasonCode.isRetryableAsEft(reasonCode),
+                                )
                             },
                         )
                     }
@@ -204,6 +234,20 @@ class PayViewModel(
             )
         }
     }
+
+    /** Human message for a terminal failure, keyed on the server's machine-readable reason. */
+    private fun failureMessage(state: String, reasonCode: String?, reasonMessage: String?): String =
+        when (reasonCode) {
+            PaymentReasonCode.BANK_NOT_ON_PAYSHAP ->
+                "This bank doesn't support instant payments yet."
+            PaymentReasonCode.AMOUNT_OVER_PAYSHAP_CAP ->
+                "Instant payments must be under R50,000."
+            PaymentReasonCode.LEDGER_REJECTED ->
+                "The payment was declined — check your available balance."
+            PaymentReasonCode.PROVIDER_FAILED ->
+                "The payment couldn't be completed. Your money has been returned to your wallet."
+            else -> reasonMessage ?: "Payment $state."
+        }
 
     companion object {
         private const val MAX_POLLS = 20
@@ -244,6 +288,8 @@ data class PayState(
     val branchCode: String = "",
     val accountNumber: String = "",
     val accountType: String = BankAccountType.CHEQUE,
+    // Instant (PayShap) is the preferred default for bank payouts; Standard (EFT) is the fallback.
+    val bankRail: String = PayoutRail.PAYSHAP,
     val isSubmitting: Boolean = false,
     val statusText: String? = null,
     val error: String? = null,
@@ -252,14 +298,19 @@ data class PayState(
     val payButtonLabel: String
         get() = when (mode) {
             PayMode.NUMBER -> "Pay to number"
-            PayMode.BANK -> "Pay to bank account"
+            PayMode.BANK -> if (bankRail == PayoutRail.PAYSHAP) "Pay instantly" else "Pay by EFT"
         }
 }
 
 sealed interface PayResult {
     data class Success(val paymentId: String, val route: String?) : PayResult
     data class Pending(val paymentId: String) : PayResult
-    data class Failure(val message: String) : PayResult
+    data class Failure(
+        val message: String,
+        val reasonCode: String? = null,
+        /** True when the same payment can be re-sent one-tap on the Standard (EFT) rail. */
+        val canSendAsEft: Boolean = false,
+    ) : PayResult
 }
 
 sealed interface PayAction {
@@ -269,9 +320,13 @@ sealed interface PayAction {
     data class HolderNameChanged(val value: String) : PayAction
     data class BankNameChanged(val value: String) : PayAction
     data class BranchCodeChanged(val value: String) : PayAction
-    data class AccountNumberChanged(val value: String) : PayAction
     data class AccountTypeChanged(val value: String) : PayAction
+    data class AccountNumberChanged(val value: String) : PayAction
+    data class RailChanged(val rail: String) : PayAction
     data object Submit : PayAction
     data object Retry : PayAction
+
+    /** Resend the failed instant attempt as a Standard (EFT) payment — new clientRefId. */
+    data object SendAsEft : PayAction
     data object DismissResult : PayAction
 }

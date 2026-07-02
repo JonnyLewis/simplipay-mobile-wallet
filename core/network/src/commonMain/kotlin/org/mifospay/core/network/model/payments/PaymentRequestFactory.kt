@@ -10,6 +10,8 @@
 package org.mifospay.core.network.model.payments
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /** Thrown when a proxy/phone (PayShap) payout is attempted at or above the server cap. */
 class PayShapCapExceededException(
@@ -103,26 +105,49 @@ object PaymentRequestFactory {
     }
 
     /**
-     * Payout to a bank account (EFT). The payee identifier is the bank account number and
-     * the [BankAccount] is serialized to a JSON **string** carried in `customData.value`
-     * (not nested as an object).
+     * Payout to a bank account on the user-chosen [rail]: [PayoutRail.PAYSHAP] (instant —
+     * enforces the sub-R50,000 cap up front; the server additionally requires a participating
+     * bank) or [PayoutRail.EFT] (standard). The payee identifier is the bank account number,
+     * the rail rides `payee.subIdOrType`, and the [BankAccount] is serialized to a JSON
+     * **string** carried in `customData.value` (not nested as an object).
      */
     fun payoutToBank(
         payerAccountId: String,
         bankAccount: BankAccount,
         amount: ZarAmount,
         clientRefId: String,
-    ): TransferRequest = build(
-        payerAccountId = payerAccountId,
-        payeeType = PartyIdType.ACCOUNT_ID,
-        payeeIdentifier = bankAccount.accountNumber,
-        amount = amount,
-        customData = TransferCustomData(
-            key = CustomDataKey.BANK_ACCOUNT,
-            value = bankAccountJson.encodeToString(BankAccount.serializer(), bankAccount),
-        ),
-        clientRefId = clientRefId,
-    )
+        rail: String = PayoutRail.EFT,
+    ): TransferRequest {
+        require(rail == PayoutRail.PAYSHAP || rail == PayoutRail.EFT) { "rail must be PAYSHAP or EFT" }
+        if (rail == PayoutRail.PAYSHAP && !PayShapLimits.isWithinPayShapCap(amount)) {
+            throw PayShapCapExceededException(amount)
+        }
+        return build(
+            payerAccountId = payerAccountId,
+            payeeType = PartyIdType.ACCOUNT_ID,
+            payeeIdentifier = bankAccount.accountNumber,
+            // subIdOrType is the preferred rail transport, but the deployed openMF channel image drops it
+            // (verified on prod). We ALSO embed the rail in the bankAccount JSON below (customData survives),
+            // and the connector reads that as the fallback. Keep subIdOrType for when the channel is fixed.
+            payeeSubIdOrType = rail,
+            amount = amount,
+            customData = TransferCustomData(
+                key = CustomDataKey.BANK_ACCOUNT,
+                value = encodeBankAccountWithRail(bankAccount, rail),
+            ),
+            clientRefId = clientRefId,
+        )
+    }
+
+    /** Serialize the bank details plus a `rail` field, so the rail rides customData (which the channel forwards). */
+    private fun encodeBankAccountWithRail(bankAccount: BankAccount, rail: String): String {
+        val fields = bankAccountJson
+            .encodeToJsonElement(BankAccount.serializer(), bankAccount)
+            .let { it as JsonObject }
+            .toMutableMap()
+        fields["rail"] = JsonPrimitive(rail)
+        return bankAccountJson.encodeToString(JsonObject(fields))
+    }
 
     private fun providerCustomData(): TransferCustomData =
         TransferCustomData(key = CustomDataKey.PROVIDER, value = DEFAULT_PROVIDER)
@@ -134,6 +159,7 @@ object PaymentRequestFactory {
         amount: ZarAmount,
         customData: TransferCustomData,
         clientRefId: String,
+        payeeSubIdOrType: String? = null,
     ): TransferRequest = TransferRequest(
         clientRefId = clientRefId,
         payer = TransferParty(
@@ -146,6 +172,7 @@ object PaymentRequestFactory {
             PartyIdInfo(
                 partyIdType = payeeType,
                 partyIdentifier = payeeIdentifier,
+                subIdOrType = payeeSubIdOrType,
             ),
         ),
         amount = TransferAmount(amount = amount.toApiString(), currency = CURRENCY_ZAR),

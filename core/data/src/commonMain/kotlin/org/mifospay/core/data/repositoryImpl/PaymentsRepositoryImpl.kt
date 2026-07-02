@@ -45,8 +45,11 @@ class PaymentsRepositoryImpl(
         bankAccount: BankAccount,
         amount: ZarAmount,
         clientRefId: String,
+        rail: String,
     ): Flow<DataState<TransferResponse>> = initiate {
-        PaymentRequestFactory.payoutToBank(payerAccountId, bankAccount, amount, clientRefId)
+        // Throws PayShapCapExceededException for instant amounts at/above the cap; surfaced
+        // as DataState.Error by asDataStateFlow's catch.
+        PaymentRequestFactory.payoutToBank(payerAccountId, bankAccount, amount, clientRefId, rail)
     }
 
     override fun payoutInstant(

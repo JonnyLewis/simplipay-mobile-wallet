@@ -14,14 +14,25 @@ import kotlinx.serialization.Serializable
 
 /**
  * DTOs for the SimpliPay Payments API. Money on `POST /channel/transfer` is a **string in
- * rands** (`"50.00"`); money on the status/payin JSON is a number. The server — not the
- * app — decides the rail (ON_US / PAYSHAP / EFT) from the destination.
+ * rands** (`"50.00"`); money on the status/payin JSON is a number. On-us is detected by the
+ * server; for a bank-account payout the USER picks the rail — Instant (PayShap) vs Standard
+ * (EFT) — sent as `payee.partyIdInfo.subIdOrType`. Infeasible instant requests come back as a
+ * FAILED payment with a machine-readable [PaymentReasonCode].
  */
 
 /** `partyIdType` values the app is allowed to send. */
 object PartyIdType {
     const val ACCOUNT_ID = "ACCOUNT_ID"
     const val MSISDN = "MSISDN"
+}
+
+/** The user's rail choice for a bank-account payout, sent as `payee.subIdOrType`. */
+object PayoutRail {
+    /** Instant — PayShap. Needs a participating bank and amount < R50,000. */
+    const val PAYSHAP = "PAYSHAP"
+
+    /** Standard — EFT batch, typically 1–2 business days. Always available. */
+    const val EFT = "EFT"
 }
 
 /** `customData` keys. */
@@ -43,6 +54,8 @@ const val CURRENCY_ZAR = "ZAR"
 data class PartyIdInfo(
     val partyIdType: String,
     val partyIdentifier: String,
+    // Rail choice for bank-account payouts (PayoutRail.PAYSHAP | PayoutRail.EFT); null elsewhere.
+    val subIdOrType: String? = null,
 )
 
 @Serializable
@@ -129,6 +142,22 @@ object PaymentRoute {
     const val EFT = "EFT"
 }
 
+/**
+ * Machine-readable reason on a FAILED payment (status + callback). The first two mean the
+ * payment is re-sendable as Standard (EFT) — with a NEW clientRefId.
+ */
+object PaymentReasonCode {
+    const val BANK_NOT_ON_PAYSHAP = "BANK_NOT_ON_PAYSHAP"
+    const val AMOUNT_OVER_PAYSHAP_CAP = "AMOUNT_OVER_PAYSHAP_CAP"
+    const val LEDGER_REJECTED = "LEDGER_REJECTED"
+    const val PROVIDER_FAILED = "PROVIDER_FAILED"
+    const val VALIDATION = "VALIDATION"
+
+    /** True when the same payment can be re-offered on the Standard (EFT) rail. */
+    fun isRetryableAsEft(code: String?): Boolean =
+        code == BANK_NOT_ON_PAYSHAP || code == AMOUNT_OVER_PAYSHAP_CAP
+}
+
 @Serializable
 data class PaymentStatusResponse(
     val paymentId: String,
@@ -137,6 +166,8 @@ data class PaymentStatusResponse(
     val amount: Double? = null,
     val currency: String? = null,
     val state: String,
+    val reasonCode: String? = null,
+    val reasonMessage: String? = null,
     val providerRef: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,

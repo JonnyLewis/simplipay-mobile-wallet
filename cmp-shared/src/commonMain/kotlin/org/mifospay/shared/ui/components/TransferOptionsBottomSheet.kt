@@ -75,13 +75,13 @@ fun TransferOptionsBottomSheet(
                 TransferOptionRow(
                     icon = MifosIcons.SendToMobile,
                     title = "Send to mobile number",
-                    subtitle = "Pay a contact by their phone number",
+                    subtitle = "Free to SimpliPay users, instant via PayShap otherwise",
                     onClick = onSendToMobile,
                 )
                 TransferOptionRow(
                     icon = MifosIcons.SendToBank,
                     title = "Send to bank account",
-                    subtitle = "Transfer money to a bank account",
+                    subtitle = "Instant (PayShap) or standard EFT",
                     onClick = onSendToBank,
                 )
                 TransferOptionRow(

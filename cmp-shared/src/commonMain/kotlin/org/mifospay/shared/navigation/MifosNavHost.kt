@@ -85,8 +85,9 @@ import org.mifospay.feature.notification.navigateToNotification
 import org.mifospay.feature.notification.notificationScreen
 import org.mifospay.feature.payments.PAYMENTS_ROUTE
 import org.mifospay.feature.payments.PaymentsScreenContents
-import org.mifospay.feature.payments.pay.PayScreen
 import org.mifospay.feature.payments.RequestScreen
+import org.mifospay.feature.payments.pay.PayMode
+import org.mifospay.feature.payments.pay.PayScreen
 import org.mifospay.feature.payments.paymentsScreen
 import org.mifospay.feature.profile.navigation.navigateToProfile
 import org.mifospay.feature.profile.navigation.profileNavGraph
@@ -365,6 +366,10 @@ internal fun MifosNavHost(
         buyGraph(navController = navController)
 
         topUpWalletScreen(
+            onBackClick = { navController.popBackStack() },
+        )
+
+        payScreen(
             onBackClick = { navController.popBackStack() },
         )
 
@@ -979,8 +984,16 @@ internal fun MifosNavHost(
         )
 
         transferOptionsDialog(
-            onSendToMobile = navController::navigateToSendMoneyOptionsScreen,
-            onSendToBank = navController::navigateToIntraBankHub,
+            // Both wired to the live Payments API PayScreen (on-us / PayShap / EFT via
+            // /channel/transfer) — NOT the legacy Fineract self-service transfer flows.
+            onSendToMobile = {
+                navController.popBackStack()
+                navController.navigateToPay(PayMode.NUMBER)
+            },
+            onSendToBank = {
+                navController.popBackStack()
+                navController.navigateToPay(PayMode.BANK)
+            },
             onSendToBarcode = navController::navigateToScanQr,
             onProximityPayment = {
                 navController.popBackStack()
