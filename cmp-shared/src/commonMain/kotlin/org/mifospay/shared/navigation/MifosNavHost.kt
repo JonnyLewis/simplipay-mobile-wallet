@@ -84,7 +84,6 @@ import org.mifospay.feature.mpay.qr.scan.navigation.scanQrScreen
 import org.mifospay.feature.notification.navigateToNotification
 import org.mifospay.feature.notification.notificationScreen
 import org.mifospay.feature.payments.PAYMENTS_ROUTE
-import org.mifospay.feature.payments.PaymentsScreenContents
 import org.mifospay.feature.payments.RequestScreen
 import org.mifospay.feature.payments.pay.PayMode
 import org.mifospay.feature.payments.pay.PayScreen
@@ -98,7 +97,6 @@ import org.mifospay.feature.receipt.navigation.receiptScreen
 import org.mifospay.feature.savedcards.createOrUpdate.addEditCardScreen
 import org.mifospay.feature.savedcards.details.cardDetailRoute
 import org.mifospay.feature.send.money.AmountUtils
-import org.mifospay.feature.send.money.SendMoneyScreen
 import org.mifospay.feature.send.money.navigation.PAYMENT_SUCCESS_ROUTE
 import org.mifospay.feature.send.money.navigation.PAY_ANYONE_ROUTE
 import org.mifospay.feature.send.money.navigation.SEND_MONEY_OPTIONS_ROUTE
@@ -196,17 +194,6 @@ internal fun MifosNavHost(
             // SimpliPay Payments API via PayViewModel.
             PayScreen()
         },
-        // from send money pr
-        TabContent(PaymentsScreenContents.SEND.name) {
-            SendMoneyScreen(
-                onBackClick = navController::navigateUp,
-                // TODO Need clarification
-                navigateToTransferScreen = navController::navigateToSendMoneyScreen,
-                navigateToScanQrScreen = navController::navigateToScanQr,
-                navigateToPayeeDetails = navController::navigateToPayeeDetailsScreen,
-                showTopBar = false,
-            )
-        },
         TabContent(stringResource(Res.string.feature_payments_request)) {
             RequestScreen(
                 showQr = navController::navigateToMpayQrScreen,
@@ -229,7 +216,7 @@ internal fun MifosNavHost(
 //            )
 //        },
 
-        TabContent(PaymentsScreenContents.AUTOPAY.name) {
+        TabContent("AutoPay") {
             AutoPayScreen(
                 onNavigateToScheduleManagement = {
                     navController.navigateToScheduleManagement()
