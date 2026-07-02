@@ -15,6 +15,7 @@ import de.jensklingenberg.ktorfit.http.Header
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
+import org.mifospay.core.network.model.payments.BankDto
 import org.mifospay.core.network.model.payments.PayinRequest
 import org.mifospay.core.network.model.payments.PaymentStatusResponse
 import org.mifospay.core.network.model.payments.TransferRequest
@@ -38,6 +39,10 @@ interface PaymentsService {
         @Header("X-CorrelationID") correlationId: String,
         @Body request: TransferRequest,
     ): TransferResponse
+
+    /** Bank catalog (name + universal branch code + PayShap participation). Public reference data, no token. */
+    @GET("banks")
+    suspend fun banks(): List<BankDto>
 
     /** Poll a payment until a terminal state (SUCCESS / FAILED / EXPIRED). */
     @GET("payments/{paymentId}")

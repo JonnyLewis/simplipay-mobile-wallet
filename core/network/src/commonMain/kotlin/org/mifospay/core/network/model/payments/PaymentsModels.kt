@@ -118,6 +118,19 @@ data class BankAccount(
 )
 
 // ---------------------------------------------------------------------------------------
+// GET /banks  (bank catalog — single source of truth, served by the connector)
+// ---------------------------------------------------------------------------------------
+
+@Serializable
+data class BankDto(
+    val name: String,
+    val universalBranchCode: String,
+    val payShap: Boolean = true,
+) {
+    fun toSaBank(): SaBank = SaBank(name = name, universalBranchCode = universalBranchCode, payShap = payShap)
+}
+
+// ---------------------------------------------------------------------------------------
 // GET /payments/{paymentId}
 // ---------------------------------------------------------------------------------------
 

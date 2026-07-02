@@ -18,9 +18,14 @@ package org.mifospay.core.network.model.payments
 data class SaBank(
     val name: String,
     val universalBranchCode: String,
+    /** Whether Instant (PayShap) is available for this bank; false -> only Standard (EFT). */
+    val payShap: Boolean = true,
 )
 
-/** The canonical list shown in the bank picker (alphabetical). */
+/**
+ * Bundled fallback list, used only if the server catalog (GET /banks) is unreachable. The connector's
+ * {@code simplipay.banks} config is the source of truth at runtime; keep this roughly in sync as a safety net.
+ */
 object SouthAfricanBanks {
     val ALL: List<SaBank> = listOf(
         SaBank("Absa", "632005"),

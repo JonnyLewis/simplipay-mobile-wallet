@@ -47,7 +47,6 @@ import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.network.model.payments.PaymentRoute
 import org.mifospay.core.network.model.payments.PayoutRail
 import org.mifospay.core.network.model.payments.SaBank
-import org.mifospay.core.network.model.payments.SouthAfricanBanks
 import template.core.base.designsystem.theme.KptTheme
 
 @Composable
@@ -164,6 +163,7 @@ private fun PayScreenContent(
                 )
                 Spacer(Modifier.height(KptTheme.spacing.sm))
                 BankCarousel(
+                    banks = state.banks,
                     selectedBranchCode = state.branchCode,
                     enabled = !state.isSubmitting,
                     onSelect = { onAction(PayAction.BankSelected(it)) },
@@ -246,6 +246,7 @@ private fun PayScreenContent(
  */
 @Composable
 private fun BankCarousel(
+    banks: List<SaBank>,
     selectedBranchCode: String,
     enabled: Boolean,
     onSelect: (SaBank) -> Unit,
@@ -255,7 +256,7 @@ private fun BankCarousel(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
     ) {
-        items(SouthAfricanBanks.ALL) { bank ->
+        items(banks) { bank ->
             ChoiceChip(
                 label = bank.name,
                 selected = bank.universalBranchCode == selectedBranchCode,

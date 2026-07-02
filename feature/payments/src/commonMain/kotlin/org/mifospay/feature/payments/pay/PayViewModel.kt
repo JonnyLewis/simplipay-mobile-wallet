@@ -26,6 +26,7 @@ import org.mifospay.core.network.model.payments.PaymentState
 import org.mifospay.core.network.model.payments.PaymentTarget
 import org.mifospay.core.network.model.payments.PayoutRail
 import org.mifospay.core.network.model.payments.SaBank
+import org.mifospay.core.network.model.payments.SouthAfricanBanks
 import org.mifospay.core.network.model.payments.ZarAmount
 import org.mifospay.core.ui.utils.BaseViewModel
 import kotlin.uuid.ExperimentalUuidApi
@@ -53,6 +54,20 @@ class PayViewModel(
 ) {
     // Stable per confirmed payment; regenerated only after success or an explicit reset.
     private var clientRefId: String? = null
+
+    init {
+        loadBanks()
+    }
+
+    /** Pull the server bank catalog (single source of truth); keep the bundled fallback on failure. */
+    private fun loadBanks() {
+        viewModelScope.launch {
+            val result = paymentsRepository.getBanks().first { it !is DataState.Loading }
+            if (result is DataState.Success && result.data.isNotEmpty()) {
+                mutableStateFlow.update { it.copy(banks = result.data) }
+            }
+        }
+    }
 
     override fun handleAction(action: PayAction) {
         when (action) {
@@ -289,6 +304,8 @@ data class PayState(
     val branchCode: String = "",
     val accountNumber: String = "",
     val accountType: String = BankAccountType.CHEQUE,
+    // Bank picker options — defaults to the bundled fallback, replaced by the server catalog on load.
+    val banks: List<SaBank> = SouthAfricanBanks.ALL,
     // Instant (PayShap) is the preferred default for bank payouts; Standard (EFT) is the fallback.
     val bankRail: String = PayoutRail.PAYSHAP,
     val isSubmitting: Boolean = false,

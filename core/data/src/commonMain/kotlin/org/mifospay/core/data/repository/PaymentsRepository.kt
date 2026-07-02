@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import org.mifospay.core.common.DataState
 import org.mifospay.core.network.model.payments.BankAccount
 import org.mifospay.core.network.model.payments.PaymentStatusResponse
+import org.mifospay.core.network.model.payments.SaBank
 import org.mifospay.core.network.model.payments.PaymentTarget
 import org.mifospay.core.network.model.payments.TransferResponse
 import org.mifospay.core.network.model.payments.ZarAmount
@@ -68,4 +69,7 @@ interface PaymentsRepository {
     /** Fetch the current state of a payment. Poll this until [PaymentStatusResponse.state]
      *  is terminal (SUCCESS / FAILED / EXPIRED). */
     fun getPaymentStatus(paymentId: String): Flow<DataState<PaymentStatusResponse>>
+
+    /** The server's bank catalog (single source of truth for the picker + PayShap participation). */
+    fun getBanks(): Flow<DataState<List<SaBank>>>
 }
