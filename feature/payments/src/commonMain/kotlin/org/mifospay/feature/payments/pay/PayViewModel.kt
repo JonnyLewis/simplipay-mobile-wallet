@@ -178,9 +178,9 @@ class PayViewModel(
         val amount = validate() ?: return
 
         viewModelScope.launch {
-            // Step-up auth: a send at or above the threshold must be re-authenticated (passcode or
-            // biometric) right before it leaves the wallet, even though the session is already unlocked.
-            if (amount.minorUnits >= REAUTH_THRESHOLD_MINOR_UNITS && !verifyUser()) {
+            // Money leaving the wallet always requires a fresh re-auth at the confirmation step
+            // (biometric when enrolled, else passcode), even though the session is already unlocked.
+            if (!verifyUser()) {
                 mutableStateFlow.update {
                     it.copy(
                         isSubmitting = false,
@@ -325,9 +325,6 @@ class PayViewModel(
         private const val MAX_POLLS = 20
         private const val POLL_INTERVAL_MS = 2_000L
         private const val PAYER_LOOKUP_TIMEOUT_MS = 3_000L
-
-        /** Sends at or above R1,000.00 require a step-up passcode/biometric re-auth before leaving. */
-        const val REAUTH_THRESHOLD_MINOR_UNITS: Long = 1_000_00L
     }
 }
 
