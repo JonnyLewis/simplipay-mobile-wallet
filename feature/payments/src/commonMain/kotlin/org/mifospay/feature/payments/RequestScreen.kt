@@ -158,6 +158,90 @@ private fun RequestScreenContent(
                     )
                 }
             }
+
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = KptTheme.colorScheme.outlineVariant,
+            )
+
+            // EFT / bank transfer: the details a payer needs to pay money INTO this wallet.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs)) {
+                    Text(text = "Bank transfer (EFT)")
+                    Text(
+                        text = "Share these details to get paid by EFT",
+                        style = KptTheme.typography.bodySmall,
+                        color = KptTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                FilledTonalIconButton(
+                    onClick = {
+                        onAction(TransferAction.CopyTextToClipboard(state.eftDetailsText))
+                    },
+                    colors = IconButtonDefaults.filledIconButtonColors(),
+                ) {
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.baseline_content_copy),
+                        contentDescription = "Copy EFT details",
+                    )
+                }
+            }
+
+            EftDetailRow(label = "Account name", value = state.accountName)
+            EftDetailRow(label = "Bank", value = state.bankName)
+            EftDetailRow(
+                label = "Account number",
+                value = state.accountNumber,
+                onCopy = { onAction(TransferAction.CopyTextToClipboard(state.accountNumber)) },
+            )
+            EftDetailRow(
+                label = "Branch code",
+                value = state.branchCode,
+                onCopy = { onAction(TransferAction.CopyTextToClipboard(state.branchCode)) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun EftDetailRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    onCopy: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs)) {
+            Text(
+                text = label,
+                style = KptTheme.typography.bodySmall,
+                color = KptTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = value,
+                style = KptTheme.typography.bodyMedium,
+            )
+        }
+
+        if (onCopy != null) {
+            FilledTonalIconButton(
+                onClick = onCopy,
+                colors = IconButtonDefaults.filledIconButtonColors(),
+            ) {
+                Icon(
+                    imageVector = vectorResource(Res.drawable.baseline_content_copy),
+                    contentDescription = "Copy $label",
+                )
+            }
         }
     }
 }
@@ -170,6 +254,10 @@ private fun RequestScreenPreview() {
             state = TransferState(
                 mobileNo = "iisque",
                 externalId = "nonumes",
+                accountName = "Thabo Mokoena",
+                accountNumber = "000000038",
+                bankName = "SimpliPay",
+                branchCode = "410506",
             ),
             onAction = {},
             modifier = Modifier,
