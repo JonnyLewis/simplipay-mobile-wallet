@@ -25,7 +25,9 @@ android {
     namespace = "org.mifospay"
 
     defaultConfig {
-        applicationId = "org.mifospay"
+        // Registered in Firebase project simplipay-4d4c0 (google-services.json).
+        // Note: Android uses za.co.* (SA convention); the iOS bundle id is co.za.simplipay.
+        applicationId = "za.co.simplipay"
         versionName = System.getenv("VERSION") ?: project.dynamicVersion
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         vectorDrawables.useSupportLibrary = true
@@ -45,7 +47,8 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = AppBuildType.DEBUG.applicationIdSuffix
+            // No applicationIdSuffix: only za.co.simplipay is registered in the
+            // Firebase project, and google-services validates every variant id.
         }
 
         // Disabling proguard for now until

@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import co.touchlab.kermit.Logger
 import mobile_wallet.cmp_shared.generated.resources.Res
 import mobile_wallet.cmp_shared.generated.resources.not_connected
 import org.jetbrains.compose.resources.stringResource
@@ -67,10 +68,13 @@ import org.mifospay.core.designsystem.component.MifosNavigationRailItem
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.LocalGradientColors
 import org.mifospay.feature.mpay.qr.scan.navigation.navigateToScanQr
+import org.mifospay.feature.notification.NOTIFICATION_ROUTE
+import org.mifospay.feature.notification.navigateToNotification
 import org.mifospay.feature.profile.navigation.navigateToEditProfile
 import org.mifospay.feature.profile.navigation.navigateToProfile
 import org.mifospay.feature.settings.navigation.navigateToSettings
 import org.mifospay.shared.navigation.MifosNavHost
+import org.mifospay.shared.push.PushBridge
 import org.mifospay.shared.utils.TopLevelDestination
 import template.core.base.designsystem.theme.KptTheme
 
@@ -113,6 +117,34 @@ internal fun MifosApp(
         }
         val onScanQrClick: () -> Unit = {
             if (!isLocked) appState.navController.navigateToScanQr()
+        }
+
+        // Push-notification tap routing (one-shot). This shell only composes after
+        // passcode unlock, so a tap from cold start / background parks in PushBridge
+        // until the user is in — then routes exactly once. TRANSACTION lands on the
+        // History tab; every other type opens the notification centre. Locked
+        // (no-client) users stay on Home; the tap is dropped.
+        val pendingPushTap by PushBridge.lastTappedType.collectAsStateWithLifecycle()
+        LaunchedEffect(pendingPushTap) {
+            pendingPushTap?.let { type ->
+                Logger.d(tag = "PushTap", messageString = "routing tap type=$type isLocked=$isLocked")
+                if (!isLocked) {
+                    when (type) {
+                        "TRANSACTION" -> appState.navigateToTopLevelDestination(TopLevelDestination.HISTORY)
+                        else -> appState.navController.navigateToNotification()
+                    }
+                }
+                PushBridge.consumeTap()
+            }
+        }
+
+        // Opening the notification centre clears the app-icon badge.
+        LaunchedEffect(appState.navController) {
+            appState.navController.currentBackStackEntryFlow.collect { entry ->
+                if (entry.destination.route == NOTIFICATION_ROUTE) {
+                    PushBridge.clearBadge()
+                }
+            }
         }
 
         val isOffline by appState.isOffline.collectAsStateWithLifecycle()

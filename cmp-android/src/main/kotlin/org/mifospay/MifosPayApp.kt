@@ -10,6 +10,9 @@
 package org.mifospay
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import kotlinx.coroutines.flow.first
@@ -19,6 +22,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.GlobalContext.startKoin
 import org.mifospay.core.datastore.UserPreferencesRepository
+import org.mifospay.push.NOTIFICATION_CHANNEL_ID
 import org.mifospay.shared.di.KoinModules
 
 class MifosPayApp : Application() {
@@ -34,6 +38,18 @@ class MifosPayApp : Application() {
         }
 
         restoreSavedLanguage()
+        createNotificationChannel()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                getString(R.string.app_name),
+                NotificationManager.IMPORTANCE_HIGH,
+            )
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
     }
 
     private fun restoreSavedLanguage() {

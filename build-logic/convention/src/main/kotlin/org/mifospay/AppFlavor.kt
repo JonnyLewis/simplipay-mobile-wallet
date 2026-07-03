@@ -15,7 +15,9 @@ enum class FlavorDimension {
 // These two product flavors reflect this behaviour.
 @Suppress("EnumEntryName")
 enum class AppFlavor(val dimension: FlavorDimension, val applicationIdSuffix: String? = null) {
-    demo(FlavorDimension.contentType, applicationIdSuffix = ".demo"),
+    // No applicationIdSuffix on demo: only za.co.simplipay is registered in the
+    // Firebase project (simplipay-4d4c0), and google-services validates every variant id.
+    demo(FlavorDimension.contentType),
     prod(FlavorDimension.contentType)
 }
 

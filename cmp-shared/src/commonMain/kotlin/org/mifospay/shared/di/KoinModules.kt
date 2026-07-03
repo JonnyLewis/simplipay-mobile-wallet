@@ -53,6 +53,7 @@ import org.mifospay.shared.MifosPayViewModel
 import org.mifospay.shared.TransferOptionsViewModel
 import org.mifospay.shared.buy.BuyViewModel
 import org.mifospay.shared.instance.InstanceSelectorViewModel
+import org.mifospay.shared.push.PushModule
 
 /**
  * Aggregator object that bundles every Koin module the app needs. Consumed by
@@ -148,6 +149,7 @@ object KoinModules {
         featureModules,
         sharedModule,
         MifosPasscodeModule,
+        PushModule,
     )
 }
 

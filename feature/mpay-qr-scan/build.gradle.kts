@@ -39,6 +39,7 @@ kotlin {
             implementation(libs.androidx.camera.lifecycle)
             implementation(libs.accompanist.permissions)
             implementation(libs.mlkit.barcode.scanning)
+            implementation(libs.mlkit.text.recognition)
             implementation(libs.guava)
             implementation(libs.kotlinx.coroutines.play.services)
         }

@@ -10,8 +10,15 @@
 package org.mifospay.feature.send.money
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import platform.Contacts.CNContactStore
+import platform.Contacts.CNEntityType
 
 @Composable
 actual fun ContactPermissionHandler() {
-    // TODO
+    // iOS shows the system prompt itself; requesting on first composition mirrors
+    // the Android PermissionBox flow without adding a second in-app dialog layer.
+    LaunchedEffect(Unit) {
+        CNContactStore().requestAccessForEntityType(CNEntityType.CNEntityTypeContacts) { _, _ -> }
+    }
 }

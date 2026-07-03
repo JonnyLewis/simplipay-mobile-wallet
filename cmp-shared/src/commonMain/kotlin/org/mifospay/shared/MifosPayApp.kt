@@ -42,6 +42,7 @@ import org.mifospay.passcode.PasscodeStep
 import org.mifospay.shared.UserState.Authenticated
 import org.mifospay.shared.navigation.MifosNavGraph.LOGIN_GRAPH
 import org.mifospay.shared.navigation.RootNavGraph
+import org.mifospay.shared.push.PushRegistrationCoordinator
 import org.mifospay.shared.ui.BlockedScreen
 import template.core.base.designsystem.theme.KptTheme
 import kotlin.time.Duration.Companion.seconds
@@ -72,6 +73,11 @@ fun MifosPaySharedApp(
     networkMonitor: NetworkMonitor = koinInject(),
     timeZoneMonitor: TimeZoneMonitor = koinInject(),
 ) {
+    val pushRegistrationCoordinator: PushRegistrationCoordinator = koinInject()
+    LaunchedEffect(pushRegistrationCoordinator) {
+        pushRegistrationCoordinator.start(this)
+    }
+
     val biometricStorageAdapter: BiometricStorageAdapter = koinInject()
     PlatformAuthenticatorCompositionProvider(
         biometricStorageAdapter = biometricStorageAdapter,

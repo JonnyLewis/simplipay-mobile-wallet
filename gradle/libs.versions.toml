@@ -235,6 +235,7 @@ google-oss-licenses-plugin = { group = "com.google.android.gms", name = "oss-lic
 google-play-services-code-scanner = { group = "com.google.android.gms", name = "play-services-code-scanner", version.ref = "playServicesCodeScanner" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleidVersion" }
 mlkit-barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlkit" }
+mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version = "16.0.1" }
 
 junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
 
