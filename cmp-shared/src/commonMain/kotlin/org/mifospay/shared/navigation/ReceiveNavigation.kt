@@ -48,6 +48,7 @@ fun NavGraphBuilder.receiveScreen(
     onBackClick: () -> Unit,
     onShowQr: () -> Unit,
     onShowDetail: (ReceiveMethod) -> Unit,
+    onProximity: () -> Unit,
 ) {
     composable<ReceiveRoute> {
         MifosScaffold(
@@ -59,6 +60,7 @@ fun NavGraphBuilder.receiveScreen(
                 modifier = Modifier.padding(padding),
                 showQr = onShowQr,
                 onShowDetail = onShowDetail,
+                onProximity = onProximity,
             )
         }
     }

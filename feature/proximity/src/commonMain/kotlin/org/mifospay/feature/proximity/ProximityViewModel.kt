@@ -12,8 +12,11 @@ package org.mifospay.feature.proximity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.ui.utils.BaseViewModel
 import org.mifospay.feature.proximity.model.AmountMode
@@ -51,6 +54,13 @@ class ProximityViewModel(
     private var scanJob: Job? = null
     private var advertiseJob: Job? = null
 
+    /**
+     * Receive mode starts advertising by itself as soon as the radio is ready — choosing
+     * "Proximity payment" under Receive money IS the ask to become discoverable. Only once:
+     * after the user taps Stop (or an auto-start fails), restarting is theirs via the button.
+     */
+    private var receiveAutoStartDone = false
+
     init {
         viewModelScope.launch {
             transport.observeCapabilities().collect { caps ->
@@ -73,6 +83,10 @@ class ProximityViewModel(
         val ready = state.ready
         if (state.entryMode == ProximityEntryMode.Send) {
             if (ready && scanJob == null) startScanning() else if (!ready) stopScanning()
+        }
+        if (state.entryMode == ProximityEntryMode.Receive && ready && !receiveAutoStartDone) {
+            receiveAutoStartDone = true
+            startAdvertising()
         }
         if (state.advertising && !ready) stopAdvertising()
     }
@@ -138,20 +152,32 @@ class ProximityViewModel(
 
     private fun startAdvertising() {
         if (!state.ready) return
-        val phone = preferencesRepository.client.value?.mobileNo
-        if (phone.isNullOrBlank()) {
-            mutableStateFlow.update { it.copy(error = "Your wallet isn't loaded yet. Open Home once, then try again.") }
-            return
-        }
         val amountMinor = if (state.amountMode == AmountMode.Fixed) state.amountInput.toMinorUnits() else 0L
         if (state.amountMode == AmountMode.Fixed && amountMinor <= 0L) {
             mutableStateFlow.update { it.copy(error = "Enter the amount you want to receive.") }
             return
         }
-        val payLink = ProximityPayLink(phone = phone, amountMode = state.amountMode, amountMinor = amountMinor)
-        mutableStateFlow.update { it.copy(advertising = true) }
+        mutableStateFlow.update { it.copy(advertising = true, error = null) }
         advertiseJob?.cancel()
         advertiseJob = viewModelScope.launch {
+            // The client StateFlow is DataStore-backed and starts as null (its stateIn initial)
+            // even when the wallet is already loaded — await the real value instead of reading
+            // .value once, which raced the preference load and mis-reported "wallet not loaded".
+            val phone = withTimeoutOrNull(WALLET_LOAD_TIMEOUT_MS) {
+                preferencesRepository.client
+                    .mapNotNull { it?.mobileNo?.takeIf(String::isNotBlank) }
+                    .first()
+            }
+            if (phone == null) {
+                mutableStateFlow.update {
+                    it.copy(
+                        advertising = false,
+                        error = "Your wallet isn't loaded yet. Open Home once, then try again.",
+                    )
+                }
+                return@launch
+            }
+            val payLink = ProximityPayLink(phone = phone, amountMode = state.amountMode, amountMinor = amountMinor)
             transport.startAdvertising(PayLinkPeripheral(payLink)).collect { }
         }
     }
@@ -160,6 +186,11 @@ class ProximityViewModel(
         advertiseJob?.cancel()
         advertiseJob = null
         mutableStateFlow.update { it.copy(advertising = false) }
+    }
+
+    private companion object {
+        /** How long to wait for the DataStore-backed wallet client before giving up. */
+        const val WALLET_LOAD_TIMEOUT_MS = 5_000L
     }
 }
 

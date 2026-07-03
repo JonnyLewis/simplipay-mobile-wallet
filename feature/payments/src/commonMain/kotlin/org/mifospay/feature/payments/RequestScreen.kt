@@ -43,6 +43,7 @@ enum class ReceiveMethod { MOBILE, EFT }
 fun RequestScreen(
     showQr: () -> Unit,
     onShowDetail: (ReceiveMethod) -> Unit,
+    onProximity: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -75,6 +76,12 @@ fun RequestScreen(
             title = "Bank transfer (EFT)",
             subtitle = "Share your account details",
             onClick = { onShowDetail(ReceiveMethod.EFT) },
+        )
+        ReceiveOptionRow(
+            icon = MifosIcons.Proximity,
+            title = "Proximity payment",
+            subtitle = "Get paid by someone nearby",
+            onClick = onProximity,
         )
     }
 }
@@ -136,6 +143,7 @@ private fun RequestScreenPreview() {
         RequestScreen(
             showQr = {},
             onShowDetail = {},
+            onProximity = {},
             modifier = Modifier,
         )
     }
