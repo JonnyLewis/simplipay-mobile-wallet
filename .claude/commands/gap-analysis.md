@@ -104,6 +104,14 @@ When `/gap-analysis` is called without parameters, show the **FULL comprehensive
 | Desktop | ✅ | JVM |
 | Web | ⚠️ | Experimental |
 
+> **Parity is a first-class gap category here.** Per `CLAUDE.md` → *Cross-Platform Parity*, a feature
+> that works on iOS but not Android (or vice versa) is a **P1 gap**, not "done on one platform." When
+> analysing the platform layer, scan for **shell asymmetry**: an `expect` with a real `actual` on one
+> OS and a stub/`// TODO` on the other, a permission in `Info.plist` but not `AndroidManifest.xml`
+> (or vice versa), a native dep wired in `Podfile` but not Gradle, or app-shell wiring present in the
+> `AppDelegate` but not `MainActivity`/`MifosPayApp`. A missing feature is a parity gap; an
+> OS-specific *bug* is tracked separately.
+
 ---
 
 ## ❌ GAPS (What Needs Work)
