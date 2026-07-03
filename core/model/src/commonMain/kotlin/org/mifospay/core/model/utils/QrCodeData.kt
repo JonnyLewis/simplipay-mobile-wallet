@@ -67,7 +67,7 @@ data class QrCodeData(
      * currently Savings Account to Savings Account Transaction are allowed
      */
     companion object {
-        const val DEFAULT_CURRENCY = "USD"
+        const val DEFAULT_CURRENCY = "ZAR"
         const val OFFICE_ID: Long = 1
 
         // WALLET

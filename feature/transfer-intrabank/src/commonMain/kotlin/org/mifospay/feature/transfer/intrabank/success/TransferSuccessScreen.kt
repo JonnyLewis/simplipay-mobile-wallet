@@ -217,7 +217,7 @@ internal fun TransferSuccessScreen(
                         // Amount
                         TransferDetailRow(
                             label = stringResource(Res.string.feature_transfer_amount),
-                            value = "$${transferResult.amount}",
+                            value = "R${transferResult.amount}",
                             isHighlighted = true,
                         )
 

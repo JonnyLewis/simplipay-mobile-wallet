@@ -132,7 +132,7 @@ fun FastMpayScreen(
                         accountExternalId = r.accountExternalId,
                         recipientName = r.recipientName,
                         amount = r.amount,
-                        currency = "USD",
+                        currency = "ZAR",
                     )
                     showAmountConfirmation = true
                 } else {
