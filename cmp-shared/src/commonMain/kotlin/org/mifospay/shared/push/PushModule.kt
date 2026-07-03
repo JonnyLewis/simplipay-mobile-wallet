@@ -9,9 +9,11 @@
  */
 package org.mifospay.shared.push
 
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.mifos.corebase.network.httpClient
 import org.mifos.corebase.network.setupDefaultHttpClient
+import org.mifospay.feature.payments.pay.WalletTransferNotifier
 
 /**
  * Base URL of the standalone notification engine (`notification-service`).
@@ -21,16 +23,30 @@ import org.mifos.corebase.network.setupDefaultHttpClient
  */
 const val NOTIFICATION_ENGINE_URL = "http://localhost:8085"
 
+private val EngineHttpClient = named("notificationEngineHttpClient")
+
 val PushModule = module {
+    single(EngineHttpClient) {
+        httpClient(
+            config = setupDefaultHttpClient(
+                baseUrl = "$NOTIFICATION_ENGINE_URL/",
+                loggableHosts = listOf("localhost"),
+            ),
+        )
+    }
+
     single {
         PushDeviceRegistrar(
-            client = httpClient(
-                config = setupDefaultHttpClient(
-                    baseUrl = "$NOTIFICATION_ENGINE_URL/",
-                    loggableHosts = listOf("localhost"),
-                ),
-            ),
+            client = get(EngineHttpClient),
             baseUrl = NOTIFICATION_ENGINE_URL,
+        )
+    }
+
+    single<WalletTransferNotifier> {
+        NotificationEngineWalletTransferNotifier(
+            client = get(EngineHttpClient),
+            baseUrl = NOTIFICATION_ENGINE_URL,
+            searchRepository = get(),
         )
     }
 

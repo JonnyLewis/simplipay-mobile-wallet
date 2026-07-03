@@ -18,14 +18,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.mifospay.core.common.DataState
+import org.mifospay.core.common.MoneyFormat
+import org.mifospay.core.data.repository.AccountRepository
+import org.mifospay.core.data.repository.BeneficiaryRepository
 import org.mifospay.core.data.repository.PaymentsRepository
 import org.mifospay.core.data.repository.UserVerificationRepository
 import org.mifospay.core.datastore.UserPreferencesRepository
+import org.mifospay.core.model.beneficiary.Beneficiary
+import org.mifospay.core.model.search.AccountResult
 import org.mifospay.core.network.model.payments.BankAccount
 import org.mifospay.core.network.model.payments.BankAccountType
 import org.mifospay.core.network.model.payments.PayShapLimits
 import org.mifospay.core.network.model.payments.PaymentReasonCode
+import org.mifospay.core.network.model.payments.PaymentRoute
 import org.mifospay.core.network.model.payments.PaymentState
+import org.mifospay.core.network.model.payments.PaymentStatusResponse
 import org.mifospay.core.network.model.payments.PaymentTarget
 import org.mifospay.core.network.model.payments.PayoutRail
 import org.mifospay.core.network.model.payments.SaBank
@@ -53,14 +60,22 @@ class PayViewModel(
     private val paymentsRepository: PaymentsRepository,
     private val preferencesRepository: UserPreferencesRepository,
     private val userVerificationRepository: UserVerificationRepository,
+    private val beneficiaryRepository: BeneficiaryRepository,
+    private val accountRepository: AccountRepository,
+    private val walletTransferNotifier: WalletTransferNotifier,
 ) : BaseViewModel<PayState, PayEvent, PayAction>(
     initialState = PayState(),
 ) {
     // Stable per confirmed payment; regenerated only after success or an explicit reset.
     private var clientRefId: String? = null
 
+    // Recipient wallet owner for a beneficiary payment, resolved with the payee account just
+    // before sending; consumed by the wallet-credit notification once the payment settles.
+    private var recipientClientId: Long? = null
+
     init {
         loadBanks()
+        loadBeneficiaries()
     }
 
     /** Pull the server bank catalog (single source of truth); keep the bundled fallback on failure. */
@@ -69,6 +84,16 @@ class PayViewModel(
             val result = paymentsRepository.getBanks().first { it !is DataState.Loading }
             if (result is DataState.Success && result.data.isNotEmpty()) {
                 mutableStateFlow.update { it.copy(banks = result.data) }
+            }
+        }
+    }
+
+    /** Saved beneficiaries for [PayMode.BENEFICIARY]; an empty list shows the empty hint. */
+    private fun loadBeneficiaries() {
+        viewModelScope.launch {
+            val result = beneficiaryRepository.getBeneficiaryList().first { it !is DataState.Loading }
+            if (result is DataState.Success) {
+                mutableStateFlow.update { it.copy(beneficiaries = result.data) }
             }
         }
     }
@@ -100,6 +125,9 @@ class PayViewModel(
             is PayAction.RailChanged -> mutableStateFlow.update {
                 it.copy(bankRail = action.rail, error = null)
             }
+            is PayAction.BeneficiarySelected -> mutableStateFlow.update {
+                it.copy(selectedBeneficiaryId = action.id, error = null)
+            }
             // Tapping the pay button REVIEWS the payment (shows the confirm step); it does not send.
             PayAction.Submit -> review()
             PayAction.Retry -> review()
@@ -116,7 +144,8 @@ class PayViewModel(
             }
             PayAction.DismissResult -> {
                 clientRefId = null
-                mutableStateFlow.update { PayState(mode = it.mode) }
+                recipientClientId = null
+                mutableStateFlow.update { PayState(mode = it.mode, beneficiaries = it.beneficiaries) }
             }
             // Round-trip result from the passcode/biometric gate (screen-observed saved-state-handle).
             is PayAction.UpdateUserVerificationResult -> mutableStateFlow.update {
@@ -150,6 +179,12 @@ class PayViewModel(
                     mutableStateFlow.update {
                         it.copy(error = "Amounts of R50,000 or more must be paid to a bank account.")
                     }
+                    return null
+                }
+            }
+            PayMode.BENEFICIARY -> {
+                if (current.selectedBeneficiary == null) {
+                    mutableStateFlow.update { it.copy(error = "Select the beneficiary you're paying.") }
                     return null
                 }
             }
@@ -242,6 +277,28 @@ class PayViewModel(
                 amount = amount,
                 clientRefId = ref,
             )
+            PayMode.BENEFICIARY -> {
+                // A beneficiary stores the wallet's account NUMBER; the Payments API wants the
+                // account id — resolve it (the match also carries the owner for the credit notice).
+                val payeeAccount = resolveBeneficiaryAccount(current.selectedBeneficiary)
+                if (payeeAccount == null) {
+                    mutableStateFlow.update {
+                        it.copy(
+                            isSubmitting = false,
+                            statusText = null,
+                            error = "We couldn't find that beneficiary's wallet account. Check your beneficiary list and try again.",
+                        )
+                    }
+                    return
+                }
+                recipientClientId = payeeAccount.parentId.toLong()
+                paymentsRepository.payOnUs(
+                    payerAccountId = payerAccountId,
+                    target = PaymentTarget.Account(payeeAccount.entityId.toString()),
+                    amount = amount,
+                    clientRefId = ref,
+                )
+            }
             PayMode.BANK -> paymentsRepository.payoutToBank(
                 payerAccountId = payerAccountId,
                 bankAccount = BankAccount(
@@ -266,6 +323,15 @@ class PayViewModel(
         }
     }
 
+    /** Match the saved account number to its wallet savings account (id + owning client). */
+    private suspend fun resolveBeneficiaryAccount(beneficiary: Beneficiary?): AccountResult? {
+        if (beneficiary == null) return null
+        val result = accountRepository.searchAccounts(beneficiary.accountNumber)
+            .first { it !is DataState.Loading }
+        return (result as? DataState.Success)?.data
+            ?.firstOrNull { it.entityAccountNo == beneficiary.accountNumber }
+    }
+
     private suspend fun pollUntilTerminal(paymentId: String) {
         mutableStateFlow.update { it.copy(statusText = "Confirming…") }
         repeat(MAX_POLLS) {
@@ -275,6 +341,9 @@ class PayViewModel(
                 val paymentState = status.data.state
                 if (PaymentState.isTerminal(paymentState)) {
                     clientRefId = null
+                    if (paymentState == PaymentState.SUCCESS) {
+                        notifyRecipientIfWalletToWallet(status.data, paymentId)
+                    }
                     val reasonCode = status.data.reasonCode
                     mutableStateFlow.update {
                         it.copy(
@@ -307,6 +376,36 @@ class PayViewModel(
         }
     }
 
+    /**
+     * A settled ON_US payment means the money landed in another SimpliPay wallet — tell the
+     * notification engine so the recipient gets an in-app "Payment received" notification.
+     * Best-effort and fully detached from the pay flow: the payment has already settled, so a
+     * notification failure is swallowed (the engine retries nothing we can act on here).
+     */
+    private fun notifyRecipientIfWalletToWallet(status: PaymentStatusResponse, paymentId: String) {
+        if (status.route != PaymentRoute.ON_US) return
+        val current = state
+        val recipient = when (current.mode) {
+            PayMode.NUMBER -> WalletCreditRecipient.Phone(current.phone)
+            PayMode.BENEFICIARY -> recipientClientId?.let { WalletCreditRecipient.Client(it) } ?: return
+            PayMode.BANK -> return
+        }
+        val amountDisplay = MoneyFormat.zar(status.amount ?: current.amount.toDoubleOrNull() ?: 0.0)
+        viewModelScope.launch {
+            val senderName = withTimeoutOrNull(SENDER_LOOKUP_TIMEOUT_MS) {
+                preferencesRepository.client.first { it != null }
+            }?.displayName
+            runCatching {
+                walletTransferNotifier.notifyWalletCredit(
+                    recipient = recipient,
+                    amountDisplay = amountDisplay,
+                    senderName = senderName,
+                    paymentId = paymentId,
+                )
+            }
+        }
+    }
+
     /** Human message for a terminal failure, keyed on the server's machine-readable reason. */
     private fun failureMessage(state: String, reasonCode: String?, reasonMessage: String?): String =
         when (reasonCode) {
@@ -325,6 +424,7 @@ class PayViewModel(
         private const val MAX_POLLS = 20
         private const val POLL_INTERVAL_MS = 2_000L
         private const val PAYER_LOOKUP_TIMEOUT_MS = 3_000L
+        private const val SENDER_LOOKUP_TIMEOUT_MS = 2_000L
     }
 }
 
@@ -345,7 +445,7 @@ private fun String.filterAmount(): String {
     }
 }
 
-enum class PayMode { NUMBER, BANK }
+enum class PayMode { NUMBER, BANK, BENEFICIARY }
 
 /** Bank account types accepted by the Payments API for EFT. */
 val ACCOUNT_TYPES = listOf(
@@ -367,6 +467,9 @@ data class PayState(
     val banks: List<SaBank> = SouthAfricanBanks.ALL,
     // Instant (PayShap) is the preferred default for bank payouts; Standard (EFT) is the fallback.
     val bankRail: String = PayoutRail.PAYSHAP,
+    // Saved beneficiaries (wallet-to-wallet) for PayMode.BENEFICIARY.
+    val beneficiaries: List<Beneficiary> = emptyList(),
+    val selectedBeneficiaryId: Long? = null,
     // True once the form is validated and the user is on the Confirm/review step (before sending).
     val showConfirm: Boolean = false,
     val isSubmitting: Boolean = false,
@@ -378,9 +481,13 @@ data class PayState(
     // True between emitting NavigateForPasscodeVerification and receiving the result (drives the cancel guard).
     val isAwaitingPasscodeVerification: Boolean = false,
 ) {
+    val selectedBeneficiary: Beneficiary?
+        get() = beneficiaries.firstOrNull { it.id == selectedBeneficiaryId }
+
     val payButtonLabel: String
         get() = when (mode) {
             PayMode.NUMBER -> "Pay to number"
+            PayMode.BENEFICIARY -> "Pay beneficiary"
             PayMode.BANK -> if (bankRail == PayoutRail.PAYSHAP) "Pay instantly" else "Pay by EFT"
         }
 
@@ -388,6 +495,12 @@ data class PayState(
     val confirmRecipient: String
         get() = when (mode) {
             PayMode.NUMBER -> phone
+            PayMode.BENEFICIARY -> selectedBeneficiary?.let { b ->
+                buildString {
+                    append(b.name.ifBlank { b.clientName })
+                    if (b.accountNumber.length >= 4) append(" ••${b.accountNumber.takeLast(4)}")
+                }
+            } ?: "Beneficiary"
             PayMode.BANK -> buildString {
                 append(accountHolderName.trim().ifBlank { "Bank account" })
                 if (bankName.isNotBlank()) append(" · $bankName")
@@ -399,6 +512,7 @@ data class PayState(
     val confirmMethod: String
         get() = when (mode) {
             PayMode.NUMBER -> "To mobile number · instant if they're a SimpliPay user"
+            PayMode.BENEFICIARY -> "Wallet to wallet · instant and free"
             PayMode.BANK -> if (bankRail == PayoutRail.PAYSHAP) {
                 "Instant (PayShap) · arrives in seconds"
             } else {
@@ -430,6 +544,7 @@ sealed interface PayAction {
     data class AccountTypeChanged(val value: String) : PayAction
     data class AccountNumberChanged(val value: String) : PayAction
     data class RailChanged(val rail: String) : PayAction
+    data class BeneficiarySelected(val id: Long) : PayAction
 
     /** Review the payment (validate + show the confirm step). Does not send. */
     data object Submit : PayAction

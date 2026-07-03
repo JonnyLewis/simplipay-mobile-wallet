@@ -203,6 +203,15 @@ private fun PayScreenContent(
                 )
             }
 
+            PayMode.BENEFICIARY -> {
+                BeneficiaryPicker(
+                    beneficiaries = state.beneficiaries,
+                    selectedId = state.selectedBeneficiaryId,
+                    enabled = !state.isSubmitting,
+                    onSelect = { onAction(PayAction.BeneficiarySelected(it)) },
+                )
+            }
+
             PayMode.BANK -> {
                 Text(
                     text = "How fast should it arrive?",
@@ -305,6 +314,73 @@ private fun PayScreenContent(
                 }
             },
         )
+    }
+}
+
+/** Saved-beneficiary picker: tap the wallet you're paying. Empty list shows a pointer to Beneficiaries. */
+@Composable
+private fun BeneficiaryPicker(
+    beneficiaries: List<org.mifospay.core.model.beneficiary.Beneficiary>,
+    selectedId: Long?,
+    enabled: Boolean,
+    onSelect: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        if (beneficiaries.isEmpty()) {
+            Text(
+                text = "No beneficiaries yet. Add one under Beneficiaries to pay them here.",
+                style = KptTheme.typography.bodyMedium,
+                color = KptTheme.colorScheme.onSurfaceVariant,
+            )
+            return@Column
+        }
+        Text(
+            text = "Choose a beneficiary",
+            style = KptTheme.typography.bodyMedium,
+            color = KptTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(KptTheme.spacing.sm))
+        beneficiaries.forEach { beneficiary ->
+            val selected = beneficiary.id == selectedId
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = KptTheme.spacing.sm)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (selected) KptTheme.colorScheme.primary else KptTheme.colorScheme.surface)
+                    .then(
+                        if (selected) {
+                            Modifier
+                        } else {
+                            Modifier.border(1.dp, KptTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                        },
+                    )
+                    .clickable(enabled = enabled) { onSelect(beneficiary.id) }
+                    .padding(KptTheme.spacing.md),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = MifosIcons.Person,
+                    contentDescription = null,
+                    tint = if (selected) KptTheme.colorScheme.onPrimary else KptTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.width(KptTheme.spacing.md))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = beneficiary.name.ifBlank { beneficiary.clientName },
+                        style = KptTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (selected) KptTheme.colorScheme.onPrimary else KptTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "Wallet ••${beneficiary.accountNumber.takeLast(4)}",
+                        style = KptTheme.typography.bodySmall,
+                        color = if (selected) KptTheme.colorScheme.onPrimary else KptTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -445,7 +521,8 @@ private fun ModeToggle(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         ToggleSegment("To number", selected == PayMode.NUMBER, enabled, { onSelect(PayMode.NUMBER) }, Modifier.weight(1f))
-        ToggleSegment("To bank account", selected == PayMode.BANK, enabled, { onSelect(PayMode.BANK) }, Modifier.weight(1f))
+        ToggleSegment("To bank", selected == PayMode.BANK, enabled, { onSelect(PayMode.BANK) }, Modifier.weight(1f))
+        ToggleSegment("To beneficiary", selected == PayMode.BENEFICIARY, enabled, { onSelect(PayMode.BENEFICIARY) }, Modifier.weight(1f))
     }
 }
 
