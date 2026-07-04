@@ -64,7 +64,7 @@ private data class PayLink(
     val status: PayLinkStatus,
 )
 
-private const val PAY_LINK_HOST = "pay.simplipay.co.za/l/"
+private const val PAY_LINK_HOST = "paylink.simplipay.co.za/l/"
 private const val PAY_LINK_BASE = "https://$PAY_LINK_HOST"
 
 /** Sample links — one per status — used until the backend service exists. */
