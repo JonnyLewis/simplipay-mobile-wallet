@@ -47,85 +47,64 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
+import org.koin.compose.viewmodel.koinViewModel
+import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.designsystem.component.MifosScaffold
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
+import org.mifospay.shared.paylink.PayLinkDto
 
 /** Lifecycle status of a pay link, mirroring Stripe Payment Links' status badges. */
 private enum class PayLinkStatus { AVAILABLE, PAID, EXPIRED, CANCELLED }
 
-/** A single pay link as shown in the list (UI-only mock model — no backend). */
+/** A single pay link as shown in the list. */
 private data class PayLink(
     val id: String,
     val description: String,
     val amountText: String,
     val shortUrl: String,
+    val url: String,
     val status: PayLinkStatus,
 )
 
-private const val PAY_LINK_HOST = "paylink.simplipay.co.za/l/"
-private const val PAY_LINK_BASE = "https://$PAY_LINK_HOST"
-
-/** Sample links — one per status — used until the backend service exists. */
-private val sampleLinks = listOf(
-    PayLink(
-        id = "aB12cD",
-        description = "Invoice #1042 — Web design",
-        amountText = "R 2 500.00",
-        shortUrl = "${PAY_LINK_HOST}aB12cD",
-        status = PayLinkStatus.AVAILABLE,
-    ),
-    PayLink(
-        id = "9KpQ2x",
-        description = "Coffee subscription",
-        amountText = "R 250.00",
-        shortUrl = "${PAY_LINK_HOST}9KpQ2x",
-        status = PayLinkStatus.PAID,
-    ),
-    PayLink(
-        id = "Zt7Lm4",
-        description = "Event ticket — March",
-        amountText = "R 480.00",
-        shortUrl = "${PAY_LINK_HOST}Zt7Lm4",
-        status = PayLinkStatus.EXPIRED,
-    ),
-    PayLink(
-        id = "Q3wRn8",
-        description = "Consulting retainer",
-        amountText = "R 7 800.00",
-        shortUrl = "${PAY_LINK_HOST}Q3wRn8",
-        status = PayLinkStatus.CANCELLED,
-    ),
+/** Maps a SimpliLink DTO to the row model (ACTIVE reads as the Available badge). */
+private fun PayLinkDto.toRow(): PayLink = PayLink(
+    id = slug,
+    description = description,
+    amountText = amountMinor?.let { MoneyFormat.zar(it / 100.0) } ?: "Any amount",
+    shortUrl = url.removePrefix("https://").removePrefix("http://"),
+    url = url,
+    status = when (status) {
+        "PAID" -> PayLinkStatus.PAID
+        "EXPIRED" -> PayLinkStatus.EXPIRED
+        "CANCELLED" -> PayLinkStatus.CANCELLED
+        else -> PayLinkStatus.AVAILABLE
+    },
 )
 
-private const val LINK_ID_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"
-
-/** Builds a fake 6-char link id locally — stand-in for a server-generated slug. */
-private fun randomLinkId(): String =
-    (1..6).map { LINK_ID_CHARS.random() }.joinToString("")
-
 /**
- * Pay Links hub (UI only), modeled on Stripe Payment Links: a list of existing links
- * each with a description, amount, short URL and a status badge, plus a "New pay link"
- * action that opens an in-screen create panel. On generate, a fake URL is built locally
- * and shown alongside a QR code with copy / share / share-as-barcode actions.
- *
- * All state is local; there is no ViewModel/Koin wiring and no network calls.
+ * Pay Links hub, modeled on Stripe Payment Links: the owner's links from the
+ * SimpliLink service, each with description, amount, short URL and a status
+ * badge, plus a "New pay link" panel. Generate posts to the service; the
+ * returned canonical URL is shown alongside a QR with copy / share actions.
  */
 @Composable
 internal fun PayLinkScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: PayLinkViewModel = koinViewModel(),
 ) {
     val tokens = SimpliPayTheme.tokens
     val clipboard = LocalClipboardManager.current
+    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
 
-    // Create-panel local state.
+    // Create-panel local state (field contents); the generated URL comes from the service.
     var showCreate by remember { mutableStateOf(false) }
     var description by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var generatedUrl by remember { mutableStateOf<String?>(null) }
+    val generatedUrl = state.generatedUrl
 
     MifosScaffold(
         modifier = modifier.fillMaxSize(),
@@ -182,7 +161,7 @@ internal fun PayLinkScreen(
                     if (!showCreate) {
                         description = ""
                         amount = ""
-                        generatedUrl = null
+                        viewModel.trySendAction(PayLinkAction.ClearGenerated)
                     }
                 },
             )
@@ -194,16 +173,16 @@ internal fun PayLinkScreen(
                     onDescriptionChange = {
                         description = it
                         // Editing invalidates a previously generated link.
-                        generatedUrl = null
+                        viewModel.trySendAction(PayLinkAction.ClearGenerated)
                     },
                     amount = amount,
                     onAmountChange = {
                         amount = it
-                        generatedUrl = null
+                        viewModel.trySendAction(PayLinkAction.ClearGenerated)
                     },
                     generatedUrl = generatedUrl,
                     onGenerate = {
-                        generatedUrl = PAY_LINK_BASE + randomLinkId()
+                        viewModel.trySendAction(PayLinkAction.Create(description, amount))
                     },
                     onCopy = { url ->
                         clipboard.setText(AnnotatedString(url))
@@ -220,6 +199,16 @@ internal fun PayLinkScreen(
                 )
             }
 
+            state.error?.let { message ->
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFB42318),
+                    modifier = Modifier.clickable { viewModel.trySendAction(PayLinkAction.Refresh) },
+                )
+            }
+
             Spacer(Modifier.height(22.dp))
 
             Text(
@@ -229,12 +218,24 @@ internal fun PayLinkScreen(
             )
             Spacer(Modifier.height(10.dp))
 
-            sampleLinks.forEach { link ->
-                PayLinkRow(
-                    link = link,
-                    onCopy = { clipboard.setText(AnnotatedString(PAY_LINK_BASE + link.id)) },
+            when {
+                state.loading -> Text(
+                    text = "Loading your links…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = tokens.sub,
                 )
-                Spacer(Modifier.height(10.dp))
+                state.links.isEmpty() -> Text(
+                    text = "No pay links yet — create one above to get paid.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = tokens.sub,
+                )
+                else -> state.links.map { it.toRow() }.forEach { link ->
+                    PayLinkRow(
+                        link = link,
+                        onCopy = { clipboard.setText(AnnotatedString(link.url)) },
+                    )
+                    Spacer(Modifier.height(10.dp))
+                }
             }
 
             Spacer(Modifier.height(24.dp))

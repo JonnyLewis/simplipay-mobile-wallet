@@ -53,6 +53,7 @@ import org.mifospay.shared.MifosPayViewModel
 import org.mifospay.shared.TransferOptionsViewModel
 import org.mifospay.shared.buy.BuyViewModel
 import org.mifospay.shared.instance.InstanceSelectorViewModel
+import org.mifospay.shared.paylink.PayLinkModule
 import org.mifospay.shared.push.PushModule
 
 /**
@@ -150,6 +151,7 @@ object KoinModules {
         sharedModule,
         MifosPasscodeModule,
         PushModule,
+        PayLinkModule,
     )
 }
 
