@@ -44,6 +44,7 @@ fun RequestScreen(
     showQr: () -> Unit,
     onShowDetail: (ReceiveMethod) -> Unit,
     onProximity: () -> Unit,
+    onPayLink: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -76,6 +77,12 @@ fun RequestScreen(
             title = "Bank transfer (EFT)",
             subtitle = "Share your account details",
             onClick = { onShowDetail(ReceiveMethod.EFT) },
+        )
+        ReceiveOptionRow(
+            icon = MifosIcons.PayLink,
+            title = "Receive using pay link",
+            subtitle = "Share a link or QR to get paid",
+            onClick = onPayLink,
         )
         ReceiveOptionRow(
             icon = MifosIcons.Proximity,
@@ -144,6 +151,7 @@ private fun RequestScreenPreview() {
             showQr = {},
             onShowDetail = {},
             onProximity = {},
+            onPayLink = {},
             modifier = Modifier,
         )
     }

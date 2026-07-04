@@ -206,6 +206,7 @@ internal fun MifosNavHost(
                 showQr = navController::navigateToMpayQrScreen,
                 onShowDetail = navController::navigateToReceiveDetail,
                 onProximity = { navController.navigateToProximity(ProximityEntryMode.Receive) },
+                onPayLink = navController::navigateToPayLink,
             )
         },
         TabContent(stringResource(Res.string.feature_payments_history)) {
@@ -377,6 +378,7 @@ internal fun MifosNavHost(
             onShowQr = navController::navigateToMpayQrScreen,
             onShowDetail = navController::navigateToReceiveDetail,
             onProximity = { navController.navigateToProximity(ProximityEntryMode.Receive) },
+            onPayLink = navController::navigateToPayLink,
         )
 
         receiveDetailScreen(
