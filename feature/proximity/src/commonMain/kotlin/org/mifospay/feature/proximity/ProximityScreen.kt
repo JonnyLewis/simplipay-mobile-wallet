@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
@@ -55,6 +56,11 @@ import org.mifospay.feature.proximity.model.ProximityBand
 import org.mifospay.feature.proximity.navigation.ProximityEntryMode
 import template.core.base.designsystem.theme.KptTheme
 
+/**
+ * Proximity screen, radar-first: the particle field fills the whole screen,
+ * the status message floats in the middle, and the actions anchor to the
+ * bottom — like standing inside the radar rather than looking at a card of it.
+ */
 @Composable
 fun ProximityScreen(
     onNavigateBack: () -> Unit,
@@ -88,51 +94,221 @@ fun ProximityScreen(
                 )
             },
         ) { padding ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = KptTheme.spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+                    .padding(padding),
             ) {
-                if (!ready) {
-                    DeviceNotCapableBanner(
-                        reason = when {
-                            !state.capable -> UnavailableReason.NotCapable
-                            state.permissionDenied -> UnavailableReason.PermissionDenied
-                            else -> UnavailableReason.BluetoothOff
-                        },
-                        onUseQr = { viewModel.trySendAction(ProximityAction.UseQrInstead) },
-                    )
+                // The radar field IS the screen.
+                ParticleField(modifier = Modifier.fillMaxSize())
+
+                // Top overlays: capability + error banners.
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = KptTheme.spacing.lg)
+                        .padding(top = KptTheme.spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+                ) {
+                    if (!ready) {
+                        DeviceNotCapableBanner(
+                            reason = when {
+                                !state.capable -> UnavailableReason.NotCapable
+                                state.permissionDenied -> UnavailableReason.PermissionDenied
+                                else -> UnavailableReason.BluetoothOff
+                            },
+                            onUseQr = { viewModel.trySendAction(ProximityAction.UseQrInstead) },
+                        )
+                    }
+                    state.error?.let { message ->
+                        ErrorBanner(
+                            message = message,
+                            onDismiss = { viewModel.trySendAction(ProximityAction.DismissError) },
+                        )
+                    }
                 }
 
-                state.error?.let { message ->
-                    ErrorBanner(
-                        message = message,
-                        onDismiss = { viewModel.trySendAction(ProximityAction.DismissError) },
-                    )
-                }
+                CenterStatus(
+                    entryMode = entryMode,
+                    ready = ready,
+                    state = state,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = KptTheme.spacing.xl),
+                )
 
-                when (entryMode) {
-                    ProximityEntryMode.Receive -> ReceiveContent(
-                        amountMode = state.amountMode,
-                        amountInput = state.amountInput,
-                        enabled = ready,
-                        advertising = state.advertising,
-                        onAmountMode = { viewModel.trySendAction(ProximityAction.SetAmountMode(it)) },
-                        onAmountChange = { viewModel.trySendAction(ProximityAction.AmountChanged(it)) },
-                        onStart = { viewModel.trySendAction(ProximityAction.StartReceiving) },
-                        onStop = { viewModel.trySendAction(ProximityAction.StopReceiving) },
-                    )
+                // Bottom-anchored actions.
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = KptTheme.spacing.lg)
+                        .padding(bottom = KptTheme.spacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+                ) {
+                    when (entryMode) {
+                        ProximityEntryMode.Receive -> ReceiveControls(
+                            amountMode = state.amountMode,
+                            amountInput = state.amountInput,
+                            enabled = ready,
+                            advertising = state.advertising,
+                            onAmountMode = { viewModel.trySendAction(ProximityAction.SetAmountMode(it)) },
+                            onAmountChange = { viewModel.trySendAction(ProximityAction.AmountChanged(it)) },
+                            onStart = { viewModel.trySendAction(ProximityAction.StartReceiving) },
+                            onStop = { viewModel.trySendAction(ProximityAction.StopReceiving) },
+                        )
 
-                    ProximityEntryMode.Send -> SendContent(
-                        enabled = ready,
-                        discoveries = state.discoveries,
-                        connectingId = state.connectingId,
-                        onSelect = { viewModel.trySendAction(ProximityAction.DeviceSelected(it)) },
-                    )
+                        ProximityEntryMode.Send -> SendDeviceList(
+                            enabled = ready,
+                            discoveries = state.discoveries,
+                            connectingId = state.connectingId,
+                            onSelect = { viewModel.trySendAction(ProximityAction.DeviceSelected(it)) },
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+/** The floating status message at the heart of the radar. */
+@Composable
+private fun CenterStatus(
+    entryMode: ProximityEntryMode,
+    ready: Boolean,
+    state: ProximityState,
+    modifier: Modifier = Modifier,
+) {
+    val (title, subtitle) = when {
+        entryMode == ProximityEntryMode.Receive && state.advertising ->
+            "You're discoverable" to if (state.amountMode == AmountMode.Fixed && state.amountInput.isNotBlank()) {
+                "Asking for R${state.amountInput} · keep this screen open"
+            } else {
+                "Nearby SimpliPay users can pay you · keep this screen open"
+            }
+
+        entryMode == ProximityEntryMode.Receive ->
+            "Get paid nearby" to "Start receiving below to become discoverable to people around you."
+
+        !ready ->
+            "Nearby unavailable" to "Turn on Bluetooth to pay someone nearby."
+
+        state.discoveries.isEmpty() ->
+            "Looking for people nearby…" to
+                "Ask them to open \"Get paid nearby\" and hold their phone close."
+
+        else ->
+            "Tap the person you're paying" to "They'll get your payment instantly."
+    }
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(KptTheme.spacing.lg))
+            // Soft scrim so the message stays legible over the moving particles.
+            .background(KptTheme.colorScheme.surface.copy(alpha = 0.72f))
+            .padding(horizontal = KptTheme.spacing.xl, vertical = KptTheme.spacing.lg),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = title,
+            style = KptTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            color = KptTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(KptTheme.spacing.sm))
+        Text(
+            text = subtitle,
+            style = KptTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = KptTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Receive-mode actions, anchored to the bottom of the radar. */
+@Composable
+private fun ReceiveControls(
+    amountMode: AmountMode,
+    amountInput: String,
+    enabled: Boolean,
+    advertising: Boolean,
+    onAmountMode: (AmountMode) -> Unit,
+    onAmountChange: (String) -> Unit,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+    ) {
+        if (advertising) {
+            MifosButton(onClick = onStop, modifier = Modifier.fillMaxWidth()) {
+                Text("Stop receiving")
+            }
+            return@Column
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(KptTheme.spacing.md))
+                .background(KptTheme.colorScheme.surface.copy(alpha = 0.84f))
+                .padding(KptTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+        ) {
+            Text("How much do you want to receive?", style = KptTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm)) {
+                FilterChip(
+                    selected = amountMode == AmountMode.Open,
+                    onClick = { onAmountMode(AmountMode.Open) },
+                    label = { Text("Any amount") },
+                )
+                FilterChip(
+                    selected = amountMode == AmountMode.Fixed,
+                    onClick = { onAmountMode(AmountMode.Fixed) },
+                    label = { Text("Set amount") },
+                )
+            }
+            if (amountMode == AmountMode.Fixed) {
+                OutlinedTextField(
+                    value = amountInput,
+                    onValueChange = onAmountChange,
+                    label = { Text("Amount (ZAR)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+        MifosButton(onClick = onStart, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+            Text("Start receiving")
+        }
+    }
+}
+
+/** Send-mode: the discovered receivers, anchored above the bottom edge. */
+@Composable
+private fun SendDeviceList(
+    enabled: Boolean,
+    discoveries: List<NearbyDevice>,
+    connectingId: String?,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (!enabled || discoveries.isEmpty()) return
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
+    ) {
+        discoveries.forEach { device ->
+            NearbyRow(
+                device = device,
+                connecting = connectingId == device.id,
+                onClick = { if (connectingId == null) onSelect(device.id) },
+            )
         }
     }
 }
@@ -194,133 +370,6 @@ private fun ErrorBanner(message: String, onDismiss: () -> Unit, modifier: Modifi
             color = KptTheme.colorScheme.onErrorContainer,
             modifier = Modifier.padding(KptTheme.spacing.lg),
         )
-    }
-}
-
-@Composable
-private fun ReceiveContent(
-    amountMode: AmountMode,
-    amountInput: String,
-    enabled: Boolean,
-    advertising: Boolean,
-    onAmountMode: (AmountMode) -> Unit,
-    onAmountChange: (String) -> Unit,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
-    ) {
-        if (advertising) {
-            RadarPanel(
-                title = "You're discoverable",
-                subtitle = if (amountMode == AmountMode.Fixed && amountInput.isNotBlank()) {
-                    "Asking for R$amountInput · keep this screen open"
-                } else {
-                    "Nearby SimpliPay users can pay you · keep this screen open"
-                },
-            )
-            MifosButton(onClick = onStop, modifier = Modifier.fillMaxWidth()) {
-                Text("Stop receiving")
-            }
-            return@Column
-        }
-
-        Text("How much do you want to receive?", style = KptTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm)) {
-            FilterChip(
-                selected = amountMode == AmountMode.Open,
-                onClick = { onAmountMode(AmountMode.Open) },
-                label = { Text("Any amount") },
-            )
-            FilterChip(
-                selected = amountMode == AmountMode.Fixed,
-                onClick = { onAmountMode(AmountMode.Fixed) },
-                label = { Text("Set amount") },
-            )
-        }
-        if (amountMode == AmountMode.Fixed) {
-            OutlinedTextField(
-                value = amountInput,
-                onValueChange = onAmountChange,
-                label = { Text("Amount (ZAR)") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        Spacer(Modifier.height(KptTheme.spacing.sm))
-        MifosButton(onClick = onStart, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-            Text("Start receiving")
-        }
-    }
-}
-
-@Composable
-private fun SendContent(
-    enabled: Boolean,
-    discoveries: List<NearbyDevice>,
-    connectingId: String?,
-    onSelect: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
-    ) {
-        if (!enabled) {
-            Text("Nearby unavailable", style = KptTheme.typography.titleMedium)
-            return@Column
-        }
-        if (discoveries.isEmpty()) {
-            RadarPanel(
-                title = "Looking for people nearby…",
-                subtitle = "Ask them to open \"Get paid nearby\" and hold their phone close.",
-            )
-        } else {
-            Text("Tap the person you're paying", style = KptTheme.typography.titleMedium)
-            discoveries.forEach { device ->
-                NearbyRow(
-                    device = device,
-                    connecting = connectingId == device.id,
-                    onClick = { if (connectingId == null) onSelect(device.id) },
-                )
-            }
-        }
-    }
-}
-
-/** A decorative radar/sonar panel reusing the particle field, for the searching / discoverable states. */
-@Composable
-private fun RadarPanel(title: String, subtitle: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(KptTheme.spacing.lg),
-        colors = CardDefaults.cardColors(containerColor = KptTheme.colorScheme.surfaceContainer),
-    ) {
-        Box(modifier = Modifier.fillMaxWidth().height(220.dp)) {
-            ParticleField(modifier = Modifier.fillMaxSize())
-            Column(
-                modifier = Modifier.fillMaxSize().padding(KptTheme.spacing.xl),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = title,
-                    style = KptTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = KptTheme.colorScheme.onSurface,
-                )
-                Spacer(Modifier.height(KptTheme.spacing.sm))
-                Text(
-                    text = subtitle,
-                    style = KptTheme.typography.bodyMedium,
-                    color = KptTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
     }
 }
 
