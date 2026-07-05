@@ -78,6 +78,8 @@ import org.mifospay.feature.kyc.navigation.navigateToKYCLevel3
 import org.mifospay.feature.merchants.navigation.merchantTransferScreen
 import org.mifospay.feature.mpay.qr.navigation.mpayQrScreen
 import org.mifospay.feature.mpay.qr.navigation.navigateToMpayQrScreen
+import org.mifospay.feature.mpay.qr.navigation.navigateToPersonalQr
+import org.mifospay.feature.mpay.qr.navigation.personalQrScreen
 import org.mifospay.feature.mpay.qr.scan.navigation.SCAN_QR_ROUTE
 import org.mifospay.feature.mpay.qr.scan.navigation.navigateToScanQr
 import org.mifospay.feature.mpay.qr.scan.navigation.scanQrScreen
@@ -415,7 +417,12 @@ internal fun MifosNavHost(
             onLinkBankAccount = {
                 navController.navigateToSavingAccountAddEdit(SavingsAddEditType.AddItem)
             },
-            showQrCode = navController::navigateToMpayQrScreen,
+            // Barcode-only personal QR, not the Receive flow's full QR screen.
+            showQrCode = navController::navigateToPersonalQr,
+            navigateBack = navController::popBackStack,
+        )
+
+        personalQrScreen(
             navigateBack = navController::popBackStack,
         )
 

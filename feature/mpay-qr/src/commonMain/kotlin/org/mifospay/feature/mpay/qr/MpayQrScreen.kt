@@ -14,32 +14,23 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -50,7 +41,6 @@ import io.github.alexzhirkevich.qrose.toByteArray
 import mobile_wallet.feature.mpay_qr.generated.resources.Res
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_copied
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_downloaded
-import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_external_id_required
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_go_back
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_receive_money
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_scan_to_pay
@@ -71,7 +61,6 @@ import org.mifospay.core.ui.utils.EventsEffect
 import org.mifospay.feature.mpay.qr.components.AccountIdSection
 import org.mifospay.feature.mpay.qr.components.AccountPickerBottomSheet
 import org.mifospay.feature.mpay.qr.components.AccountSelectorCard
-import org.mifospay.feature.mpay.qr.components.InterBankPlaceholder
 import org.mifospay.feature.mpay.qr.components.QrActionButtons
 import org.mifospay.feature.mpay.qr.components.QrCodeCard
 import org.mifospay.feature.mpay.qr.components.QrType
@@ -189,7 +178,6 @@ internal fun MpayQrScreen(
                     MpayQrScreenContent(
                         state = state,
                         contentState = viewState,
-                        selectedPage = state.selectedPage,
                         modifier = Modifier,
                         onAction = onAction,
                     )
@@ -203,23 +191,10 @@ internal fun MpayQrScreen(
 private fun MpayQrScreenContent(
     state: MpayQrState,
     contentState: MpayQrState.ViewState.Content,
-    selectedPage: Int,
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
     onAction: (MpayQrAction) -> Unit,
 ) {
-    val pagerState = rememberPagerState(
-        initialPage = selectedPage,
-        pageCount = { 2 },
-    )
-
-    // Sync pager state with viewmodel
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect { page ->
-            onAction(MpayQrAction.PageChanged(page))
-        }
-    }
-
     // Account Picker Bottom Sheet
     if (state.isAccountPickerVisible) {
         AccountPickerBottomSheet(
@@ -271,55 +246,13 @@ private fun MpayQrScreenContent(
             )
         }
 
-        // Swipeable QR codes with QrCodeCard component
+        // The wallet QR — the single QR on this screen.
         item {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxWidth(),
-                key = { it },
-            ) { page ->
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    when (page) {
-                        0 -> {
-                            // Intra-Bank - always show QR
-                            QrCodeCard(
-                                data = contentState.intraBankData,
-                                options = contentState.options,
-                                qrType = QrType.INTRA_BANK,
-                                modifier = Modifier.padding(horizontal = KptTheme.spacing.sm),
-                            )
-                        }
-                        1 -> {
-                            // Inter-Bank - show QR or placeholder
-                            if (contentState.interBankData != null) {
-                                QrCodeCard(
-                                    data = contentState.interBankData,
-                                    options = contentState.options,
-                                    qrType = QrType.INTER_BANK,
-                                    modifier = Modifier.padding(horizontal = KptTheme.spacing.sm),
-                                )
-                            } else {
-                                InterBankPlaceholder(
-                                    reason = contentState.interBankUnavailableReason
-                                        ?: stringResource(Res.string.feature_mpay_qr_external_id_required),
-                                    modifier = Modifier.padding(horizontal = KptTheme.spacing.sm),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Page indicator dots
-        item {
-            HorizontalPagerIndicator(
-                pageCount = 2,
-                currentPage = pagerState.currentPage,
-                modifier = Modifier.padding(vertical = KptTheme.spacing.sm),
+            QrCodeCard(
+                data = contentState.intraBankData,
+                options = contentState.options,
+                qrType = QrType.INTRA_BANK,
+                modifier = Modifier.padding(horizontal = KptTheme.spacing.sm),
             )
         }
 
@@ -337,29 +270,21 @@ private fun MpayQrScreenContent(
 
         // Share and Download buttons
         item {
-            val currentData = when {
-                pagerState.currentPage == 0 -> contentState.intraBankData
-                contentState.interBankData != null -> contentState.interBankData
-                else -> null
-            }
+            val qrPainter = rememberQrCodePainter(
+                data = contentState.intraBankData,
+                options = contentState.options,
+            )
 
-            if (currentData != null) {
-                val qrPainter = rememberQrCodePainter(
-                    data = currentData,
-                    options = contentState.options,
-                )
-
-                QrActionButtons(
-                    onShareClick = {
-                        val bytes = qrPainter.toByteArray(1024, 1024, ImageFormat.PNG)
-                        onAction(MpayQrAction.ShareQrCode(bytes))
-                    },
-                    onDownloadClick = {
-                        val bytes = qrPainter.toByteArray(1024, 1024, ImageFormat.PNG)
-                        onAction(MpayQrAction.DownloadQrCode(bytes))
-                    },
-                )
-            }
+            QrActionButtons(
+                onShareClick = {
+                    val bytes = qrPainter.toByteArray(1024, 1024, ImageFormat.PNG)
+                    onAction(MpayQrAction.ShareQrCode(bytes))
+                },
+                onDownloadClick = {
+                    val bytes = qrPainter.toByteArray(1024, 1024, ImageFormat.PNG)
+                    onAction(MpayQrAction.DownloadQrCode(bytes))
+                },
+            )
         }
 
         // Account IDs section
@@ -425,40 +350,6 @@ private fun MpayQrErrorContent(
     }
 }
 
-@Composable
-private fun HorizontalPagerIndicator(
-    pageCount: Int,
-    currentPage: Int,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        repeat(pageCount) { index ->
-            Box(
-                modifier = Modifier
-                    .size(
-                        if (index == currentPage) {
-                            KptTheme.spacing.sm + KptTheme.spacing.xs / 2
-                        } else {
-                            KptTheme.spacing.sm
-                        },
-                    )
-                    .clip(CircleShape)
-                    .background(
-                        if (index == currentPage) {
-                            KptTheme.colorScheme.primary
-                        } else {
-                            KptTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        },
-                    ),
-            )
-        }
-    }
-}
-
 @Preview
 @Composable
 private fun MpayQrScreenLoadingPreview() {
@@ -501,17 +392,6 @@ private fun MpayQrScreenErrorPreview() {
         MpayQrErrorContent(
             message = "No default account set",
             onNavigateBack = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun HorizontalPagerIndicatorPreview() {
-    KptMaterialTheme {
-        HorizontalPagerIndicator(
-            pageCount = 3,
-            currentPage = 1,
         )
     }
 }

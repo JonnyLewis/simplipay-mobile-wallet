@@ -26,7 +26,7 @@
     <string name="feature_request_money_error_oops">Lo!</string>
     <string name="feature_request_money_unexpected_error_subtitle">Hitilafu isiyotarajiwa imetokea. Tafadhali jaribu tena.</string>
     <string name="feature_mpay_qr_receive_money">Pokea Pesa</string>
-    <string name="feature_mpay_qr_intra_bank">QR ya Ndani ya Benki</string>
+    <string name="feature_mpay_qr_intra_bank">SimpliPay wallet QR</string>
     <string name="feature_mpay_qr_inter_bank">QR ya Kati ya Benki</string>
     <string name="feature_mpay_qr_share">Shiriki</string>
     <string name="feature_mpay_qr_unable_to_generate">Haiwezekani kuunda msimbo wa QR</string>

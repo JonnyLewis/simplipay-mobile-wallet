@@ -14,8 +14,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import org.mifospay.core.ui.composableWithPushTransitions
 import org.mifospay.feature.mpay.qr.MpayQrScreen
+import org.mifospay.feature.mpay.qr.PersonalQrScreen
 
 const val MPAY_QR_ROUTE = "mpay_qr_route"
+const val PERSONAL_QR_ROUTE = "personal_qr_route"
 
 fun NavGraphBuilder.mpayQrScreen(
     navigateBack: () -> Unit,
@@ -36,4 +38,15 @@ fun NavGraphBuilder.mpayQrScreen(
 
 fun NavController.navigateToMpayQrScreen(navOptions: NavOptions? = null) {
     navigate(MPAY_QR_ROUTE, navOptions)
+}
+
+/** The profile's barcode-only personal QR (no receive-flow chrome). */
+fun NavGraphBuilder.personalQrScreen(navigateBack: () -> Unit) {
+    composableWithPushTransitions(route = PERSONAL_QR_ROUTE) {
+        PersonalQrScreen(navigateBack = navigateBack)
+    }
+}
+
+fun NavController.navigateToPersonalQr(navOptions: NavOptions? = null) {
+    navigate(PERSONAL_QR_ROUTE, navOptions)
 }
