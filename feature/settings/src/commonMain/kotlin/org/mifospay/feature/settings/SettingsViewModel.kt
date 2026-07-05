@@ -11,8 +11,10 @@ package org.mifospay.feature.settings
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import mobile_wallet.feature.settings.generated.resources.Res
 import mobile_wallet.feature.settings.generated.resources.feature_settings_alert_disable_account
 import mobile_wallet.feature.settings.generated.resources.feature_settings_alert_disable_account_desc
@@ -51,6 +53,9 @@ import org.mifospay.passcode.PasscodeManager
  * `authProvider.unregister()`.
  */
 const val DISABLE_BIOMETRICS_VERIFICATION_KEY = "org.mifospay.mifos.authentication.verification.key"
+
+/** How long to wait for the DataStore-backed default account id before giving up. */
+private const val ACCOUNT_LOOKUP_TIMEOUT_MS = 3_000L
 
 /**
  * ViewModel for [SettingsScreen]. Three concerns relevant to passcode /
@@ -259,9 +264,24 @@ class SettingsViewModel(
             it.copy(dialogState = DialogState.Loading)
         }
 
-        // TODO:: this shouldn't work, we need account id to block account
         viewModelScope.launch {
-            val result = repository.blockAccount(state.client.id)
+            // Blocking acts on the wallet SAVINGS account, not the client. defaultAccountId
+            // is DataStore-backed and resolves asynchronously — await the first real value
+            // instead of reading .value, which returns the stateIn null initial.
+            val accountId = withTimeoutOrNull(ACCOUNT_LOOKUP_TIMEOUT_MS) {
+                userPreferencesRepository.defaultAccountId.first { it != null }
+            }
+            if (accountId == null) {
+                mutableStateFlow.update {
+                    it.copy(
+                        dialogState = DialogState.Error(
+                            "No wallet account is selected. Open Home once to load your wallet, then try again.",
+                        ),
+                    )
+                }
+                return@launch
+            }
+            val result = repository.blockAccount(accountId)
             sendAction(DisableAccountResult(result))
         }
     }
