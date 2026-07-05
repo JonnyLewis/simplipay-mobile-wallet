@@ -10,6 +10,7 @@
 package org.mifospay.feature.payments.pay
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -323,11 +324,21 @@ class PayViewModel(
         }
     }
 
-    /** Match the saved account number to its wallet savings account (id + owning client). */
+    /**
+     * Match the saved account number to its wallet savings account (id + owning client).
+     * Any lookup failure degrades to null — the caller's "couldn't find that beneficiary"
+     * error path — a repository flow misbehaving must never crash the pay flow.
+     */
     private suspend fun resolveBeneficiaryAccount(beneficiary: Beneficiary?): AccountResult? {
         if (beneficiary == null) return null
-        val result = accountRepository.searchAccounts(beneficiary.accountNumber)
-            .first { it !is DataState.Loading }
+        val result = try {
+            accountRepository.searchAccounts(beneficiary.accountNumber)
+                .first { it !is DataState.Loading }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
         return (result as? DataState.Success)?.data
             ?.firstOrNull { it.entityAccountNo == beneficiary.accountNumber }
     }

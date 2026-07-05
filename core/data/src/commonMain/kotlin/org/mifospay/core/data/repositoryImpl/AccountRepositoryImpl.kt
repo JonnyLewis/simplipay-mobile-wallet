@@ -11,7 +11,6 @@ package org.mifospay.core.data.repositoryImpl
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -53,9 +52,11 @@ class AccountRepositoryImpl(
     }
 
     override fun searchAccounts(query: String): Flow<DataState<List<AccountResult>>> {
+        // No extra catch here: a non-emitting catch upstream of asDataStateFlow swallows
+        // the failure and completes the flow empty, crashing first{}-style consumers.
+        // asDataStateFlow already emits DataState.Error on upstream exceptions.
         return selfManager.accountTransfersApi
             .searchAccounts(query, "savings")
-            .catch { DataState.Error(it, null) }
             .asDataStateFlow().flowOn(ioDispatcher)
     }
 
