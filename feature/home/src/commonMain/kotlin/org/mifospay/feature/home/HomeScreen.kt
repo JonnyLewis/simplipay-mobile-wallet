@@ -88,13 +88,13 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.common.WalletNaming
+import org.mifospay.core.designsystem.component.AnimatedWalletWordmark
 import org.mifospay.core.designsystem.component.BasicDialogState
 import org.mifospay.core.designsystem.component.LoadingDialogState
 import org.mifospay.core.designsystem.component.MifosBasicDialog
 import org.mifospay.core.designsystem.component.MifosLoadingDialog
 import org.mifospay.core.designsystem.component.MifosScaffold
 import org.mifospay.core.designsystem.component.Rosette
-import org.mifospay.core.designsystem.component.WalletWordmark
 import org.mifospay.core.designsystem.component.scrollbar.DraggableScrollbar
 import org.mifospay.core.designsystem.component.scrollbar.rememberDraggableScroller
 import org.mifospay.core.designsystem.component.scrollbar.scrollbarState
@@ -289,7 +289,7 @@ private fun HomeScreenContent(
             contentPadding = PaddingValues(),
         ) {
             item {
-                WalletWordmark(
+                AnimatedWalletWordmark(
                     fontSize = 24.sp,
                     modifier = Modifier.padding(
                         start = KptTheme.spacing.md,
