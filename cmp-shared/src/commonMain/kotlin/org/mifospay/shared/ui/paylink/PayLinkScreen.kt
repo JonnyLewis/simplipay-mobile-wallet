@@ -27,11 +27,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -90,6 +93,7 @@ private fun PayLinkDto.toRow(): PayLink = PayLink(
  * badge, plus a "New pay link" panel. Generate posts to the service; the
  * returned canonical URL is shown alongside a QR with copy / share actions.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PayLinkScreen(
     onBackClick: () -> Unit,
@@ -99,6 +103,7 @@ internal fun PayLinkScreen(
     val tokens = SimpliPayTheme.tokens
     val clipboard = LocalClipboardManager.current
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+    val pullRefreshState = rememberPullToRefreshState()
 
     // Create-panel local state (field contents); the generated URL comes from the service.
     var showCreate by remember { mutableStateOf(false) }
@@ -111,135 +116,169 @@ internal fun PayLinkScreen(
         backPress = onBackClick,
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = state.loading,
+            onRefresh = { viewModel.trySendAction(PayLinkAction.Refresh) },
+            state = pullRefreshState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
+                .padding(padding),
         ) {
-            // Header — back affordance + title + subtitle (BuyScreen pattern).
-            Box(
+            Column(
                 modifier = Modifier
-                    .padding(top = 4.dp)
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .border(1.dp, tokens.border, RoundedCornerShape(12.dp))
-                    .clickable(onClick = onBackClick),
-                contentAlignment = Alignment.Center,
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
             ) {
-                Icon(
-                    imageVector = MifosIcons.ArrowBack2,
-                    contentDescription = "Back",
-                    tint = tokens.sub,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = "Pay Links",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-0.5).sp,
-                ),
-                color = tokens.ink,
-            )
-            Text(
-                text = "Share a link or QR to get paid",
-                style = MaterialTheme.typography.bodyMedium,
-                color = tokens.sub,
-                modifier = Modifier.padding(top = 2.dp),
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Primary "New pay link" action — toggles the in-screen create panel.
-            NewPayLinkButton(
-                onClick = {
-                    showCreate = !showCreate
-                    if (!showCreate) {
-                        description = ""
-                        amount = ""
-                        viewModel.trySendAction(PayLinkAction.ClearGenerated)
-                    }
-                },
-            )
-
-            if (showCreate) {
-                Spacer(Modifier.height(14.dp))
-                CreatePayLinkPanel(
-                    description = description,
-                    onDescriptionChange = {
-                        description = it
-                        // Editing invalidates a previously generated link.
-                        viewModel.trySendAction(PayLinkAction.ClearGenerated)
-                    },
-                    amount = amount,
-                    onAmountChange = {
-                        amount = it
-                        viewModel.trySendAction(PayLinkAction.ClearGenerated)
-                    },
-                    generatedUrl = generatedUrl,
-                    onGenerate = {
-                        viewModel.trySendAction(PayLinkAction.Create(description, amount))
-                    },
-                    onCopy = { url ->
-                        clipboard.setText(AnnotatedString(url))
-                        // TODO: surface a confirmation toast once a host hook exists.
-                    },
-                    onShareUrl = { _ ->
-                        // TODO: wire to template.core.base.ui.ShareUtils.shareText(url)
-                        //  once the backend pay-link service is available.
-                    },
-                    onShareBarcode = { _ ->
-                        // TODO: render the QR painter to an ImageBitmap and call
-                        //  ShareUtils.shareImage(...) once the service is available.
-                    },
-                )
-            }
-
-            state.error?.let { message ->
-                Spacer(Modifier.height(12.dp))
+                // Header — back affordance + title + subtitle (BuyScreen pattern).
+                Box(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, tokens.border, RoundedCornerShape(12.dp))
+                        .clickable(onClick = onBackClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = MifosIcons.ArrowBack2,
+                        contentDescription = "Back",
+                        tint = tokens.sub,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
                 Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFB42318),
-                    modifier = Modifier.clickable { viewModel.trySendAction(PayLinkAction.Refresh) },
+                    text = "Pay Links",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.5).sp,
+                    ),
+                    color = tokens.ink,
                 )
-            }
-
-            Spacer(Modifier.height(22.dp))
-
-            Text(
-                text = "Your links",
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
-                color = tokens.ink,
-            )
-            Spacer(Modifier.height(10.dp))
-
-            when {
-                state.loading -> Text(
-                    text = "Loading your links…",
-                    style = MaterialTheme.typography.bodySmall,
+                Text(
+                    text = "Share a link or QR to get paid",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = tokens.sub,
+                    modifier = Modifier.padding(top = 2.dp),
                 )
-                state.links.isEmpty() -> Text(
-                    text = "No pay links yet — create one above to get paid.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = tokens.sub,
+
+                Spacer(Modifier.height(16.dp))
+
+                // Primary "New pay link" action — toggles the in-screen create panel.
+                NewPayLinkButton(
+                    onClick = {
+                        showCreate = !showCreate
+                        if (!showCreate) {
+                            description = ""
+                            amount = ""
+                            viewModel.trySendAction(PayLinkAction.ClearGenerated)
+                        }
+                    },
                 )
-                else -> state.links.map { it.toRow() }.forEach { link ->
-                    PayLinkRow(
-                        link = link,
-                        onCopy = { clipboard.setText(AnnotatedString(link.url)) },
+
+                if (showCreate) {
+                    Spacer(Modifier.height(14.dp))
+                    CreatePayLinkPanel(
+                        description = description,
+                        onDescriptionChange = {
+                            description = it
+                            // Editing invalidates a previously generated link.
+                            viewModel.trySendAction(PayLinkAction.ClearGenerated)
+                        },
+                        amount = amount,
+                        onAmountChange = {
+                            amount = it
+                            viewModel.trySendAction(PayLinkAction.ClearGenerated)
+                        },
+                        generatedUrl = generatedUrl,
+                        onGenerate = {
+                            viewModel.trySendAction(PayLinkAction.Create(description, amount))
+                        },
+                        onCopy = { url ->
+                            clipboard.setText(AnnotatedString(url))
+                            // TODO: surface a confirmation toast once a host hook exists.
+                        },
+                        onShareUrl = { _ ->
+                            // TODO: wire to template.core.base.ui.ShareUtils.shareText(url)
+                            //  once the backend pay-link service is available.
+                        },
+                        onShareBarcode = { _ ->
+                            // TODO: render the QR painter to an ImageBitmap and call
+                            //  ShareUtils.shareImage(...) once the service is available.
+                        },
+                    )
+                }
+
+                state.error?.let { message ->
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFB42318),
                     )
                     Spacer(Modifier.height(10.dp))
+                    RetryButton(onClick = { viewModel.trySendAction(PayLinkAction.Refresh) })
                 }
-            }
 
-            Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(22.dp))
+
+                Text(
+                    text = "Your links",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
+                    color = tokens.ink,
+                )
+                Spacer(Modifier.height(10.dp))
+
+                when {
+                    state.loading -> Text(
+                        text = "Loading your links…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = tokens.sub,
+                    )
+                    state.links.isEmpty() -> Text(
+                        text = "No pay links yet — create one above to get paid.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = tokens.sub,
+                    )
+                    else -> state.links.map { it.toRow() }.forEach { link ->
+                        PayLinkRow(
+                            link = link,
+                            onCopy = { clipboard.setText(AnnotatedString(link.url)) },
+                        )
+                        Spacer(Modifier.height(10.dp))
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+            }
         }
+    }
+}
+
+@Composable
+private fun RetryButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tokens = SimpliPayTheme.tokens
+    val shape = RoundedCornerShape(12.dp)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, tokens.jade, shape)
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "Retry",
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            color = tokens.jade,
+        )
     }
 }
 

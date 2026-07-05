@@ -62,7 +62,10 @@ class PayLinkViewModel(
                 }
                 .onFailure {
                     mutableStateFlow.update {
-                        it.copy(loading = false, error = "Couldn't load your pay links. Pull to retry.")
+                        it.copy(
+                            loading = false,
+                            error = "Couldn't reach the pay link service. Check your connection and try again.",
+                        )
                     }
                 }
         }
@@ -98,7 +101,10 @@ class PayLinkViewModel(
                 }
                 .onFailure {
                     mutableStateFlow.update {
-                        it.copy(creating = false, error = "Couldn't create the pay link. Try again.")
+                        it.copy(
+                            creating = false,
+                            error = "Couldn't create the pay link — the pay link service is unreachable.",
+                        )
                     }
                 }
         }

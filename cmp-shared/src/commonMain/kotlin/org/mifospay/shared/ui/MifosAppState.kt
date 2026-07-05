@@ -100,6 +100,10 @@ internal class MifosAppState(
     val isReceiveRoute: Boolean
         @Composable get() = matchesRoute("ReceiveRoute")
 
+    /** The Pay Links hub — a pushed detail that should keep the bottom nav. */
+    val isPayLinkRoute: Boolean
+        @Composable get() = matchesRoute("PayLinkRoute")
+
     @Composable
     private fun matchesRoute(name: String): Boolean = currentDestination?.route
         ?.substringBefore('/')
