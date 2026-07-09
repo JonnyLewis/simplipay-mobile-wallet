@@ -9,13 +9,13 @@
  */
 package org.mifospay.feature.proximity.di
 
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import org.mifospay.feature.proximity.transport.AndroidBleProximityTransport
 import org.mifospay.feature.proximity.transport.BleProximityTransport
-import org.mifospay.feature.proximity.transport.NoopBleProximityTransport
 
-// Android real BLE transport (BluetoothLeAdvertiser/Scanner + GATT) is the next
-// increment (plan T4); Noop for now.
+// Android: real BluetoothLe advertise/scan + GATT transport (parity with iOS).
 actual val proximityPlatformModule: Module = module {
-    single<BleProximityTransport> { NoopBleProximityTransport() }
+    single<BleProximityTransport> { AndroidBleProximityTransport(androidContext()) }
 }
