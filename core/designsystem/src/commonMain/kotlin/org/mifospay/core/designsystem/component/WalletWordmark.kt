@@ -9,18 +9,16 @@
  */
 package org.mifospay.core.designsystem.component
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.StartOffset
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -42,6 +40,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import org.mifospay.core.designsystem.theme.SimpliPayTheme
 
 private fun wordmarkText(accentColor: Color) = buildAnnotatedString {
@@ -77,9 +76,10 @@ fun WalletWordmark(
 
 /**
  * The `simplipay.` wordmark with the brand letter-wave: each letter bubbles up,
- * settles back with a small overshoot, staggered left to right, then the word
- * rests before looping — matching `simplipay-assets/web/wordmark-wave.html`
- * (2.4 s cycle, 90 ms stagger, cubic-bezier(0.36, 0, 0.24, 1)). Same styling
+ * settles back with a small overshoot, staggered left to right, then rests —
+ * matching `simplipay-assets/web/wordmark-wave.html` (2.4 s cycle, 90 ms stagger,
+ * cubic-bezier(0.36, 0, 0.24, 1)). The wave plays **exactly once per composition**
+ * (i.e. once each time the home screen is loaded) instead of looping. Same styling
  * contract as [WalletWordmark]; the trailing period rides the wave last, in jade.
  */
 @Composable
@@ -98,39 +98,61 @@ fun AnimatedWalletWordmark(
     // Wave amplitude scales with the wordmark size (≈ -0.33em up, +0.08em settle).
     val rise = fontSize.value / 3f
     val settle = fontSize.value / 12f
-    val transition = rememberInfiniteTransition(label = "wordmarkWave")
+
+    // One-shot: a single clock (ms) runs from 0 until the last (staggered) letter
+    // has settled back, then stops — so the wave plays once. Re-entering the home
+    // screen re-composes this and restarts the clock, replaying it once per load
+    // rather than looping forever.
+    val totalMs = (WORDMARK.length - 1) * WAVE_STAGGER_MS + WAVE_SETTLE_END_MS
+    val clockMs = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        clockMs.snapTo(0f)
+        clockMs.animateTo(
+            targetValue = totalMs.toFloat(),
+            animationSpec = tween(durationMillis = totalMs, easing = LinearEasing),
+        )
+    }
+
     Row(modifier = modifier) {
         WORDMARK.forEachIndexed { index, letter ->
-            val offsetDp by transition.animateFloat(
-                initialValue = 0f,
-                targetValue = 0f,
-                animationSpec = infiniteRepeatable(
-                    animation = keyframes {
-                        durationMillis = WAVE_CYCLE_MS
-                        0f at 0 using WaveEasing
-                        -rise at (WAVE_CYCLE_MS * 12 / 100) using WaveEasing
-                        settle at (WAVE_CYCLE_MS * 26 / 100) using WaveEasing
-                        0f at (WAVE_CYCLE_MS * 38 / 100)
-                        // rest at baseline for the remainder of the cycle
-                    },
-                    initialStartOffset = StartOffset(index * WAVE_STAGGER_MS),
-                ),
-                label = "wordmarkLetter$index",
-            )
             Text(
                 text = letter.toString(),
                 style = style,
                 color = if (letter == '.') accentColor else inkColor,
-                // Lambda offset: the per-frame value is read in layout, not composition.
-                modifier = Modifier.offset { IntOffset(0, offsetDp.dp.roundToPx()) },
+                // Read the clock in the layout phase (not composition) and map it to
+                // this letter's staggered slice of the wave.
+                modifier = Modifier.offset {
+                    val local = clockMs.value - index * WAVE_STAGGER_MS
+                    IntOffset(0, waveLetterOffset(local, rise, settle).dp.roundToPx())
+                },
             )
         }
+    }
+}
+
+/**
+ * Vertical offset (dp) of one wordmark letter at [localMs] into its own wave slice:
+ * up by [rise], back past baseline by [settle], then to rest — the keyframe shape of
+ * the original loop, evaluated as a one-shot. Returns 0 before the slice starts and
+ * after it has settled.
+ */
+private fun waveLetterOffset(localMs: Float, rise: Float, settle: Float): Float {
+    if (localMs <= 0f) return 0f
+    val p1 = WAVE_CYCLE_MS * 0.12f
+    val p2 = WAVE_CYCLE_MS * 0.26f
+    val p3 = WAVE_CYCLE_MS * 0.38f
+    return when {
+        localMs < p1 -> lerp(0f, -rise, WaveEasing.transform(localMs / p1))
+        localMs < p2 -> lerp(-rise, settle, WaveEasing.transform((localMs - p1) / (p2 - p1)))
+        localMs < p3 -> lerp(settle, 0f, WaveEasing.transform((localMs - p2) / (p3 - p2)))
+        else -> 0f
     }
 }
 
 private const val WORDMARK = "simplipay."
 private const val WAVE_CYCLE_MS = 2_400
 private const val WAVE_STAGGER_MS = 90
+private const val WAVE_SETTLE_END_MS = WAVE_CYCLE_MS * 38 / 100
 private val WaveEasing = CubicBezierEasing(0.36f, 0f, 0.24f, 1f)
 
 /**

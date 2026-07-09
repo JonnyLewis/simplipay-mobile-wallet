@@ -290,7 +290,7 @@ private fun HomeScreenContent(
         ) {
             item {
                 AnimatedWalletWordmark(
-                    fontSize = 24.sp,
+                    fontSize = 36.sp,
                     modifier = Modifier.padding(
                         start = KptTheme.spacing.md,
                         top = KptTheme.spacing.md,
