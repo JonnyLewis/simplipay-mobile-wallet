@@ -21,11 +21,14 @@ import kotlinx.serialization.Serializable
 
 /**
  * Base URL of the SimpliLink pay link service (`SimpliLink` repo).
- * Dev default reaches the service on the Mac host from the iOS simulator.
- * TODO: move into instance config alongside NOTIFICATION_ENGINE_URL before
- *  device/TestFlight builds — a physical phone cannot see localhost.
+ *
+ * The service is deployed in-cluster and routed under the existing `api.` host
+ * (Traefik IngressRoute → `simplipay-simplilink:8086`), so it is reachable from
+ * real devices over HTTPS — the app hits `https://api.simplipay.co.za/v1/paylinks`.
+ * For local development against a service on the Mac host, override to
+ * `http://localhost:8086` (reachable from the iOS simulator only).
  */
-const val SIMPLILINK_URL = "http://localhost:8086"
+const val SIMPLILINK_URL = "https://api.simplipay.co.za"
 
 /** A pay link as served by SimpliLink (`GET/POST /v1/paylinks`). */
 @Serializable
