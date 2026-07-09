@@ -18,7 +18,9 @@ data class NewClientEntity(
     val lastname: String,
     val externalId: String,
     val mobileNo: String,
-    val address: Address,
+    // Optional — omitted from the request when null (Json explicitNulls = false), since the
+    // backend's address feature is disabled (enable-address=false).
+    val address: Address? = null,
     val savingsProductId: Int,
     val officeId: Int,
     val legalFormId: Int,
@@ -33,7 +35,7 @@ data class NewClientEntity(
         lastname: String,
         externalId: String,
         mobileNo: String,
-        address: Address,
+        address: Address? = null,
         savingsProductId: Int,
     ) : this(
         firstname = firstname,

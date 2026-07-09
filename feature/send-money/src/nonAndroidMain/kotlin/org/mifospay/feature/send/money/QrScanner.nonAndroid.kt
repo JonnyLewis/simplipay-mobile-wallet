@@ -9,5 +9,24 @@
  */
 package org.mifospay.feature.send.money
 
-actual val ScannerModule: org.koin.core.module.Module
-    get() = TODO("Not yet implemented")
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import org.koin.core.module.Module
+import org.koin.dsl.module
+
+/**
+ * No-op QR scanner for non-Android platforms (iOS, Desktop, Web).
+ *
+ * The Android implementation uses Google ML Kit's barcode scanner, which has no
+ * multiplatform equivalent. Until a platform-native scanner is wired up, this
+ * implementation emits no result so dependency injection can initialize without
+ * crashing.
+ */
+class NoOpQrScanner : QrScanner {
+    override fun startScanning(): Flow<String?> = flowOf(null)
+}
+
+actual val ScannerModule: Module
+    get() = module {
+        single<QrScanner> { NoOpQrScanner() }
+    }

@@ -9,6 +9,9 @@
  */
 package org.mifospay.shared
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -26,8 +29,6 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.mifos.authenticator.biometrics.BiometricStorageAdapter
 import org.mifos.authenticator.biometrics.PlatformAuthenticatorCompositionProvider
-import org.mifos.authenticator.passcode.PasscodeManager
-import org.mifos.authenticator.passcode.PasscodeStep
 import org.mifos.feature.passcode.ROOT_MIFOS_PASSCODE_ROUTE
 import org.mifos.feature.passcode.navigateToReAuthMifosPasscodeScreen
 import org.mifospay.core.common.GlobalAuthManager
@@ -35,9 +36,15 @@ import org.mifospay.core.data.util.NetworkMonitor
 import org.mifospay.core.data.util.TimeZoneMonitor
 import org.mifospay.core.designsystem.component.MifosDialogBox
 import org.mifospay.core.designsystem.theme.MifosTheme
+import org.mifospay.core.model.user.WalletAccessState
+import org.mifospay.passcode.PasscodeManager
+import org.mifospay.passcode.PasscodeStep
 import org.mifospay.shared.UserState.Authenticated
 import org.mifospay.shared.navigation.MifosNavGraph.LOGIN_GRAPH
 import org.mifospay.shared.navigation.RootNavGraph
+import org.mifospay.shared.push.PushRegistrationCoordinator
+import org.mifospay.shared.ui.BlockedScreen
+import template.core.base.designsystem.theme.KptTheme
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
@@ -66,6 +73,11 @@ fun MifosPaySharedApp(
     networkMonitor: NetworkMonitor = koinInject(),
     timeZoneMonitor: TimeZoneMonitor = koinInject(),
 ) {
+    val pushRegistrationCoordinator: PushRegistrationCoordinator = koinInject()
+    LaunchedEffect(pushRegistrationCoordinator) {
+        pushRegistrationCoordinator.start(this)
+    }
+
     val biometricStorageAdapter: BiometricStorageAdapter = koinInject()
     PlatformAuthenticatorCompositionProvider(
         biometricStorageAdapter = biometricStorageAdapter,
@@ -114,6 +126,7 @@ private fun MifosPayApp(
     viewModel: MifosPayViewModel = koinViewModel(),
 ) {
     val userState by viewModel.userState.collectAsStateWithLifecycle()
+    val walletAccess by viewModel.walletAccessState.collectAsStateWithLifecycle()
     val navController = rememberNavController()
 
     val showErrorDialog = remember { mutableStateOf<Boolean>(false) }
@@ -144,6 +157,15 @@ private fun MifosPayApp(
             viewModel.isPasscodeNotCreated()
         ) {
             viewModel.logOut()
+        }
+    }
+
+    // On every authenticated entry (fresh login OR resume from a stored session),
+    // re-probe wallet access so a backend role upgrade (no-access → KYC1/KYC2)
+    // unlocks the full wallet without the user having to log out and back in.
+    LaunchedEffect(userState) {
+        (userState as? Authenticated)?.let { authed ->
+            if (authed.userData.authenticated) viewModel.refreshWalletAccess()
         }
     }
 
@@ -197,6 +219,10 @@ private fun MifosPayApp(
                         }
                     }
                     onStopMark.value = null
+                    // Warm-resume case (process still alive, so the LaunchedEffect above
+                    // won't re-fire): re-probe wallet access so an upgrade applied while
+                    // the app was backgrounded unlocks the wallet on return.
+                    viewModel.refreshWalletAccess()
                 }
                 Lifecycle.Event.ON_STOP -> {
                     onStopMark.value = TimeSource.Monotonic.markNow()
@@ -209,21 +235,48 @@ private fun MifosPayApp(
     }
 
     MifosTheme {
-        RootNavGraph(
-            networkMonitor = networkMonitor,
-            timeZoneMonitor = timeZoneMonitor,
-            navHostController = navController,
-            startDestination = navDestination,
-            modifier = modifier,
-            handleAppLocale = handleAppLocale,
-            onClickLogout = {
-                viewModel.logOut()
-                navController.navigate(LOGIN_GRAPH) {
-                    popUpTo(navController.graph.id) {
-                        inclusive = true
+        // Paint the Platinum-Ivory screen background across the whole window —
+        // behind every screen — so the status-bar and home-indicator safe areas
+        // are ivory too (individual scaffolds inset their own background via
+        // navigationBarsPadding, which otherwise left white "forehead/chin" bands).
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(KptTheme.colorScheme.background),
+        ) {
+            RootNavGraph(
+                networkMonitor = networkMonitor,
+                timeZoneMonitor = timeZoneMonitor,
+                navHostController = navController,
+                startDestination = navDestination,
+                modifier = modifier,
+                handleAppLocale = handleAppLocale,
+                onClickLogout = {
+                    viewModel.logOut()
+                    navController.navigate(LOGIN_GRAPH) {
+                        popUpTo(navController.graph.id) {
+                            inclusive = true
+                        }
                     }
-                }
-            },
-        )
+                },
+            )
+
+            // Full-screen block for a revoked user — drawn on top of the whole shell (covering
+            // the bottom nav) once they're authenticated. Resolved reactively, so a mid-session
+            // revocation detected by refreshWalletAccess() drops it over the wallet immediately.
+            val authed = (userState as? Authenticated)?.userData?.authenticated == true
+            if (authed && walletAccess == WalletAccessState.REVOKED) {
+                BlockedScreen(
+                    onLogout = {
+                        viewModel.logOut()
+                        navController.navigate(LOGIN_GRAPH) {
+                            popUpTo(navController.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                )
+            }
+        }
     }
 }

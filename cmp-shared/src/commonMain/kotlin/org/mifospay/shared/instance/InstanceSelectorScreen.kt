@@ -190,7 +190,7 @@ private fun InstancesList(
             }
         }
 
-        items(instances) { instance ->
+        items(instances, key = { "${it.endpoint}_${it.platformTenantId}" }) { instance ->
             val isMainSelected = instance == selectedMainInstance
 
             MainInstanceItem(

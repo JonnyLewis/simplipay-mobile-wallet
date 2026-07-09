@@ -79,38 +79,20 @@ internal class SpecificTransactionsViewModel(
     }
 
     private fun handleTransferDetailReceive(transaction: Transaction) {
+        // Render the transaction immediately; the transfer detail fills in when it arrives.
         mutableStateFlow.update {
             it.copy(viewState = Content(transaction, null))
         }
-        // TODO: below api not there for Self So Commented it
-//        transaction.transferId?.let { transferId ->
-//            accountRepository.getAccountTransfer(transferId)
-//                .onEach { result: DataState<TransferDetail> ->
-//                    when (result) {
-//                        is DataState.Error -> {
-//                            mutableStateFlow.update {
-//                                it.copy(viewState = Error(result.exception.message.toString()))
-//                            }
-//                        }
-//
-//                        is DataState.Loading -> {
-//                            mutableStateFlow.update {
-//                                it.copy(viewState = STState.ViewState.Loading)
-//                            }
-//                        }
-//
-//                        is DataState.Success -> {
-//                            mutableStateFlow.update {
-//                                it.copy(viewState = Content(transaction, result.data))
-//                            }
-//                        }
-//                    }
-//                }.launchIn(viewModelScope)
-//        } ?: run {
-//            mutableStateFlow.update {
-//                it.copy(viewState = Content(transaction, null))
-//            }
-//        }
+        val transferId = transaction.transferId ?: return
+        accountRepository.getAccountTransfer(transferId)
+            .onEach { result: DataState<TransferDetail> ->
+                if (result is DataState.Success) {
+                    mutableStateFlow.update {
+                        it.copy(viewState = Content(transaction, result.data))
+                    }
+                }
+                // Loading/Error keep the already-rendered transaction without the detail card.
+            }.launchIn(viewModelScope)
     }
 }
 

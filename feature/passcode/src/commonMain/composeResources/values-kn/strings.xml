@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">ಅಮಾನ್ಯ ಇನ್‌ಪುಟ್‌ನ ಕಾರಣ ಬಯೋಮೆಟ್ರಿಕ್ ದೃಢೀಕರಣವನ್ನು ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">ಅಮಾನ್ಯ ಇನ್‌ಪುಟ್‌ನ ಕಾರಣ ಬಯೋಮೆಟ್ರಿಕ್ ನೋಂದಣಿಯನ್ನು ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
     <string name="feature_passcode_biometric_error_unknown">ಒಂದು ಅನಿರೀಕ್ಷಿತ ಬಯೋಮೆಟ್ರಿಕ್ ದೋಷ ಸಂಭವಿಸಿತು. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay ಅನ್‌ಲಾಕ್ ಮಾಡಿ</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay ಅನ್‌ಲಾಕ್ ಮಾಡಿ</string>
     <string name="feature_passcode_biometric_prompt_subtitle">ಮುಂದುವರಿಯಲು ನಿಮ್ಮ ಗುರುತನ್ನು ಪರಿಶೀಲಿಸಿ</string>
     <string name="feature_passcode_biometric_prompt_description">ನಿಮ್ಮ ಫಿಂಗರ್‌ಪ್ರಿಂಟ್, ಮುಖ, ಅಥವಾ ಸಾಧನ ರುಜುವಾತುಗಳನ್ನು ಬಳಸಿ</string>
     <string name="feature_passcode_biometric_prompt_negative_button">ರದ್ದುಮಾಡಿ</string>

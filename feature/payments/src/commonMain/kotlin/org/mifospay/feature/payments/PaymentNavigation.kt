@@ -21,8 +21,12 @@ fun NavController.navigateToPayments(navOptions: NavOptions) = navigate(PAYMENTS
 
 fun NavGraphBuilder.paymentsScreen(
     tabContents: List<TabContent>,
+    onPayLinkClick: () -> Unit,
 ) {
     composable(route = PAYMENTS_ROUTE) {
-        PaymentsRoute(tabContents = tabContents)
+        PaymentsRoute(
+            tabContents = tabContents,
+            onPayLinkClick = onPayLinkClick,
+        )
     }
 }

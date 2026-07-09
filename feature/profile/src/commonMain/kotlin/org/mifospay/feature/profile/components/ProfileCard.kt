@@ -9,27 +9,30 @@
  */
 package org.mifospay.feature.profile.components
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import mobile_wallet.feature.profile.generated.resources.Res
 import mobile_wallet.feature.profile.generated.resources.feature_profile_email
 import mobile_wallet.feature.profile.generated.resources.feature_profile_mobile
 import mobile_wallet.feature.profile.generated.resources.feature_profile_username
 import mobile_wallet.feature.profile.generated.resources.feature_profile_vpa
 import org.jetbrains.compose.resources.stringResource
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.client.Client
 import template.core.base.designsystem.theme.KptTheme
 
@@ -38,39 +41,36 @@ fun ProfileDetailsCard(
     client: Client,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    val tokens = SimpliPayTheme.tokens
+    val cardShape = RoundedCornerShape(18.dp)
+    Column(
         modifier = modifier
-            .fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(),
-        shape = KptTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = KptTheme.colorScheme.primaryContainer,
-            contentColor = KptTheme.colorScheme.onPrimary,
-        ),
+            .fillMaxWidth()
+            .clip(cardShape)
+            .background(KptTheme.colorScheme.surface)
+            .border(width = 1.dp, color = tokens.border, shape = cardShape)
+            .padding(horizontal = KptTheme.spacing.lg),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = KptTheme.spacing.md),
-            verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
-        ) {
-            ProfileItem(
-                label = stringResource(Res.string.feature_profile_username),
-                value = client.displayName,
-            )
-            ProfileItem(
-                label = stringResource(Res.string.feature_profile_email),
-                value = client.emailAddress,
-            )
-            ProfileItem(
-                label = stringResource(Res.string.feature_profile_vpa),
-                value = client.externalId,
-            )
-            ProfileItem(
-                label = stringResource(Res.string.feature_profile_mobile),
-                value = client.mobileNo,
-            )
-        }
+        ProfileItem(
+            label = stringResource(Res.string.feature_profile_username),
+            value = client.displayName,
+        )
+        ProfileItem(
+            label = stringResource(Res.string.feature_profile_email),
+            value = client.emailAddress,
+            valueFontFamily = tokens.monoFontFamily,
+        )
+        ProfileItem(
+            label = stringResource(Res.string.feature_profile_vpa),
+            value = client.externalId,
+            valueFontFamily = tokens.monoFontFamily,
+        )
+        ProfileItem(
+            label = stringResource(Res.string.feature_profile_mobile),
+            value = client.mobileNo,
+            valueFontFamily = tokens.monoFontFamily,
+            showDivider = false,
+        )
     }
 }
 
@@ -78,26 +78,35 @@ fun ProfileDetailsCard(
 fun ProfileItem(
     label: String,
     value: String,
-    labelColor: Color = KptTheme.colorScheme.primary,
-    textColor: Color = KptTheme.colorScheme.onSurface,
     modifier: Modifier = Modifier,
+    valueFontFamily: FontFamily? = null,
+    showDivider: Boolean = true,
 ) {
+    val tokens = SimpliPayTheme.tokens
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
+        Spacer(modifier = Modifier.height(KptTheme.spacing.md))
         Text(
-            text = label,
-            color = labelColor,
-            style = KptTheme.typography.labelLarge,
+            text = label.uppercase(),
+            color = tokens.cardLabel,
+            style = KptTheme.typography.labelSmall.copy(
+                fontFamily = tokens.monoFontFamily,
+                letterSpacing = 1.5.sp,
+            ),
         )
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = value,
-            color = textColor,
-            style = KptTheme.typography.labelLarge,
-            fontWeight = FontWeight(400),
+            color = tokens.ink,
+            style = KptTheme.typography.bodyLarge.copy(
+                fontFamily = valueFontFamily ?: KptTheme.typography.bodyLarge.fontFamily,
+                fontWeight = FontWeight(500),
+            ),
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        HorizontalDivider()
+        Spacer(modifier = Modifier.height(KptTheme.spacing.md))
+        if (showDivider) {
+            HorizontalDivider(color = tokens.line)
+        }
     }
 }

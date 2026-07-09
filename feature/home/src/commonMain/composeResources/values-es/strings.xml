@@ -11,7 +11,7 @@
 <resources>
     <string name="feature_home_loading">Cargando</string>
     <string name="start_sending_your_money_tax_free">¡Comienza a enviar dinero libre de impuestos!</string>
-    <string name="feature_home_desc">Mifos Pay es el mejor lugar para que los usuarios reciban y envíen dinero. ¡Comienza a ahorrar ahora!</string>
+    <string name="feature_home_desc">SimpliPay es el mejor lugar para que los usuarios reciban y envíen dinero. ¡Comienza a ahorrar ahora!</string>
     <string name="feature_home_wallet_balance">Saldo de la billetera</string>
     <string name="feature_home_view_more">Ver más</string>
     <string name="feature_home_mark_default">Marcar como predeterminado</string>

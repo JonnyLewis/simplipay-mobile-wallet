@@ -36,10 +36,9 @@ import mobile_wallet.feature.mpay_qr.generated.resources.Res
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_inter_bank
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_intra_bank
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_scan_instruction
-import mobile_wallet.feature.mpay_qr.generated.resources.logo
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.mifospay.core.designsystem.component.rememberWalletWordmarkPainter
 import template.core.base.designsystem.KptMaterialTheme
 import template.core.base.designsystem.theme.KptTheme
 
@@ -175,7 +174,7 @@ private fun MifosLogoOverlay(
         contentAlignment = Alignment.Center,
     ) {
         Image(
-            painter = painterResource(Res.drawable.logo),
+            painter = rememberWalletWordmarkPainter(),
             contentDescription = null,
             modifier = Modifier
                 .size(LogoImageSize)

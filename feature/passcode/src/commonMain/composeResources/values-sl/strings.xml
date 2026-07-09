@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Biometrične avtentikacije ni bilo mogoče zagnati zaradi neveljavnih argumentov.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Biometrične registracije ni bilo mogoče zagnati zaradi neveljavnih argumentov.</string>
     <string name="feature_passcode_biometric_error_unknown">Prišlo je do nepričakovane biometrične napake. Poskusite znova.</string>
-    <string name="feature_passcode_biometric_prompt_title">Odklenite Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Odklenite SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Potrdite svojo identiteto za nadaljevanje</string>
     <string name="feature_passcode_biometric_prompt_description">Uporabite prstni odtis, obraz ali poverilnice naprave</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Prekliči</string>

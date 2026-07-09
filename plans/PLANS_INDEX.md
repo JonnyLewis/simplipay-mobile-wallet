@@ -1,6 +1,6 @@
 # Plans Index
 
-**Last Updated**: 2026-06-23
+**Last Updated**: 2026-06-27
 
 ---
 
@@ -8,7 +8,16 @@
 
 | Plan | Created | Status | Progress | File |
 |------|---------|:------:|:--------:|------|
-| (none) | - | - | - | - |
+| Platform parity — iOS redesign → Android & Desktop | 2026-06-25 | planning | 0% | [2026-06-25-platform-ios-parity-android-desktop](2026-06-25-platform-ios-parity-android-desktop.md) |
+| Proximity Payment — implementation (feature/proximity) | 2026-06-27 | planning | 0% | [2026-06-27-feature-proximity-payment-implementation](2026-06-27-feature-proximity-payment-implementation.md) |
+
+---
+
+## Backlog / Future Specs
+
+| Item | Created | Notes | File |
+|------|---------|-------|------|
+| Proximity Payment **SDK** (commercialization — white-label, master key, bank devices + kiosks) | 2026-06-27 | Future spec; depends on proximity v6 shipping first | [2026-06-27-backlog-proximity-sdk-commercialization](2026-06-27-backlog-proximity-sdk-commercialization.md) |
 
 ---
 

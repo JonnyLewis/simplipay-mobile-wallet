@@ -164,6 +164,14 @@ class UserPreferencesRepositoryImpl(
         }
     }
 
+    override suspend fun clearClientInfo(): DataState<Unit> {
+        return try {
+            DataState.Success(preferenceManager.clearClientInfo())
+        } catch (e: Exception) {
+            DataState.Error(e)
+        }
+    }
+
     override suspend fun updateClientProfile(client: UpdatedClient): DataState<Unit> {
         return try {
             val result = preferenceManager.updateClientProfile(client)

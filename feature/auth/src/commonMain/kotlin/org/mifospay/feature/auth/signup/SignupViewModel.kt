@@ -25,10 +25,8 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import mobile_wallet.feature.auth.generated.resources.Res
-import mobile_wallet.feature.auth.generated.resources.feature_auth_error_address_line1_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_check_uniqueness_failed
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_confirm_password_required
-import mobile_wallet.feature.auth.generated.resources.feature_auth_error_country_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_email_invalid
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_email_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_field_already_exists
@@ -38,9 +36,7 @@ import mobile_wallet.feature.auth.generated.resources.feature_auth_error_mobile_
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_mobile_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_password_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_passwords_mismatch
-import mobile_wallet.feature.auth.generated.resources.feature_auth_error_pincode_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_select_savings_account
-import mobile_wallet.feature.auth.generated.resources.feature_auth_error_state_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_error_username_required
 import mobile_wallet.feature.auth.generated.resources.feature_auth_registration_successful
 import org.jetbrains.compose.resources.StringResource
@@ -133,7 +129,7 @@ class SignupViewModel(
 
             is SignUpAction.ConfirmPasswordInputChange -> {
                 mutableStateFlow.update {
-                    it.copy(confirmPasswordInput = action.confirmPassword)
+                    it.copy(confirmPasswordInput = action.confirmPassword.trim())
                 }
             }
 
@@ -195,6 +191,40 @@ class SignupViewModel(
                 }
             }
 
+            is SignUpAction.IdNumberInputChange -> {
+                mutableStateFlow.update { it.copy(idNumberInput = action.idNumber) }
+            }
+
+            is SignUpAction.DobInputChange -> {
+                mutableStateFlow.update { it.copy(dobInput = action.dob) }
+            }
+
+            is SignUpAction.GenderInputChange -> {
+                mutableStateFlow.update { it.copy(genderInput = action.gender) }
+            }
+
+            is SignUpAction.NationalityInputChange -> {
+                mutableStateFlow.update { it.copy(nationalityInput = action.nationality) }
+            }
+
+            is SignUpAction.CitizenshipInputChange -> {
+                mutableStateFlow.update { it.copy(citizenshipInput = action.citizenship) }
+            }
+
+            is SignUpAction.IdScanPrefill -> {
+                mutableStateFlow.update {
+                    it.copy(
+                        firstNameInput = action.firstName,
+                        lastNameInput = action.lastName,
+                        idNumberInput = action.idNumber,
+                        dobInput = action.dob,
+                        genderInput = action.gender,
+                        nationalityInput = action.nationality,
+                        citizenshipInput = action.citizenship,
+                    )
+                }
+            }
+
             is SignUpAction.CloseClick -> {
                 sendEvent(SignUpEvent.NavigateBack)
             }
@@ -216,23 +246,27 @@ class SignupViewModel(
     }
 
     private fun handlePasswordInput(action: SignUpAction.PasswordInputChange) {
+        // Trim leading/trailing whitespace: on-screen keyboards / autofill can append an
+        // invisible space, which previously made an otherwise-identical confirm password
+        // fail the equality check at submit.
+        val password = action.password.trim()
         // Update input:
         mutableStateFlow.update {
             it.copy(
-                passwordInput = action.password,
-                passwordFeedback = PasswordChecker.getPasswordFeedback(action.password)
+                passwordInput = password,
+                passwordFeedback = PasswordChecker.getPasswordFeedback(password)
                     .toPersistentList(),
             )
         }
         // Update password strength:
         passwordStrengthJob.cancel()
-        if (action.password.isEmpty()) {
+        if (password.isEmpty()) {
             mutableStateFlow.update {
                 it.copy(passwordStrengthState = PasswordStrengthState.NONE)
             }
         } else {
             passwordStrengthJob = viewModelScope.launch {
-                val result = PasswordChecker.getPasswordStrengthResult(action.password)
+                val result = PasswordChecker.getPasswordStrengthResult(password)
                 trySendAction(ReceivePasswordStrengthResult(result))
             }
         }
@@ -377,37 +411,8 @@ class SignupViewModel(
             }
         }
 
-        state.addressLine1Input.isEmpty() -> {
-            mutableStateFlow.update {
-                it.copy(
-                    dialogState = DialogState.Error.ResourceMessage(Res.string.feature_auth_error_address_line1_required),
-                )
-            }
-        }
-
-        state.pinCodeInput.isEmpty() -> {
-            mutableStateFlow.update {
-                it.copy(
-                    dialogState = DialogState.Error.ResourceMessage(Res.string.feature_auth_error_pincode_required),
-                )
-            }
-        }
-
-        state.countryInput.isEmpty() -> {
-            mutableStateFlow.update {
-                it.copy(
-                    dialogState = DialogState.Error.ResourceMessage(Res.string.feature_auth_error_country_required),
-                )
-            }
-        }
-
-        state.stateInput.isEmpty() -> {
-            mutableStateFlow.update {
-                it.copy(
-                    dialogState = DialogState.Error.ResourceMessage(Res.string.feature_auth_error_state_required),
-                )
-            }
-        }
+        // Address fields (address line, postal code, country, state) are optional — the
+        // backend's address feature is disabled, so they are not required to onboard.
 
         else -> initiateSignUp()
     }
@@ -508,13 +513,19 @@ class SignupViewModel(
                 externalId = state.userNameInput.plus("_client"),
                 mobileNo = state.mobileNumberInput,
                 savingsProductId = state.savingsProductId,
-                address = ClientAddress(
-                    addressLine1 = state.addressLine1Input,
-                    addressLine2 = state.addressLine2Input,
-                    postalCode = state.pinCodeInput,
-                    stateProvinceId = state.stateInput,
-                    countryId = state.countryInput,
-                ),
+                // Address is optional (backend address feature is disabled). Only include it
+                // when the user actually entered a street address; otherwise omit it entirely.
+                address = if (state.addressLine1Input.isNotBlank()) {
+                    ClientAddress(
+                        addressLine1 = state.addressLine1Input,
+                        addressLine2 = state.addressLine2Input,
+                        postalCode = state.pinCodeInput,
+                        stateProvinceId = state.stateInput,
+                        countryId = state.countryInput,
+                    )
+                } else {
+                    null
+                },
             )
 
             when (val result = clientRepository.createClient(newClient)) {
@@ -585,8 +596,25 @@ class SignupViewModel(
     private fun loadCountriesFromJson() {
         viewModelScope.launch {
             when (val countriesWithStatesResult = assetRepository.getCountriesWithStates()) {
-                is DataState.Success -> mutableStateFlow.update {
-                    it.copy(countriesWithStates = countriesWithStatesResult.data)
+                is DataState.Success -> {
+                    val data = countriesWithStatesResult.data
+                    // Surface South Africa as the first option (and default selection),
+                    // keeping every other country below it in the original order.
+                    val saKey = data.keys.firstOrNull { it.equals("South Africa", ignoreCase = true) }
+                    val ordered: Map<String, List<String>> = if (saKey != null) {
+                        buildMap {
+                            put(saKey, data.getValue(saKey))
+                            data.forEach { (key, value) -> if (key != saKey) put(key, value) }
+                        }
+                    } else {
+                        data
+                    }
+                    mutableStateFlow.update {
+                        it.copy(
+                            countriesWithStates = ordered,
+                            countryInput = if (it.countryInput.isEmpty() && saKey != null) saKey else it.countryInput,
+                        )
+                    }
                 }
 
                 is DataState.Error -> Logger.d("Failed to load countries.json: ${countriesWithStatesResult.exception.message}")
@@ -612,6 +640,12 @@ data class SignUpState(
     val stateInput: String = "",
     val countryInput: String = "",
     val businessNameInput: String = "",
+    // Identity fields populated from a scanned SA Smart ID barcode (no backend slot yet).
+    val idNumberInput: String = "",
+    val dobInput: String = "",
+    val genderInput: String = "",
+    val nationalityInput: String = "",
+    val citizenshipInput: String = "",
     @Transient val dialogState: DialogState? = null,
     val passwordStrengthState: PasswordStrengthState = PasswordStrengthState.NONE,
     @Serializable(with = ImmutableListSerializer::class)
@@ -652,6 +686,22 @@ sealed interface SignUpAction {
     data class SavingsAccountNoInputChange(val savingsAccountNo: Int) : SignUpAction
     data class StateInputChange(val state: String) : SignUpAction
     data class CountryInputChange(val country: String) : SignUpAction
+    data class IdNumberInputChange(val idNumber: String) : SignUpAction
+    data class DobInputChange(val dob: String) : SignUpAction
+    data class GenderInputChange(val gender: String) : SignUpAction
+    data class NationalityInputChange(val nationality: String) : SignUpAction
+    data class CitizenshipInputChange(val citizenship: String) : SignUpAction
+
+    /** Prefills all identity fields at once from a scanned SA Smart ID barcode. */
+    data class IdScanPrefill(
+        val firstName: String,
+        val lastName: String,
+        val idNumber: String,
+        val dob: String,
+        val gender: String,
+        val nationality: String,
+        val citizenship: String,
+    ) : SignUpAction
 
     data object SubmitClick : SignUpAction
     data object CloseClick : SignUpAction

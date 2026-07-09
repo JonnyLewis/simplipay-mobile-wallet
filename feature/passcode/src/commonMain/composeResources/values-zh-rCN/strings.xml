@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">由于参数无效，无法启动生物识别验证。</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">由于参数无效，无法启动生物识别注册。</string>
     <string name="feature_passcode_biometric_error_unknown">发生了意外的生物识别错误，请重试。</string>
-    <string name="feature_passcode_biometric_prompt_title">解锁 Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">解锁 SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">验证您的身份以继续</string>
     <string name="feature_passcode_biometric_prompt_description">使用您的指纹、人脸或设备凭据</string>
     <string name="feature_passcode_biometric_prompt_negative_button">取消</string>

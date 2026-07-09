@@ -26,7 +26,7 @@
     <string name="feature_request_money_error_oops">Oups !</string>
     <string name="feature_request_money_unexpected_error_subtitle">Une erreur inattendue s\'est produite. Veuillez réessayer.</string>
     <string name="feature_mpay_qr_receive_money">Recevoir de l\'argent</string>
-    <string name="feature_mpay_qr_intra_bank">QR intra-bancaire</string>
+    <string name="feature_mpay_qr_intra_bank">SimpliPay wallet QR</string>
     <string name="feature_mpay_qr_inter_bank">QR inter-bancaire</string>
     <string name="feature_mpay_qr_share">Partager</string>
     <string name="feature_mpay_qr_unable_to_generate">Impossible de générer le code QR</string>

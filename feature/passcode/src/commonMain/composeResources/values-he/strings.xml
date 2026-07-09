@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">לא ניתן היה להתחיל אימות ביומטרי בשל ארגומנטים לא חוקיים.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">לא ניתן היה להתחיל רישום ביומטרי בשל ארגומנטים לא חוקיים.</string>
     <string name="feature_passcode_biometric_error_unknown">אירעה שגיאה ביומטרית בלתי צפויה. אנא נסו שוב.</string>
-    <string name="feature_passcode_biometric_prompt_title">פתיחת Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">פתיחת SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">אמתו את זהותכם כדי להמשיך</string>
     <string name="feature_passcode_biometric_prompt_description">השתמשו בטביעת האצבע, בפנים או באישור המכשיר שלכם</string>
     <string name="feature_passcode_biometric_prompt_negative_button">ביטול</string>

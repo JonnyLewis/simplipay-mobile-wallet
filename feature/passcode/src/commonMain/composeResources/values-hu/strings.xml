@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">A biometrikus hitelesítés érvénytelen argumentumok miatt nem indítható.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">A biometrikus regisztráció érvénytelen argumentumok miatt nem indítható.</string>
     <string name="feature_passcode_biometric_error_unknown">Váratlan biometrikus hiba történt. Próbálja újra.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay feloldása</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay feloldása</string>
     <string name="feature_passcode_biometric_prompt_subtitle">A folytatáshoz igazolja személyazonosságát</string>
     <string name="feature_passcode_biometric_prompt_description">Használja ujjlenyomatát, arcát vagy eszközhitelesítőjét</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Mégse</string>

@@ -32,6 +32,7 @@
 :feature:passcode
 :feature:payments
 :feature:profile
+:feature:proximity
 :feature:receipt
 :feature:savedcards
 :feature:send-money
@@ -243,6 +244,7 @@ com.google.android.gms:play-services-auth-blockstore:16.4.0
 com.google.android.gms:play-services-auth:21.3.0
 com.google.android.gms:play-services-base:18.5.0
 com.google.android.gms:play-services-basement:18.5.0
+com.google.android.gms:play-services-cloud-messaging:17.2.0
 com.google.android.gms:play-services-code-scanner:16.1.0
 com.google.android.gms:play-services-fido:21.0.0
 com.google.android.gms:play-services-identity-credentials:16.0.0-alpha02
@@ -253,6 +255,8 @@ com.google.android.gms:play-services-measurement-sdk-api:23.0.0
 com.google.android.gms:play-services-measurement-sdk:23.0.0
 com.google.android.gms:play-services-measurement:23.0.0
 com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1
+com.google.android.gms:play-services-mlkit-text-recognition-common:19.1.0
+com.google.android.gms:play-services-mlkit-text-recognition:19.0.1
 com.google.android.gms:play-services-stats:17.0.2
 com.google.android.gms:play-services-tasks:18.2.0
 com.google.android.libraries.identity.googleid:googleid:1.1.1
@@ -275,9 +279,11 @@ com.google.firebase:firebase-datatransport:19.0.0
 com.google.firebase:firebase-encoders-json:18.0.1
 com.google.firebase:firebase-encoders-proto:16.0.0
 com.google.firebase:firebase-encoders:17.0.0
+com.google.firebase:firebase-iid-interop:17.1.0
 com.google.firebase:firebase-installations-interop:17.2.0
 com.google.firebase:firebase-installations:19.0.1
 com.google.firebase:firebase-measurement-connector:20.0.1
+com.google.firebase:firebase-messaging:25.0.1
 com.google.firebase:firebase-sessions:3.0.3
 com.google.guava:failureaccess:1.0.3
 com.google.guava:guava:33.4.8-android
@@ -286,6 +292,8 @@ com.google.j2objc:j2objc-annotations:3.0.0
 com.google.mlkit:barcode-scanning-common:17.0.0
 com.google.mlkit:barcode-scanning:17.3.0
 com.google.mlkit:common:18.11.0
+com.google.mlkit:text-recognition-bundled-common:17.0.0
+com.google.mlkit:text-recognition:16.0.1
 com.google.mlkit:vision-common:17.3.0
 com.google.mlkit:vision-interfaces:16.3.0
 com.google.zxing:core:3.5.3

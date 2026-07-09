@@ -17,157 +17,181 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
 import mobile_wallet.core.designsystem.generated.resources.Res
-import mobile_wallet.core.designsystem.generated.resources.outfit_black
-import mobile_wallet.core.designsystem.generated.resources.outfit_bold
-import mobile_wallet.core.designsystem.generated.resources.outfit_extra_bold
-import mobile_wallet.core.designsystem.generated.resources.outfit_extra_light
-import mobile_wallet.core.designsystem.generated.resources.outfit_light
-import mobile_wallet.core.designsystem.generated.resources.outfit_medium
-import mobile_wallet.core.designsystem.generated.resources.outfit_regular
-import mobile_wallet.core.designsystem.generated.resources.outfit_semi_bold
-import mobile_wallet.core.designsystem.generated.resources.outfit_thin
+import mobile_wallet.core.designsystem.generated.resources.geist_mono_bold
+import mobile_wallet.core.designsystem.generated.resources.geist_mono_medium
+import mobile_wallet.core.designsystem.generated.resources.geist_mono_regular
+import mobile_wallet.core.designsystem.generated.resources.geist_mono_semibold
+import mobile_wallet.core.designsystem.generated.resources.plus_jakarta_sans_bold
+import mobile_wallet.core.designsystem.generated.resources.plus_jakarta_sans_extrabold
+import mobile_wallet.core.designsystem.generated.resources.plus_jakarta_sans_medium
+import mobile_wallet.core.designsystem.generated.resources.plus_jakarta_sans_regular
+import mobile_wallet.core.designsystem.generated.resources.plus_jakarta_sans_semibold
 import org.jetbrains.compose.resources.Font
 
+/**
+ * SimpliPay "Platinum Ivory" display/body family — **Plus Jakarta Sans**.
+ *
+ * Used for everything except numeric/monetary values and eyebrow labels, which use
+ * [monoFontFamily] (Geist Mono). Headings in the design are weight 800 with tight
+ * negative tracking; see [getTypography].
+ */
 @Composable
-private fun fontFamily(): FontFamily {
+internal fun displayFontFamily(): FontFamily {
     return FontFamily(
-        Font(Res.font.outfit_black, FontWeight.Black),
-        Font(Res.font.outfit_bold, FontWeight.Bold),
-        Font(Res.font.outfit_semi_bold, FontWeight.SemiBold),
-        Font(Res.font.outfit_medium, FontWeight.Medium),
-        Font(Res.font.outfit_regular, FontWeight.Normal),
-        Font(Res.font.outfit_light, FontWeight.Light),
-        Font(Res.font.outfit_thin, FontWeight.Thin),
-        Font(Res.font.outfit_extra_light, FontWeight.ExtraLight),
-        Font(Res.font.outfit_extra_bold, FontWeight.ExtraBold),
+        Font(Res.font.plus_jakarta_sans_regular, FontWeight.Normal),
+        Font(Res.font.plus_jakarta_sans_medium, FontWeight.Medium),
+        Font(Res.font.plus_jakarta_sans_semibold, FontWeight.SemiBold),
+        Font(Res.font.plus_jakarta_sans_bold, FontWeight.Bold),
+        Font(Res.font.plus_jakarta_sans_extrabold, FontWeight.ExtraBold),
+    )
+}
+
+/**
+ * SimpliPay monospace family — **Geist Mono**.
+ *
+ * The design renders **all** money (`R 12,480.50`), card numbers (`•••• 4567`), IDs,
+ * numeric dates/times and eyebrow/section labels in this family. Reach for it via
+ * [SimpliPayTokens.monoFontFamily] in feature code rather than re-declaring it.
+ */
+@Composable
+internal fun monoFontFamily(): FontFamily {
+    return FontFamily(
+        Font(Res.font.geist_mono_regular, FontWeight.Normal),
+        Font(Res.font.geist_mono_medium, FontWeight.Medium),
+        Font(Res.font.geist_mono_semibold, FontWeight.SemiBold),
+        Font(Res.font.geist_mono_bold, FontWeight.Bold),
     )
 }
 
 // Set of Material typography styles to start with
 @Composable
-internal fun getTypography() = Typography(
-    displayLarge = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp,
-    ),
-    displayMedium = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
-        letterSpacing = 0.sp,
-    ),
-    displaySmall = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
-        letterSpacing = 0.sp,
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.sp,
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = 0.sp,
-    ),
-    headlineSmall = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
-        letterSpacing = 0.sp,
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Bottom,
-            trim = LineHeightStyle.Trim.None,
+internal fun getTypography(): Typography {
+    val display = displayFontFamily()
+    return Typography(
+        displayLarge = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 57.sp,
+            lineHeight = 60.sp,
+            letterSpacing = (-1.7).sp,
         ),
-    ),
-    titleLarge = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 30.24.sp,
-    ),
-    titleMedium = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.1.sp,
-    ),
-    titleSmall = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
-    ),
-    // Default text style
-    bodyLarge = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp,
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.None,
+        displayMedium = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 45.sp,
+            lineHeight = 48.sp,
+            letterSpacing = (-1.35).sp,
         ),
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.25.sp,
-    ),
-    bodySmall = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp,
-    ),
-    // Used for Button
-    labelLarge = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
-    ),
-    // Used for Navigation items
-    labelMedium = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp,
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.LastLineBottom,
+        displaySmall = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 36.sp,
+            lineHeight = 40.sp,
+            letterSpacing = (-1.0).sp,
         ),
-    ),
-    // Used for Tag
-    labelSmall = TextStyle(
-        fontFamily = fontFamily(),
-        fontWeight = FontWeight.Medium,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.sp,
-        lineHeightStyle = LineHeightStyle(
-            alignment = LineHeightStyle.Alignment.Center,
-            trim = LineHeightStyle.Trim.LastLineBottom,
+        headlineLarge = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 32.sp,
+            lineHeight = 36.sp,
+            letterSpacing = (-0.9).sp,
         ),
-    ),
-)
+        headlineMedium = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 28.sp,
+            lineHeight = 32.sp,
+            letterSpacing = (-0.8).sp,
+        ),
+        headlineSmall = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 24.sp,
+            lineHeight = 30.sp,
+            letterSpacing = (-0.6).sp,
+            lineHeightStyle = LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Bottom,
+                trim = LineHeightStyle.Trim.None,
+            ),
+        ),
+        titleLarge = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp,
+            lineHeight = 28.sp,
+            letterSpacing = (-0.5).sp,
+        ),
+        titleMedium = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.Bold,
+            fontSize = 17.sp,
+            lineHeight = 24.sp,
+            letterSpacing = (-0.3).sp,
+        ),
+        titleSmall = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.sp,
+        ),
+        // Default text style
+        bodyLarge = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.Normal,
+            fontSize = 15.sp,
+            lineHeight = 22.sp,
+            letterSpacing = 0.sp,
+            lineHeightStyle = LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Center,
+                trim = LineHeightStyle.Trim.None,
+            ),
+        ),
+        bodyMedium = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.Normal,
+            fontSize = 13.5.sp,
+            lineHeight = 19.sp,
+            letterSpacing = 0.sp,
+        ),
+        bodySmall = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.Medium,
+            fontSize = 11.5.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.sp,
+        ),
+        // Used for Button
+        labelLarge = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            lineHeight = 20.sp,
+            letterSpacing = (-0.15).sp,
+        ),
+        // Used for Navigation items
+        labelMedium = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 10.sp,
+            lineHeight = 14.sp,
+            letterSpacing = 0.sp,
+            lineHeightStyle = LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Center,
+                trim = LineHeightStyle.Trim.LastLineBottom,
+            ),
+        ),
+        // Used for Tag
+        labelSmall = TextStyle(
+            fontFamily = display,
+            fontWeight = FontWeight.Bold,
+            fontSize = 10.sp,
+            lineHeight = 14.sp,
+            letterSpacing = 0.4.sp,
+            lineHeightStyle = LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Center,
+                trim = LineHeightStyle.Trim.LastLineBottom,
+            ),
+        ),
+    )
+}

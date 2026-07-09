@@ -17,10 +17,13 @@ import org.mifospay.core.network.model.entity.user.NewUserEntity
 import org.mifospay.core.network.model.entity.user.User
 
 private const val OFFICE_ID = 1
-private const val MOBILE_WALLET_ROLE_ID = 2
-private const val SUPER_USER_ROLE_ID = 1
 
-val NEW_USER_ROLE_IDS: ArrayList<Int> = arrayListOf(MOBILE_WALLET_ROLE_ID, SUPER_USER_ROLE_ID)
+// Wallet role ids on the backend: new signups start with "wallet-no-access" (login works but
+// no data access → the app shows a locked/dummy home). They are later swapped to wallet-kyc1
+// or wallet-kyc2 to unlock real data.
+private const val WALLET_NO_ACCESS_ROLE_ID = 5
+
+val NEW_USER_ROLE_IDS: ArrayList<Int> = arrayListOf(WALLET_NO_ACCESS_ROLE_ID)
 
 fun NewUser.toEntity(): NewUserEntity {
     return NewUserEntity(

@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Vërtetimi biometrik nuk mund të niset për shkak të argumenteve të pavlefshme.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Regjistrimi biometrik nuk mund të niset për shkak të argumenteve të pavlefshme.</string>
     <string name="feature_passcode_biometric_error_unknown">Ndodhi një gabim biometrik i papritur. Provoni përsëri.</string>
-    <string name="feature_passcode_biometric_prompt_title">Zhbllokoni Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Zhbllokoni SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Verifikoni identitetin tuaj për të vazhduar</string>
     <string name="feature_passcode_biometric_prompt_description">Përdorni gjurmën e gishtit, fytyrën ose kredencialet e pajisjes</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Anulo</string>

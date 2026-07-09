@@ -29,12 +29,22 @@ class TransferViewModel(
         TransferState(
             mobileNo = client.mobileNo,
             externalId = client.externalId,
+            // EFT / bank-transfer details a payer uses to pay money INTO this wallet.
+            accountName = client.displayName,
+            accountNumber = repository.defaultAccount.value?.accountNo ?: client.accountNo,
+            bankName = EFT_RECEIVE_BANK,
+            branchCode = EFT_RECEIVE_BRANCH_CODE,
         )
     },
 ) {
 
     companion object {
         private const val TRANSFER_STATE_KEY = "TransferState"
+
+        // SimpliPay's published inbound-EFT bank details (the wallet is sponsored at this bank).
+        // Placeholder constants until the backend exposes them as config.
+        private const val EFT_RECEIVE_BANK = "SimpliPay"
+        private const val EFT_RECEIVE_BRANCH_CODE = "410506"
     }
 
     init {
@@ -60,7 +70,20 @@ class TransferViewModel(
 data class TransferState(
     val mobileNo: String,
     val externalId: String,
-)
+    val accountName: String = "",
+    val accountNumber: String = "",
+    val bankName: String = "",
+    val branchCode: String = "",
+) {
+    /** One block a payer can paste when setting up an EFT beneficiary for this wallet. */
+    val eftDetailsText: String
+        get() = buildString {
+            appendLine("Account name: $accountName")
+            appendLine("Bank: $bankName")
+            appendLine("Account number: $accountNumber")
+            append("Branch code: $branchCode")
+        }
+}
 
 sealed interface TransferEvent {
     data class OnCopyTextToClipboard(val text: String) : TransferEvent

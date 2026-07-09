@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Kon biometrische verificatie niet starten vanwege ongeldige argumenten.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Kon biometrische registratie niet starten vanwege ongeldige argumenten.</string>
     <string name="feature_passcode_biometric_error_unknown">Er is een onverwachte biometrische fout opgetreden. Probeer het opnieuw.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay ontgrendelen</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay ontgrendelen</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Verifieer je identiteit om door te gaan</string>
     <string name="feature_passcode_biometric_prompt_description">Gebruik je vingerafdruk, gezicht of apparaatgegevens</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Annuleren</string>

@@ -9,10 +9,13 @@
  */
 package org.mifospay.shared.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,6 +31,7 @@ import org.mifos.feature.passcode.rootMifosPasscodeScreen
 import org.mifospay.core.data.util.NetworkMonitor
 import org.mifospay.core.data.util.TimeZoneMonitor
 import org.mifospay.shared.instance.InstanceSelectorScreen
+import org.mifospay.shared.onboarding.SplashScreen
 import org.mifospay.shared.ui.MifosApp
 
 /**
@@ -78,6 +82,12 @@ internal fun RootNavGraph(
 ) {
     var showInstanceSelector by remember { mutableStateOf(false) }
 
+    // The session-resolved destination arrives async (userInfo flow emits after
+    // first composition). Track the latest value so the splash forwards to the
+    // CURRENT destination — passcode for a returning user — instead of the stale
+    // first-frame LOGIN_GRAPH it would otherwise capture in its onTimeout.
+    val currentStartDestination by rememberUpdatedState(startDestination)
+
     val systemAuthProvider = platformAuthenticationProvider.current
     val authenticatorStatus by systemAuthProvider.authenticatorStatus.collectAsStateWithLifecycle()
 
@@ -86,10 +96,27 @@ internal fun RootNavGraph(
 
     NavHost(
         navController = navHostController,
-        startDestination = startDestination,
+        startDestination = MifosNavGraph.SPLASH_ROUTE,
         route = MifosNavGraph.ROOT_GRAPH,
         modifier = modifier,
     ) {
+        composable(
+            route = MifosNavGraph.SPLASH_ROUTE,
+            // Short cross-fade off the splash so it doesn't co-exist with the landing screen
+            // (and its particle field) for the full 700ms default. Scoped to this edge only —
+            // passcode/biometric/reAuth transitions keep their defaults.
+            exitTransition = { fadeOut(tween(140)) },
+            popExitTransition = { fadeOut(tween(140)) },
+        ) {
+            SplashScreen(
+                onTimeout = {
+                    navHostController.navigate(currentStartDestination) {
+                        popUpTo(MifosNavGraph.SPLASH_ROUTE) { inclusive = true }
+                    }
+                },
+            )
+        }
+
         loginNavGraph(
             navController = navHostController,
             onShowInstanceSelector = { showInstanceSelector = true },

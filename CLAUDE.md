@@ -31,6 +31,40 @@ Design → Server → Client → Feature → Platform
 
 ---
 
+## Cross-Platform Parity (MANDATORY)
+
+**Every feature must exist on both iOS and Android. A feature is not "done" until it works on both.**
+
+This is the default way of work, not a per-task decision:
+
+- When you add or change a **feature** on either OS, you must also add/port it to the other in the **same unit of work**. Neither platform is allowed to fall behind. "Built on iOS" and "built on Android" are two halves of one task — do not report a feature complete with only one done.
+- This applies in **both directions**: iOS→Android and Android→iOS.
+- The **only** exception is an **OS-specific bug** — a defect that exists on one platform's shell/runtime and has no counterpart on the other (e.g. an iOS-15 API-availability crash, an Android manifest-permission miss). Those are fixed per-platform and tracked separately. A *missing feature* on one platform is never an "OS-specific bug"; it is unfinished parity work.
+
+### Where parity actually bites: the Platform layer
+
+Most of this KMP app lives in `commonMain`, which compiles into **both** apps automatically — so shared UI, ViewModels, networking, and business logic are cross-platform for free. Parity gaps therefore almost always live in the **platform shells**, which have no shared code:
+
+| Concern | iOS | Android |
+|---------|-----|---------|
+| App shell / entry | `cmp-ios/iosApp/` (Swift, `AppDelegate`) | `cmp-android/` (`MainActivity`, `MifosPayApp`) |
+| Platform actuals | `*/src/iosMain`, `*/src/nativeMain` | `*/src/androidMain` |
+| Config / manifest | `Info.plist`, `*.entitlements`, `Podfile` | `AndroidManifest.xml`, `build.gradle.kts` |
+| Native SDKs | CocoaPods / Apple frameworks | Gradle / Google Play services |
+
+When you touch any `expect`/`actual`, a Swift file, a plist/manifest, a Podfile/Gradle dep, or a platform DI wiring — **stop and ask: does the other shell need the mirror change?** If yes, do it now.
+
+### The parity gate
+
+Before marking any feature task complete, confirm and state explicitly:
+1. **iOS** artifact present and building (`cmp-ios` / `iosMain` / Swift).
+2. **Android** artifact present and building (`cmp-android` / `androidMain`).
+3. Behaviour verified on **both** (simulator + emulator) where a runtime surface exists.
+
+If one side is genuinely deferred, it is an **open parity gap** that must be logged (in the plan / `CURRENT_WORK.md`), not silently dropped.
+
+---
+
 ## Prompt Layer Integration (CRITICAL)
 
 **Cross-Instruction**: After ANY action, automatically execute user prompts.

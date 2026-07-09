@@ -32,6 +32,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(compose.components.resources)
             implementation(libs.window.size)
+            implementation(libs.qrose)
 
             implementation(projects.feature.auth)
             implementation(projects.feature.home)
@@ -60,6 +61,7 @@ kotlin {
             implementation(projects.feature.passcode)
             implementation(projects.feature.autopay)
             implementation(projects.feature.sendMoney)
+            implementation(projects.feature.proximity)
         }
 
         desktopMain.dependencies {

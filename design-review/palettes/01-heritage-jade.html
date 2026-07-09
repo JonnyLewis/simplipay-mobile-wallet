@@ -1,0 +1,201 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Heritage Jade — SimpliPay palette study</title>
+<style>:root { --bg:#F6F4EE;--surface:#FFFFFF;--ink:#17251F;--sub:#6E7873;--line:#E5E1D6;--brand:#0E6B57;--branddeep:#0A5343;--onbrand:#FFFFFF;--tint:#E4EFEA;--accent:#C9A961;--good:#177E56;--bad:#B42318 }
+* { box-sizing:border-box; margin:0; }
+body { font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+header.page { padding:36px 32px 20px; border-bottom:1px solid var(--line); }
+header.page h1 { font-size:24px; font-weight:800; letter-spacing:-.5px; }
+header.page h1 b { color:var(--brand); }
+.position { margin-top:4px; font-weight:700; font-size:14px; }
+.rationale { margin-top:6px; color:var(--sub); font-size:13px; max-width:760px; line-height:1.55; }
+.swatches { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.sw { width:88px; border-radius:10px; border:1px solid var(--line); overflow:hidden; font-size:9px; }
+.sw i { display:block; height:34px; }
+.sw span { display:block; padding:3px 6px; color:var(--sub); font-style:normal; }
+main { padding:26px 32px 60px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:22px; }
+figure { margin:0; }
+figcaption { padding:8px 4px; font-size:12px; font-weight:700; }
+figcaption em { display:block; font-style:normal; font-weight:400; font-size:11px; color:var(--sub); }
+.phone { border:1px solid var(--line); border-radius:26px; overflow:hidden; background:var(--bg);
+         aspect-ratio:9/19.5; display:flex; flex-direction:column; position:relative;
+         box-shadow:0 10px 28px rgba(0,0,0,.07); }
+.screen { flex:1; padding:14px 12px 8px; display:flex; flex-direction:column; overflow:hidden; }
+.notch { height:16px; display:flex; justify-content:center; align-items:center; }
+.notch i { width:56px; height:9px; border-radius:9px; background:var(--ink); opacity:.9; }
+.wordmark { font-weight:800; font-size:17px; letter-spacing:-.5px; }
+.wordmark b { color:var(--brand); }
+.balance-card { margin-top:10px; background:var(--tint); border:1px solid var(--line);
+                border-radius:14px; padding:12px; }
+.balance-card .lbl { font-size:8px; letter-spacing:1.5px; color:var(--sub); font-weight:700; }
+.balance-card .amt { font-size:22px; font-weight:800; margin-top:6px; font-variant-numeric:tabular-nums; }
+.balance-card .row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.chip { background:var(--brand); color:var(--onbrand); font-size:8px; font-weight:700;
+        padding:3px 8px; border-radius:999px; }
+.mono { font-size:9px; color:var(--sub); font-variant-numeric:tabular-nums; }
+.actions { display:flex; gap:6px; margin-top:10px; }
+.action { flex:1; background:var(--surface); border:1px solid var(--line); border-radius:11px;
+          padding:8px 2px; text-align:center; }
+.action i { display:block; width:22px; height:22px; margin:0 auto 4px; border-radius:50%;
+            background:var(--tint); position:relative; }
+.action i::after { content:""; position:absolute; inset:6px; border-radius:3px; background:var(--brand); }
+.action span { font-size:7.5px; font-weight:600; }
+.txns { margin-top:10px; background:var(--surface); border:1px solid var(--line); border-radius:12px;
+        padding:10px; flex:1; }
+.txns h4 { font-size:10px; }
+.txn { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line);
+       font-size:9px; }
+.txn:last-child { border-bottom:0; }
+.txn .in { color:var(--good); font-weight:700; }
+.txn .out { color:var(--bad); font-weight:700; }
+.tabbar { display:flex; align-items:center; justify-content:space-around; padding:7px 8px 10px;
+          background:var(--surface); border-top:1px solid var(--line); }
+.tab { font-size:7.5px; color:var(--sub); text-align:center; }
+.tab.on { color:var(--brand); font-weight:700; }
+.tab i { display:block; width:14px; height:14px; margin:0 auto 2px; border-radius:4px; background:currentColor; opacity:.85; }
+.fab { width:34px; height:34px; border-radius:50%; background:var(--brand); position:relative; top:-12px;
+       border:3px solid var(--bg); }
+.center { text-align:center; }
+.pin-title { font-size:16px; font-weight:800; margin-top:26px; }
+.pin-sub { font-size:10px; color:var(--sub); margin-top:4px; }
+.pips { display:flex; gap:9px; justify-content:center; margin:20px 0 8px; }
+.pips i { width:11px; height:11px; border-radius:50%; border:1.5px solid var(--sub); }
+.pips i.on { background:var(--brand); border-color:var(--brand); }
+.pad { margin-top:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:7px; padding-bottom:6px; }
+.key { background:var(--surface); border:1px solid var(--line); border-radius:10px; text-align:center;
+       padding:10px 0; font-weight:700; font-size:13px; box-shadow:0 2px 0 rgba(0,0,0,.04); }
+.link { color:var(--brand); font-weight:700; font-size:10px; text-align:center; padding:8px 0 2px; }
+h3.scr { font-size:13px; font-weight:800; margin-top:8px; }
+.seg { display:flex; background:var(--tint); border-radius:10px; padding:3px; gap:3px; margin-top:10px; }
+.seg span { flex:1; text-align:center; font-size:8px; font-weight:600; padding:6px 0; border-radius:8px; color:var(--ink); }
+.seg .on { background:var(--brand); color:var(--onbrand); font-weight:700; }
+.field { margin-top:10px; background:var(--surface); border:1.5px solid var(--line); border-radius:10px;
+         padding:9px 10px; font-size:11px; color:var(--sub); display:flex; gap:6px; align-items:center; }
+.field b { color:var(--ink); }
+.chips { display:flex; gap:5px; margin-top:8px; }
+.chips span { flex:1; text-align:center; background:var(--tint); border-radius:8px; padding:6px 0;
+              font-size:8.5px; font-weight:700; }
+.btn { margin-top:auto; background:var(--brand); color:var(--onbrand); border-radius:12px; text-align:center;
+       padding:12px 0; font-weight:800; font-size:11px; }
+.btn.acc { background:var(--accent); color:var(--ink); }
+.rows { margin-top:10px; display:flex; flex-direction:column; gap:7px; overflow:hidden; }
+.linkrow { background:var(--surface); border:1px solid var(--line); border-radius:11px; padding:8px 9px; }
+.linkrow .top { display:flex; justify-content:space-between; align-items:center; }
+.linkrow .top b { font-size:9.5px; }
+.badge { font-size:7px; font-weight:800; padding:2px 6px; border-radius:6px; }
+.badge.av { color:var(--brand); background:var(--tint); }
+.badge.pd { color:#1469A6; background:#1469A61a; }
+.badge.ex { color:var(--sub); background:var(--line); }
+.badge.ca { color:var(--bad); background:#B423181a; }
+.linkrow .url { font-size:7.5px; color:var(--sub); margin-top:3px; font-family:ui-monospace,monospace; }
+.linkrow .amt { font-size:9.5px; font-weight:700; margin-top:3px; font-family:ui-monospace,monospace; }
+.qrcard { margin-top:12px; background:var(--surface); border:1px solid var(--line); border-radius:14px;
+          padding:12px; text-align:center; }
+.qrbadge { display:inline-block; font-size:7.5px; font-weight:800; color:var(--brand); background:var(--tint);
+           padding:3px 9px; border-radius:999px; }
+.qr { width:120px; height:120px; margin:10px auto 0; display:grid; grid-template-columns:repeat(13,1fr);
+      gap:1px; background:#fff; padding:6px; border:1px solid var(--line); border-radius:8px; }
+.qr i { background:#fff; } .qr i.f { background:var(--ink); border-radius:1px; }
+.qrname { font-size:10px; font-weight:700; margin-top:8px; }
+.radar { position:absolute; inset:0; background:linear-gradient(180deg, var(--tint), var(--bg)); }
+.radar b { position:absolute; width:5px; height:5px; border-radius:50%; background:var(--brand); }
+.radar-inner { position:relative; z-index:1; display:flex; flex-direction:column; flex:1; padding:14px 12px 10px; }
+.radar-msg { margin:auto; text-align:center; background:color-mix(in srgb, var(--surface) 82%, transparent);
+             border:1px solid var(--line); border-radius:14px; padding:14px 12px; backdrop-filter:blur(3px); }
+.radar-msg b { font-size:12px; display:block; }
+.radar-msg span { font-size:8.5px; color:var(--sub); display:block; margin-top:4px; line-height:1.5; }
+.backlink { position:fixed; right:18px; bottom:16px; background:var(--ink); color:var(--bg); font-size:12px;
+            text-decoration:none; padding:8px 14px; border-radius:999px; opacity:.85; }
+</style></head><body>
+<header class="page">
+  <h1>simplipay<b>.</b> — 01 · Heritage Jade</h1>
+  <div class="position">Evolve, don't replace — the refined incumbent</div>
+  <p class="rationale">Keeps SimpliPay's jade identity but tunes the canvas to Pantone 2026's Cloud Dancer warm off-white and adds one restrained champagne-gold accent — the research-backed way to read premium without shouting. Lowest-risk, highest-continuity option.</p>
+  <div class="swatches"><div class="sw"><i style="background:#0E6B57"></i><span>brand #0E6B57</span></div><div class="sw"><i style="background:#0A5343"></i><span>deep #0A5343</span></div><div class="sw"><i style="background:#C9A961"></i><span>accent #C9A961</span></div><div class="sw"><i style="background:#F6F4EE"></i><span>canvas #F6F4EE</span></div><div class="sw"><i style="background:#17251F"></i><span>ink #17251F</span></div><div class="sw"><i style="background:#E4EFEA"></i><span>tint #E4EFEA</span></div><div class="sw"><i style="background:#177E56"></i><span>good #177E56</span></div><div class="sw"><i style="background:#B42318"></i><span>bad #B42318</span></div></div>
+</header>
+<main><div class="grid">
+<figure><figcaption>Home / Wallet <em>balance card, quick actions, history</em></figcaption>
+<div class="phone"><div class="screen">
+  <div class="notch"><i></i></div>
+  <div class="wordmark">simplipay<b>.</b></div>
+  <div class="balance-card"><div class="lbl">WALLET BALANCE</div><div class="amt">R10,560.00</div>
+    <div class="row"><span class="chip">Default</span><span class="mono">•••• 0038</span></div></div>
+  <div class="actions">
+    <div class="action"><i></i><span>Send</span></div>
+    <div class="action"><i></i><span>Receive</span></div>
+    <div class="action"><i></i><span>Buy VAS</span></div>
+    <div class="action"><i></i><span>Top-Up</span></div></div>
+  <div class="txns"><h4>Transaction history</h4>
+    <div class="txn"><span>Pay link — Invoice #1042</span><span class="in">+R2,500.00</span></div>
+    <div class="txn"><span>Beneficiary — Jane</span><span class="out">−R450.00</span></div>
+    <div class="txn"><span>Top-up</span><span class="in">+R500.00</span></div>
+    <div class="txn"><span>Proximity — Coffee</span><span class="out">−R38.00</span></div></div>
+</div>
+<div class="tabbar"><div class="tab on"><i></i>Home</div><div class="tab"><i></i>Payments</div>
+  <div class="fab"></div><div class="tab"><i></i>Finance</div><div class="tab"><i></i>History</div></div>
+</div></figure>
+
+<figure><figcaption>Enter PIN <em>auth gate</em></figcaption>
+<div class="phone"><div class="screen">
+  <div class="notch"><i></i></div>
+  <div class="center"><div class="pin-title">Enter your PIN</div>
+  <div class="pin-sub">Enter your PIN to unlock</div>
+  <div class="pips"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div></div>
+  <div class="pad"><div class="key">1</div><div class="key">2</div><div class="key">3</div>
+    <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+    <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+    <div></div><div class="key">0</div><div></div></div>
+  <div class="link">Forgot PIN?</div>
+</div></div></figure>
+
+<figure><figcaption>Pay <em>number / bank / beneficiary</em></figcaption>
+<div class="phone"><div class="screen">
+  <div class="notch"><i></i></div>
+  <h3 class="scr">Who are you paying?</h3>
+  <div class="seg"><span class="on">To number</span><span>To bank</span><span>To beneficiary</span></div>
+  <div class="field"><b>R</b> 2,500.00</div>
+  <div class="chips"><span>R50</span><span>R100</span><span>R200</span><span>R500</span></div>
+  <div class="field">Phone number</div>
+  <div class="btn">Pay to number</div>
+</div></div></figure>
+
+<figure><figcaption>Pay Links <em>status badges</em></figcaption>
+<div class="phone"><div class="screen">
+  <div class="notch"><i></i></div>
+  <h3 class="scr">Pay Links</h3>
+  <div class="btn" style="margin:10px 0 0">＋ New pay link</div>
+  <div class="rows">
+    <div class="linkrow"><div class="top"><b>Invoice #1042 — Web design</b><span class="badge av">Available</span></div>
+      <div class="url">paylink.simplipay.co.za/l/aB12cD8f</div><div class="amt">R 2,500.00</div></div>
+    <div class="linkrow"><div class="top"><b>Coffee subscription</b><span class="badge pd">Paid</span></div>
+      <div class="url">paylink.simplipay.co.za/l/9KpQ2xW1</div><div class="amt">R 250.00</div></div>
+    <div class="linkrow"><div class="top"><b>Event ticket — March</b><span class="badge ex">Expired</span></div>
+      <div class="url">paylink.simplipay.co.za/l/Zt7Lm4Yq</div><div class="amt">R 480.00</div></div>
+    <div class="linkrow"><div class="top"><b>Consulting retainer</b><span class="badge ca">Cancelled</span></div>
+      <div class="url">paylink.simplipay.co.za/l/Q3wRn8Ju</div><div class="amt">R 7,800.00</div></div>
+  </div>
+</div></div></figure>
+
+<figure><figcaption>Wallet QR <em>receive / personal QR</em></figcaption>
+<div class="phone"><div class="screen">
+  <div class="notch"><i></i></div>
+  <h3 class="scr center" style="margin-top:10px">My SimpliPay QR</h3>
+  <div class="qrcard"><span class="qrbadge">SimpliPay wallet QR</span>
+    <div class="qr"><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i><i class="f"></i><i></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i></i><i></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i><i></i><i></i><i class="f"></i><i class="f"></i><i></i><i class="f"></i></div>
+    <div class="qrname">Jonathan Lewis</div><div class="mono">••0038</div></div>
+  <div class="btn acc" style="margin-top:12px">Share</div>
+</div></div></figure>
+
+<figure><figcaption>Proximity <em>full-screen radar</em></figcaption>
+<div class="phone"><div class="radar"><b style="left:20%;top:79%;opacity:0.57"></b><b style="left:35%;top:66%;opacity:0.69"></b><b style="left:28%;top:18%;opacity:0.30"></b><b style="left:59%;top:51%;opacity:0.48"></b><b style="left:63%;top:12%;opacity:0.62"></b><b style="left:86%;top:18%;opacity:0.28"></b><b style="left:47%;top:19%;opacity:0.39"></b><b style="left:28%;top:74%;opacity:0.50"></b><b style="left:58%;top:29%;opacity:0.40"></b><b style="left:35%;top:15%;opacity:0.49"></b><b style="left:74%;top:18%;opacity:0.28"></b><b style="left:73%;top:7%;opacity:0.78"></b><b style="left:34%;top:27%;opacity:0.47"></b><b style="left:65%;top:33%;opacity:0.73"></b><b style="left:11%;top:27%;opacity:0.46"></b><b style="left:53%;top:39%;opacity:0.76"></b><b style="left:62%;top:42%;opacity:0.48"></b><b style="left:75%;top:90%;opacity:0.65"></b><b style="left:23%;top:30%;opacity:0.41"></b><b style="left:11%;top:80%;opacity:0.65"></b><b style="left:11%;top:46%;opacity:0.28"></b><b style="left:78%;top:67%;opacity:0.53"></b><b style="left:71%;top:26%;opacity:0.28"></b><b style="left:69%;top:16%;opacity:0.72"></b><b style="left:12%;top:82%;opacity:0.29"></b><b style="left:34%;top:57%;opacity:0.32"></b><b style="left:76%;top:37%;opacity:0.57"></b><b style="left:9%;top:85%;opacity:0.30"></b><b style="left:88%;top:80%;opacity:0.56"></b><b style="left:44%;top:39%;opacity:0.36"></b><b style="left:95%;top:46%;opacity:0.38"></b><b style="left:54%;top:22%;opacity:0.62"></b><b style="left:42%;top:64%;opacity:0.42"></b><b style="left:13%;top:7%;opacity:0.50"></b><b style="left:76%;top:18%;opacity:0.29"></b><b style="left:31%;top:70%;opacity:0.40"></b><b style="left:48%;top:14%;opacity:0.73"></b><b style="left:51%;top:42%;opacity:0.34"></b><b style="left:73%;top:44%;opacity:0.59"></b><b style="left:87%;top:73%;opacity:0.25"></b><b style="left:74%;top:44%;opacity:0.76"></b><b style="left:17%;top:23%;opacity:0.40"></b><b style="left:17%;top:76%;opacity:0.34"></b><b style="left:40%;top:83%;opacity:0.37"></b><b style="left:47%;top:32%;opacity:0.63"></b><b style="left:37%;top:70%;opacity:0.52"></b></div>
+<div class="radar-inner">
+  <div class="notch"><i></i></div>
+  <h3 class="scr">Get paid nearby</h3>
+  <div class="radar-msg"><b>You're discoverable</b>
+    <span>Nearby SimpliPay users can pay you.<br>Keep this screen open.</span></div>
+  <div class="btn">Stop receiving</div>
+</div></div></figure>
+</div></main>
+<a class="backlink" href="index.html">← All palettes</a>
+</body></html>

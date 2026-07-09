@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">අවලංගු තර්ක නිසා ජෛවමිතික සත්‍යාපනය ආරම්භ කළ නොහැකි විය.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">අවලංගු තර්ක නිසා ජෛවමිතික ලියාපදිංචිය ආරම්භ කළ නොහැකි විය.</string>
     <string name="feature_passcode_biometric_error_unknown">අනපේක්ෂිත ජෛවමිතික දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සාහ කරන්න.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay අගුළු හරින්න</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay අගුළු හරින්න</string>
     <string name="feature_passcode_biometric_prompt_subtitle">ඉදිරියට යාමට ඔබේ අනන්‍යතාව සත්‍යාපනය කරන්න</string>
     <string name="feature_passcode_biometric_prompt_description">ඔබේ ඇඟිලි සලකුණ, මුහුණ, හෝ උපාංග අක්තපත්‍රය භාවිත කරන්න</string>
     <string name="feature_passcode_biometric_prompt_negative_button">ඉවත් කරන්න</string>

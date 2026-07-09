@@ -281,6 +281,21 @@ When `/verify` called without arguments, show summary from index files:
 | TestTag naming | TestTags object | Follows `feature:component:id` pattern |
 | All states tagged | Screen file | Loading, Success, Error have tags |
 
+### Cross-Platform Parity Checks (MANDATORY — see `CLAUDE.md`)
+
+A feature only passes verification if it is present on **both** platforms. `commonMain` code satisfies this automatically; only flag a gap when the feature has **platform-shell** pieces (`expect`/`actual`, Swift, plist/manifest, Podfile/Gradle) that exist on one OS but not the other.
+
+| Check | Source | Verification |
+|-------|--------|--------------|
+| Every `expect` has an iOS actual | `*/src/iosMain` or `*/src/nativeMain` | actual exists and is not a TODO/empty stub |
+| Every `expect` has an Android actual | `*/src/androidMain` | actual exists and is not a TODO/empty stub |
+| iOS permission/capability declared | `Info.plist` / `*.entitlements` | present if the feature needs it |
+| Android permission/capability declared | `AndroidManifest.xml` | present if the feature needs it |
+| Native dep on both | `Podfile` (iOS) + `build.gradle.kts` (Android) | matching SDK wired on both |
+| App-shell wiring mirrored | `AppDelegate` (iOS) ↔ `MainActivity`/`MifosPayApp` (Android) | both present |
+
+> A **stub actual** (returns empty / `// TODO`) counts as a **missing** implementation — that is a parity gap (P1), not a passing check. (This is exactly how the Android push, contacts, and OCR gaps hid behind "it compiles.") An OS-*specific bug* is out of scope here and tracked separately.
+
 ---
 
 ## TestTag Validation

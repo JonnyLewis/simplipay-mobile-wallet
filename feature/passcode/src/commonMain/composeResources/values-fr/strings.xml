@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Impossible de démarrer l\'authentification biométrique en raison d\'arguments invalides.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Impossible de démarrer l\'enregistrement biométrique en raison d\'arguments invalides.</string>
     <string name="feature_passcode_biometric_error_unknown">Une erreur biométrique inattendue s\'est produite. Veuillez réessayer.</string>
-    <string name="feature_passcode_biometric_prompt_title">Déverrouiller Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Déverrouiller SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Vérifiez votre identité pour continuer</string>
     <string name="feature_passcode_biometric_prompt_description">Utilisez votre empreinte, votre visage ou les identifiants de l\'appareil</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Annuler</string>

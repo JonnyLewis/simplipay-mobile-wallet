@@ -169,7 +169,7 @@ private fun PaymentHistoryContent(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        items(paymentHistory) { group ->
+        items(paymentHistory, key = { it.date }) { group ->
             PaymentHistoryGroup(
                 group = group,
                 onTransactionClick = onTransactionClick,

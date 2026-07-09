@@ -18,6 +18,8 @@ data class NewClient(
     val lastname: String,
     val externalId: String,
     val mobileNo: String,
-    val address: ClientAddress,
+    // Optional: the Fineract backend has the address feature disabled (enable-address=false),
+    // so a client can be created without one. Null when the user skips the address.
+    val address: ClientAddress? = null,
     val savingsProductId: Int,
 ) : Parcelable

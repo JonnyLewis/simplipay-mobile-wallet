@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Не удалось запустить биометрическую аутентификацию из-за неверных аргументов.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Не удалось запустить биометрическую регистрацию из-за неверных аргументов.</string>
     <string name="feature_passcode_biometric_error_unknown">Произошла непредвиденная биометрическая ошибка. Попробуйте снова.</string>
-    <string name="feature_passcode_biometric_prompt_title">Разблокировать Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Разблокировать SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Подтвердите личность, чтобы продолжить</string>
     <string name="feature_passcode_biometric_prompt_description">Используйте отпечаток пальца, лицо или учётные данные устройства</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Отмена</string>

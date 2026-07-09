@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">غلط ان پٹ کی وجہ سے بایومیٹرک تصدیق شروع نہیں ہو سکی۔</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">غلط ان پٹ کی وجہ سے بایومیٹرک رجسٹریشن شروع نہیں ہو سکی۔</string>
     <string name="feature_passcode_biometric_error_unknown">ایک غیر متوقع بایومیٹرک خرابی پیش آئی۔ براہ کرم دوبارہ کوشش کریں۔</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay ان لاک کریں</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay ان لاک کریں</string>
     <string name="feature_passcode_biometric_prompt_subtitle">جاری رکھنے کے لیے اپنی شناخت کی تصدیق کریں</string>
     <string name="feature_passcode_biometric_prompt_description">اپنی انگلیوں کا نشان، چہرہ، یا آلہ کی سند استعمال کریں</string>
     <string name="feature_passcode_biometric_prompt_negative_button">منسوخ کریں</string>

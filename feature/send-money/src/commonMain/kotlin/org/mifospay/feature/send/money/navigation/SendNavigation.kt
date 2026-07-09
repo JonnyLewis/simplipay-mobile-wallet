@@ -65,7 +65,14 @@ const val PAYMENT_PROCESSING_PAYEE_NAME_ARG = "payeeName"
 const val PAYMENT_PROCESSING_AMOUNT_ARG = "amount"
 const val PAYMENT_PROCESSING_IS_UPI_ARG = "isUpiCode"
 
-const val PAYMENT_PROCESSING_BASE_ROUTE = "$PAYMENT_PROCESSING_ROUTE?$PAYMENT_PROCESSING_PAYEE_NAME_ARG={$PAYMENT_PROCESSING_PAYEE_NAME_ARG}&$PAYMENT_PROCESSING_AMOUNT_ARG={$PAYMENT_PROCESSING_AMOUNT_ARG}&$PAYMENT_PROCESSING_IS_UPI_ARG={$PAYMENT_PROCESSING_IS_UPI_ARG}"
+// Payee routing for the Payments API. `payeeIdentifier` is the MSISDN (E.164) or ACCOUNT_ID
+// the server pays; `payeeType` is a PartyIdType (MSISDN / ACCOUNT_ID). Both default to
+// empty / ACCOUNT_ID so callers not yet wired to pass a destination still compile — see
+// docs/MOBILE_PAYMENTS_WIRING.md.
+const val PAYMENT_PROCESSING_PAYEE_IDENTIFIER_ARG = "payeeIdentifier"
+const val PAYMENT_PROCESSING_PAYEE_TYPE_ARG = "payeeType"
+
+const val PAYMENT_PROCESSING_BASE_ROUTE = "$PAYMENT_PROCESSING_ROUTE?$PAYMENT_PROCESSING_PAYEE_NAME_ARG={$PAYMENT_PROCESSING_PAYEE_NAME_ARG}&$PAYMENT_PROCESSING_AMOUNT_ARG={$PAYMENT_PROCESSING_AMOUNT_ARG}&$PAYMENT_PROCESSING_IS_UPI_ARG={$PAYMENT_PROCESSING_IS_UPI_ARG}&$PAYMENT_PROCESSING_PAYEE_IDENTIFIER_ARG={$PAYMENT_PROCESSING_PAYEE_IDENTIFIER_ARG}&$PAYMENT_PROCESSING_PAYEE_TYPE_ARG={$PAYMENT_PROCESSING_PAYEE_TYPE_ARG}"
 
 const val PAYMENT_SUCCESS_ROUTE = "payment_success_route"
 const val PAYMENT_SUCCESS_PAYEE_NAME_ARG = "payeeName"
@@ -159,16 +166,21 @@ fun NavController.navigateToUpiPinScreen(
     navigate(route, options)
 }
 
-// amount in paise
+// amount in paise. payeeIdentifier/payeeType route the Payments API call (empty identifier =>
+// destination not wired yet; the processing screen surfaces that rather than faking success).
 fun NavController.navigateToPaymentProcessingScreen(
     payeeName: String,
     amount: String,
     isUpiCode: Boolean,
+    payeeIdentifier: String = "",
+    payeeType: String = "ACCOUNT_ID",
     navOptions: NavOptions? = null,
 ) {
     val encodedPayeeName = payeeName.urlEncode()
     val encodedAmount = amount.urlEncode()
-    val route = "$PAYMENT_PROCESSING_ROUTE?$PAYMENT_PROCESSING_PAYEE_NAME_ARG=$encodedPayeeName&$PAYMENT_PROCESSING_AMOUNT_ARG=$encodedAmount&$PAYMENT_PROCESSING_IS_UPI_ARG=$isUpiCode"
+    val encodedPayeeIdentifier = payeeIdentifier.urlEncode()
+    val encodedPayeeType = payeeType.urlEncode()
+    val route = "$PAYMENT_PROCESSING_ROUTE?$PAYMENT_PROCESSING_PAYEE_NAME_ARG=$encodedPayeeName&$PAYMENT_PROCESSING_AMOUNT_ARG=$encodedAmount&$PAYMENT_PROCESSING_IS_UPI_ARG=$isUpiCode&$PAYMENT_PROCESSING_PAYEE_IDENTIFIER_ARG=$encodedPayeeIdentifier&$PAYMENT_PROCESSING_PAYEE_TYPE_ARG=$encodedPayeeType"
     val options = navOptions ?: navOptions {
         popUpTo(UPI_PIN_ROUTE) { inclusive = true }
     }
@@ -407,6 +419,16 @@ fun NavGraphBuilder.paymentProcessingScreen(
             navArgument(PAYMENT_PROCESSING_IS_UPI_ARG) {
                 type = NavType.BoolType
                 nullable = false
+            },
+            navArgument(PAYMENT_PROCESSING_PAYEE_IDENTIFIER_ARG) {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = ""
+            },
+            navArgument(PAYMENT_PROCESSING_PAYEE_TYPE_ARG) {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = "ACCOUNT_ID"
             },
         ),
     ) {

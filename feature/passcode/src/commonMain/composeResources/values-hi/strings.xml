@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">अमान्य तर्कों के कारण बायोमेट्रिक प्रमाणीकरण प्रारंभ नहीं हो सका।</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">अमान्य तर्कों के कारण बायोमेट्रिक पंजीकरण प्रारंभ नहीं हो सका।</string>
     <string name="feature_passcode_biometric_error_unknown">एक अप्रत्याशित बायोमेट्रिक त्रुटि हुई। कृपया पुनः प्रयास करें।</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay अनलॉक करें</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay अनलॉक करें</string>
     <string name="feature_passcode_biometric_prompt_subtitle">जारी रखने के लिए अपनी पहचान सत्यापित करें</string>
     <string name="feature_passcode_biometric_prompt_description">अपने फिंगरप्रिंट, चेहरे, या डिवाइस क्रेडेंशियल का उपयोग करें</string>
     <string name="feature_passcode_biometric_prompt_negative_button">रद्द करें</string>

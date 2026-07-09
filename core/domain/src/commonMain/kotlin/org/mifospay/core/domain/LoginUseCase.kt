@@ -48,10 +48,25 @@ class LoginUseCase(
         }
 
         return when (updateResult) {
-            is DataState.Success -> updateClientInfo(userInfo)
+            // A "wallet-no-access" user can authenticate but has no permission to read their
+            // client, so we must NOT fetch it (that 403s and would block login). Store the
+            // session as-is; the app reads the roles and shows the locked/dummy home. Only a
+            // KYC-activated user fetches and persists their real client.
+            is DataState.Success -> if (userInfo.isWalletActivated()) {
+                updateClientInfo(userInfo)
+            } else {
+                withContext(ioDispatcher) { userPreferencesRepository.updateUserInfo(userInfo) }
+                DataState.Success(userInfo)
+            }
             is DataState.Error -> DataState.Error(Exception("Something went wrong"))
             is DataState.Loading -> DataState.Loading
         }
+    }
+
+    /** A user has real wallet access only once a KYC role (wallet-kyc1/2) is assigned. */
+    private fun UserInfo.isWalletActivated(): Boolean = roles.any { role ->
+        role.name.equals("wallet-kyc1", ignoreCase = true) ||
+            role.name.equals("wallet-kyc2", ignoreCase = true)
     }
 
     private suspend fun updateClientInfo(userInfo: UserInfo): DataState<UserInfo> {

@@ -26,7 +26,7 @@
     <string name="feature_request_money_error_oops">ओह!</string>
     <string name="feature_request_money_unexpected_error_subtitle">एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें।</string>
     <string name="feature_mpay_qr_receive_money">पैसे प्राप्त करें</string>
-    <string name="feature_mpay_qr_intra_bank">इंट्रा-बैंक QR</string>
+    <string name="feature_mpay_qr_intra_bank">SimpliPay wallet QR</string>
     <string name="feature_mpay_qr_inter_bank">इंटर-बैंक QR</string>
     <string name="feature_mpay_qr_share">साझा करें</string>
     <string name="feature_mpay_qr_unable_to_generate">QR कोड जनरेट करने में असमर्थ</string>

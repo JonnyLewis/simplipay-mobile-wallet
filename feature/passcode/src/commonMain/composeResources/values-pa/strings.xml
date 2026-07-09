@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">ਅਯੋਗ ਆਰਗੂਮੈਂਟਾਂ ਕਾਰਨ ਬਾਇਓਮੀਟ੍ਰਿਕ ਪ੍ਰਮਾਣਿਕਤਾ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕੀ।</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">ਅਯੋਗ ਆਰਗੂਮੈਂਟਾਂ ਕਾਰਨ ਬਾਇਓਮੀਟ੍ਰਿਕ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕੀ।</string>
     <string name="feature_passcode_biometric_error_unknown">ਇੱਕ ਅਣਕਿਆਸੀ ਬਾਇਓਮੀਟ੍ਰਿਕ ਗਲਤੀ ਹੋਈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay ਅਨਲਾਕ ਕਰੋ</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay ਅਨਲਾਕ ਕਰੋ</string>
     <string name="feature_passcode_biometric_prompt_subtitle">ਜਾਰੀ ਰੱਖਣ ਲਈ ਆਪਣੀ ਪਛਾਣ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ</string>
     <string name="feature_passcode_biometric_prompt_description">ਆਪਣੇ ਫਿੰਗਰਪ੍ਰਿੰਟ, ਚਿਹਰੇ, ਜਾਂ ਡਿਵਾਈਸ ਪ੍ਰਮਾਣ ਪੱਤਰ ਦੀ ਵਰਤੋਂ ਕਰੋ</string>
     <string name="feature_passcode_biometric_prompt_negative_button">ਰੱਦ ਕਰੋ</string>

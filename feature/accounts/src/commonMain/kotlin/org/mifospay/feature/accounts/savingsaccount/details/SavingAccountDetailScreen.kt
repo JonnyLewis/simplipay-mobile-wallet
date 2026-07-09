@@ -11,6 +11,7 @@ package org.mifospay.feature.accounts.savingsaccount.details
 
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +23,12 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
@@ -42,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -68,6 +72,8 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.mifospay.core.common.CurrencyFormatter
 import org.mifospay.core.designsystem.component.MifosScaffold
+import org.mifospay.core.designsystem.component.Rosette
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.account.Account
 import org.mifospay.core.model.savingsaccount.SavingAccountDetail
 import org.mifospay.core.model.savingsaccount.Status
@@ -195,7 +201,7 @@ private fun SavingAccountDetails(
         verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
     ) {
         item {
-            SavingAccountCard(
+            AccountBalanceCard(
                 account = savingAccountDetail.toAccount(),
                 status = savingAccountDetail.status,
             )
@@ -214,6 +220,113 @@ private fun SavingAccountDetails(
                 showLeadingIcon = true,
                 showViewAll = false,
             )
+        }
+    }
+}
+
+@Composable
+private fun AccountBalanceCard(
+    account: Account,
+    status: Status,
+    modifier: Modifier = Modifier,
+) {
+    val tokens = SimpliPayTheme.tokens
+    val cardShape = RoundedCornerShape(22.dp)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(196.dp)
+            .clip(cardShape)
+            .background(brush = tokens.ivoryGradient)
+            .border(width = 1.dp, color = tokens.ivoryBorder, shape = cardShape),
+    ) {
+        // Signature rosettes — clipped to the card corners by the parent clip().
+        Rosette(
+            radiusX = 86.dp,
+            radiusY = 30.dp,
+            count = 40,
+            opacity = 0.30f,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 70.dp, y = (-46).dp),
+        )
+        Rosette(
+            radiusX = 70.dp,
+            radiusY = 22.dp,
+            count = 34,
+            opacity = 0.22f,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = (-78).dp, y = 86.dp),
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(KptTheme.spacing.lg),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
+            ) {
+                Text(
+                    text = stringResource(Res.string.feature_accounts_detail_wallet_balance).uppercase(),
+                    style = KptTheme.typography.labelSmall.copy(
+                        fontFamily = tokens.monoFontFamily,
+                        letterSpacing = 2.sp,
+                    ),
+                    color = tokens.cardLabel,
+                )
+
+                SavingAccountStatusCard(status)
+            }
+
+            val accountBalance = "${account.currency.displaySymbol} ${CurrencyFormatter.format(
+                balance = account.balance,
+                maximumFractionDigits = 2,
+            )}"
+
+            Text(
+                text = accountBalance,
+                color = tokens.cardInk,
+                style = KptTheme.typography.headlineLarge.copy(
+                    fontFamily = tokens.monoFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp,
+                ),
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(tokens.jadeTint)
+                        .padding(horizontal = 12.dp, vertical = 5.dp),
+                ) {
+                    Text(
+                        text = account.name,
+                        style = KptTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                        ),
+                        color = tokens.jade,
+                    )
+                }
+
+                Text(
+                    text = "•••• ${account.number.takeLast(4)}",
+                    style = KptTheme.typography.bodyMedium.copy(
+                        fontFamily = tokens.monoFontFamily,
+                    ),
+                    color = tokens.cardLabel,
+                )
+            }
         }
     }
 }

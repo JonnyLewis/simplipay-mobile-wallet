@@ -14,7 +14,6 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
-import org.mifos.authenticator.passcode.PasscodeManager
 import org.mifos.feature.passcode.MifosAuthenticatorModule
 import org.mifospay.core.common.di.DispatchersModule
 import org.mifospay.core.common.di.stringProviderModule
@@ -40,6 +39,7 @@ import org.mifospay.feature.mpay.qr.scan.di.MpayQrScanModule
 import org.mifospay.feature.notification.di.NotificationModule
 import org.mifospay.feature.payments.di.PaymentsModule
 import org.mifospay.feature.profile.di.ProfileModule
+import org.mifospay.feature.proximity.di.ProximityModule
 import org.mifospay.feature.receipt.di.ReceiptModule
 import org.mifospay.feature.savedcards.di.SavedCardsModule
 import org.mifospay.feature.send.money.di.SendMoneyModule
@@ -48,9 +48,13 @@ import org.mifospay.feature.standing.instruction.di.StandingInstructionModule
 import org.mifospay.feature.transfer.interbank.di.interbankTransferModule
 import org.mifospay.feature.transfer.intrabank.di.IntraBankModule
 import org.mifospay.feature.upi.setup.di.UpiSetupModule
+import org.mifospay.passcode.PasscodeManager
 import org.mifospay.shared.MifosPayViewModel
 import org.mifospay.shared.TransferOptionsViewModel
+import org.mifospay.shared.buy.BuyViewModel
 import org.mifospay.shared.instance.InstanceSelectorViewModel
+import org.mifospay.shared.paylink.PayLinkModule
+import org.mifospay.shared.push.PushModule
 
 /**
  * Aggregator object that bundles every Koin module the app needs. Consumed by
@@ -89,6 +93,7 @@ object KoinModules {
         viewModelOf(::MifosPayViewModel)
         viewModelOf(::InstanceSelectorViewModel)
         viewModelOf(::TransferOptionsViewModel)
+        viewModelOf(::BuyViewModel)
     }
     private val featureModules = module {
         includes(
@@ -118,6 +123,7 @@ object KoinModules {
             MifosAuthenticatorModule,
             AutoPayModule,
             SendMoneyModule,
+            ProximityModule,
         )
     }
 
@@ -144,6 +150,8 @@ object KoinModules {
         featureModules,
         sharedModule,
         MifosPasscodeModule,
+        PushModule,
+        PayLinkModule,
     )
 }
 

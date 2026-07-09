@@ -6,6 +6,12 @@ Implement the feature/UI layer using O(1) lookup and pattern detection. Creates 
 
 ---
 
+## ⚠️ Cross-Platform Parity is MANDATORY
+
+See `CLAUDE.md` → **Cross-Platform Parity**. The ViewModel/Screen/Navigation/DI this command generates all live in `commonMain`, so they are cross-platform automatically — no extra work. **But** if the feature needs a platform capability (camera, contacts, push, biometrics, share sheet, file access, a native SDK), that requires an `expect`/`actual` plus shell wiring (Swift/plist/Podfile on iOS, `androidMain`/manifest/Gradle on Android) — and both sides must be delivered together. A feature with only one platform's actual implemented is **not done**. Finish parity via `/implement`'s Phase 6 (Platform Parity) before reporting complete.
+
+---
+
 ## Command Variants
 
 ```

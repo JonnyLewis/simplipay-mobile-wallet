@@ -483,7 +483,7 @@ private fun EnterAmountCard(
             TextField(
                 leadingIcon = {
                     Text(
-                        text = "$",
+                        text = "R",
                         style = KptTheme.typography.headlineMedium,
                     )
                 },

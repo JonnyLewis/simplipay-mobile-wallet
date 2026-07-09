@@ -9,11 +9,16 @@
  */
 package org.mifospay.feature.home.navigation
 
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import org.koin.compose.koinInject
+import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.feature.home.HomeScreen
+import org.mifospay.feature.home.LockedHomeScreen
 
 const val HOME_ROUTE = "home_route"
 
@@ -23,20 +28,36 @@ fun NavGraphBuilder.homeScreen(
     onNavigateBack: () -> Unit,
     onRequest: (String) -> Unit,
     onPay: () -> Unit,
-    onAutoPay: () -> Unit,
+    onTopUp: () -> Unit,
+    onBuy: () -> Unit,
     navigateToTransactionDetail: (Long, Long) -> Unit,
     navigateToAccountDetail: (Long) -> Unit,
     navigateToHistory: () -> Unit,
 ) {
     composable(route = HOME_ROUTE) {
-        HomeScreen(
-            onRequest = onRequest,
-            onPay = onPay,
-            onAutoPay = onAutoPay,
-            onNavigateBack = onNavigateBack,
-            navigateToTransactionDetail = navigateToTransactionDetail,
-            navigateToAccountDetail = navigateToAccountDetail,
-            navigateToHistory = navigateToHistory,
-        )
+        // A wallet-no-access user has no stored client (login skips the client fetch for them),
+        // so the real HomeViewModel — which requires a client and would fetch /clients/{id}/... —
+        // must not be built. Note the stored client is never null: it defaults to an empty
+        // Client with id == 0, so "no real client" means a null OR zero-id client. Show the
+        // locked/dummy home until they're KYC-activated.
+        val preferencesRepository = koinInject<UserPreferencesRepository>()
+        val client by preferencesRepository.client.collectAsStateWithLifecycle()
+        if (client == null || client?.id == 0L) {
+            LockedHomeScreen(
+                // TODO: submit OTP to the verification backend
+                onVerify = { _ -> },
+            )
+        } else {
+            HomeScreen(
+                onRequest = onRequest,
+                onPay = onPay,
+                onTopUp = onTopUp,
+                onBuy = onBuy,
+                onNavigateBack = onNavigateBack,
+                navigateToTransactionDetail = navigateToTransactionDetail,
+                navigateToAccountDetail = navigateToAccountDetail,
+                navigateToHistory = navigateToHistory,
+            )
+        }
     }
 }

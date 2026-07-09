@@ -139,7 +139,7 @@ fun SearchRecipientScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
                 ) {
-                    items(recipients) { recipient ->
+                    items(recipients, key = { it.requestId }) { recipient ->
                         RecipientSelectionCard(
                             recipient = recipient,
                             onClick = { onRecipientSelected(recipient) },

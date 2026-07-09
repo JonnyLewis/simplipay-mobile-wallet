@@ -11,7 +11,7 @@
 <resources>
     <string name="feature_home_loading">Inapakia</string>
     <string name="start_sending_your_money_tax_free">Anza kutuma pesa bila kodi!</string>
-    <string name="feature_home_desc">Mifos Pay ni mahali pazuri kwa watumiaji kupokea na kutuma pesa. Anza kuokoa pesa sasa!</string>
+    <string name="feature_home_desc">SimpliPay ni mahali pazuri kwa watumiaji kupokea na kutuma pesa. Anza kuokoa pesa sasa!</string>
     <string name="feature_home_wallet_balance">Salio la Pochi</string>
     <string name="feature_home_view_more">Ona Zaidi</string>
     <string name="feature_home_mark_default">Weka kama Chaguo-Msingi</string>

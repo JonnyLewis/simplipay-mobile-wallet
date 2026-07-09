@@ -41,7 +41,7 @@
     <string name="feature_accounts_bank_account_mobile_verification_conditions">Asegúrate de que se cumplan las
         siguientes condiciones: \n1. El número de celular está vinculado a tu cuenta bancaria. \n2. El número de celular
         está
-        registrado en MifosPay. \n3. La tarjeta SIM está en este dispositivo.
+        registrado en SimpliPay. \n3. La tarjeta SIM está en este dispositivo.
     </string>
     <string name="delete_beneficiary_title">Eliminar beneficiario</string>
     <string name="delete_beneficiary_subtitle">¿Estás seguro de que deseas eliminar a este beneficiario?</string>

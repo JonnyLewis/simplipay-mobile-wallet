@@ -29,22 +29,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobile_wallet.feature.history.generated.resources.Res
-import mobile_wallet.feature.history.generated.resources.feature_history_account_number_alter
 import mobile_wallet.feature.history.generated.resources.feature_history_amount
-import mobile_wallet.feature.history.generated.resources.feature_history_currency
 import mobile_wallet.feature.history.generated.resources.feature_history_error
 import mobile_wallet.feature.history.generated.resources.feature_history_error_oops
 import mobile_wallet.feature.history.generated.resources.feature_history_note
-import mobile_wallet.feature.history.generated.resources.feature_history_specific_transactions_history
 import mobile_wallet.feature.history.generated.resources.feature_history_transaction_date
 import mobile_wallet.feature.history.generated.resources.feature_history_transaction_details
-import mobile_wallet.feature.history.generated.resources.feature_history_transaction_id
-import mobile_wallet.feature.history.generated.resources.feature_history_transaction_type
-import mobile_wallet.feature.history.generated.resources.feature_history_transferred_from
-import mobile_wallet.feature.history.generated.resources.feature_history_transferred_to
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
 import org.mifospay.core.designsystem.component.MifosScaffold
 import org.mifospay.core.model.savingsaccount.Transaction
 import org.mifospay.core.ui.ErrorScreenContent
@@ -83,7 +76,7 @@ internal fun SpecificTransactionsScreenContent(
 ) {
     MifosScaffold(
         modifier = modifier,
-        topBarTitle = stringResource(Res.string.feature_history_specific_transactions_history),
+        topBarTitle = stringResource(Res.string.feature_history_transaction_details),
         backPress = {
             onAction(STAction.NavigateBack)
         },
@@ -142,6 +135,27 @@ private fun TransactionDetails(
     }
 }
 
+/** Maps internal ledger narratives (e.g. "payout COMMIT") to plain language; null = hide the note row. */
+private fun humanizeNote(raw: String?): String? {
+    val note = raw?.trim().orEmpty()
+    if (note.isEmpty() || note == "-") return null
+    val lower = note.lowercase()
+    return when {
+        lower.contains("payout") || lower.contains("settle") || lower.contains("commit") -> "Payout"
+        lower.contains("on-us") || lower.contains("wallet transfer") -> "Wallet transfer"
+        lower.contains("refund") || lower.contains("reverse") -> "Refund"
+        // Anything still carrying internal jargon (suspense/pset/ledger ids) is hidden rather than shown raw.
+        lower.contains("suspense") || lower.contains("pset") || lower.contains("gl ") -> null
+        else -> note
+    }
+}
+
+private fun Transaction.typeLabel(): String = when (transactionType) {
+    org.mifospay.core.model.savingsaccount.TransactionType.DEBIT -> "Money out"
+    org.mifospay.core.model.savingsaccount.TransactionType.CREDIT -> "Money in"
+    else -> "Transaction"
+}
+
 @Composable
 private fun TransferTransactionDetails(
     transaction: Transaction,
@@ -160,41 +174,27 @@ private fun TransferTransactionDetails(
 
         DetailRow(
             label = stringResource(Res.string.feature_history_amount),
-            value = "${transaction.currency.displaySymbol}${
-                CurrencyFormatter.format(
-                    balance = transaction.amount,
-                    maximumFractionDigits = 2,
-                )
-            } (${transaction.currency.code})",
+            value = MoneyFormat.zar(transaction.amount),
         )
+
+        DetailRow(label = "Type", value = transaction.typeLabel())
 
         DetailRow(
             label = stringResource(Res.string.feature_history_transaction_date),
             value = transaction.date,
         )
 
-        SectionTitle(
-            title = stringResource(Res.string.feature_history_transferred_from),
-        )
-
         DetailRow(
-            label = stringResource(Res.string.feature_history_account_number_alter),
-            value = transaction.accountNo,
+            label = "Reference",
+            value = transaction.transferId?.toString() ?: transaction.transactionId.toString(),
         )
 
-        SectionTitle(
-            title = stringResource(Res.string.feature_history_transferred_to),
-        )
-
-        DetailRow(
-            label = stringResource(Res.string.feature_history_transaction_id),
-            value = transaction.transferId?.toString() ?: "-",
-        )
-
-        DetailRow(
-            label = stringResource(Res.string.feature_history_note),
-            value = transaction.transfer?.transferDescription ?: "-",
-        )
+        humanizeNote(transaction.transfer?.transferDescription)?.let { note ->
+            DetailRow(
+                label = stringResource(Res.string.feature_history_note),
+                value = note,
+            )
+        }
     }
 }
 
@@ -210,47 +210,28 @@ private fun RegularTransactionDetails(
             .padding(horizontal = KptTheme.spacing.md),
         verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.sm),
     ) {
-        DetailRow(
-            label = stringResource(Res.string.feature_history_transaction_id),
-            value = transaction.transactionId.toString(),
+        SectionTitle(
+            title = stringResource(Res.string.feature_history_transaction_details),
         )
 
         DetailRow(
-            label = stringResource(Res.string.feature_history_transaction_type),
-            value = transaction.transactionType.name,
+            label = stringResource(Res.string.feature_history_amount),
+            value = MoneyFormat.zar(transaction.amount),
         )
+
+        DetailRow(label = "Type", value = transaction.typeLabel())
 
         DetailRow(
             label = stringResource(Res.string.feature_history_transaction_date),
             value = transaction.date,
         )
 
-        DetailRow(
-            label = stringResource(Res.string.feature_history_currency),
-            value = transaction.currency.displayLabel,
-        )
+        DetailRow(label = "Reference", value = transaction.transactionId.toString())
 
-        DetailRow(
-            label = stringResource(Res.string.feature_history_amount),
-            value = "${transaction.currency.displaySymbol}${
-                CurrencyFormatter.format(
-                    balance = transaction.amount,
-                    maximumFractionDigits = 2,
-                )
-            }",
-        )
-
-        transaction.transfer?.transferDescription?.let { note ->
+        humanizeNote(transaction.transfer?.transferDescription)?.let { note ->
             DetailRow(
                 label = stringResource(Res.string.feature_history_note),
                 value = note,
-            )
-        }
-
-        transaction.paymentDetailData?.paymentType?.let {
-            DetailRow(
-                label = stringResource(Res.string.feature_history_transaction_type),
-                value = it.name,
             )
         }
     }

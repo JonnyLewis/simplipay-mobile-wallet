@@ -88,6 +88,28 @@ internal class MifosAppState(
             else -> null
         }
 
+    /**
+     * The standalone Send-money [PayRoute] is a pushed detail screen (keeps its own back button),
+     * but it should still show the bottom navigation so the user can jump to another tab. Detected
+     * by route name so no chrome-level dependency on the route type is needed.
+     */
+    val isPayRoute: Boolean
+        @Composable get() = matchesRoute("PayRoute")
+
+    /** The standalone Receive screen — also a pushed detail that should keep the bottom nav. */
+    val isReceiveRoute: Boolean
+        @Composable get() = matchesRoute("ReceiveRoute")
+
+    /** The Pay Links hub — a pushed detail that should keep the bottom nav. */
+    val isPayLinkRoute: Boolean
+        @Composable get() = matchesRoute("PayLinkRoute")
+
+    @Composable
+    private fun matchesRoute(name: String): Boolean = currentDestination?.route
+        ?.substringBefore('/')
+        ?.substringBefore('?')
+        ?.endsWith(name) == true
+
     val shouldShowBottomBar: Boolean
         get() = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
 

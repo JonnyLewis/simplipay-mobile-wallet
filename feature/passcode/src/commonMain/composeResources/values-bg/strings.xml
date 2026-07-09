@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Биометричното удостоверяване не може да започне поради невалидни аргументи.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Биометричната регистрация не може да започне поради невалидни аргументи.</string>
     <string name="feature_passcode_biometric_error_unknown">Възникна неочаквана биометрична грешка. Моля, опитайте отново.</string>
-    <string name="feature_passcode_biometric_prompt_title">Отключете Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Отключете SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Потвърдете самоличността си, за да продължите</string>
     <string name="feature_passcode_biometric_prompt_description">Използвайте отпечатъка си, лицето си или идентификационните данни на устройството</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Отказ</string>

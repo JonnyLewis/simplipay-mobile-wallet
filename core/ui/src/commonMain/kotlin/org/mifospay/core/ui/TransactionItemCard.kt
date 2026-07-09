@@ -34,10 +34,25 @@ import mobile_wallet.core.ui.generated.resources.Res
 import mobile_wallet.core.ui.generated.resources.core_ui_money_in
 import mobile_wallet.core.ui.generated.resources.core_ui_money_out
 import org.jetbrains.compose.resources.painterResource
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
+import org.mifospay.core.common.TransactionText
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.savingsaccount.Transaction
 import org.mifospay.core.model.savingsaccount.TransactionType
 import template.core.base.designsystem.theme.KptTheme
+
+/**
+ * Human-readable row title: the connector-written narrative (e.g. "PayShap to Capitec ••0777") when present,
+ * else a plain direction label. Never raw "DEBIT"/"CREDIT".
+ */
+private fun Transaction.rowTitle(): String {
+    TransactionText.humanize(transfer?.transferDescription)?.let { return it }
+    return when (transactionType) {
+        TransactionType.DEBIT -> "Money out"
+        TransactionType.CREDIT -> "Money in"
+        else -> "Transaction"
+    }
+}
 
 @Composable
 fun TransactionItemCard(
@@ -53,6 +68,7 @@ fun TransactionItemCard(
         color = Color.Transparent,
         contentColor = KptTheme.colorScheme.onSurface,
     ) {
+        val tokens = SimpliPayTheme.tokens
         Row(
             modifier = modifier
                 .fillMaxWidth(),
@@ -62,11 +78,11 @@ fun TransactionItemCard(
                 modifier = Modifier,
             ) {
                 Text(
-                    text = transaction.transactionType.toString(),
+                    text = transaction.rowTitle(),
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight(500),
-                        color = KptTheme.colorScheme.onSurface,
+                        color = tokens.ink,
                     ),
                 )
                 Text(
@@ -74,40 +90,26 @@ fun TransactionItemCard(
                     style = TextStyle(
                         fontSize = 10.sp,
                         fontWeight = FontWeight(400),
-                        color = KptTheme.colorScheme.onSurface,
+                        color = tokens.sub,
                     ),
                 )
             }
-            val formattedAmount = CurrencyFormatter.format(
-                balance = transaction.amount,
-                currencyCode = transaction.currency.code,
-                maximumFractionDigits = 2,
-            )
             val amount = when (transaction.transactionType) {
-                TransactionType.DEBIT -> "- $formattedAmount"
-                TransactionType.CREDIT -> "+ $formattedAmount"
-                else -> formattedAmount
+                TransactionType.DEBIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = false)
+                TransactionType.CREDIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = true)
+                else -> MoneyFormat.zar(transaction.amount)
             }
             Text(
                 modifier = Modifier,
                 text = amount,
                 style = TextStyle(
+                    fontFamily = tokens.monoFontFamily,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.SemiBold,
                     color = when (transaction.transactionType) {
-                        TransactionType.DEBIT -> KptTheme.colorScheme.error.copy(
-                            red = 0.8f,
-                            green = 0f,
-                            blue = 0f,
-                        )
-
-                        TransactionType.CREDIT -> KptTheme.colorScheme.onTertiaryContainer.copy(
-                            red = 0f,
-                            green = 0.51f,
-                            blue = 0.21f,
-                        )
-
-                        else -> KptTheme.colorScheme.scrim
+                        TransactionType.DEBIT -> tokens.debit
+                        TransactionType.CREDIT -> tokens.credit
+                        else -> tokens.ink
                     },
                     textAlign = TextAlign.End,
                 ),
@@ -123,6 +125,7 @@ fun TransactionItem(
     showLeadingIcon: Boolean = true,
     onClick: (Long, Long) -> Unit,
 ) {
+    val tokens = SimpliPayTheme.tokens
     Surface(
         modifier = modifier,
         onClick = {
@@ -161,57 +164,44 @@ fun TransactionItem(
 
                 Column {
                     Text(
-                        text = transaction.transactionType.name.uppercase(),
+                        text = transaction.rowTitle(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight(500),
                         style = KptTheme.typography.bodySmall,
+                        color = tokens.ink,
                     )
                     Text(
                         text = transaction.date,
                         fontWeight = FontWeight(300),
-                        style = KptTheme.typography.bodySmall,
+                        style = KptTheme.typography.bodySmall.copy(
+                            fontFamily = tokens.monoFontFamily,
+                        ),
+                        color = tokens.sub,
                     )
                 }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val formattedAmount =
-                    "${transaction.currency.displaySymbol}${
-                        CurrencyFormatter.format(
-                            balance = transaction.amount,
-                            maximumFractionDigits = 2,
-                        )
-                    }"
-
                 val amount = when (transaction.transactionType) {
-                    TransactionType.DEBIT -> "- $formattedAmount"
-                    TransactionType.CREDIT -> "+ $formattedAmount"
-                    else -> formattedAmount
+                    TransactionType.DEBIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = false)
+                    TransactionType.CREDIT -> MoneyFormat.zarSigned(transaction.amount, isCredit = true)
+                    else -> MoneyFormat.zar(transaction.amount)
                 }
 
                 Text(
                     modifier = Modifier,
                     text = amount,
                     style = TextStyle(
+                        fontFamily = tokens.monoFontFamily,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal,
+                        fontWeight = FontWeight.SemiBold,
                         color = if (transaction.reversed) {
-                            Color.Blue
+                            tokens.faint
                         } else {
                             when (transaction.transactionType) {
-                                TransactionType.CREDIT -> KptTheme.colorScheme.onTertiaryContainer.copy(
-                                    red = 0f,
-                                    green = 0.51f,
-                                    blue = 0.21f,
-                                )
-
-                                TransactionType.DEBIT -> KptTheme.colorScheme.error.copy(
-                                    red = 0.8f,
-                                    green = 0f,
-                                    blue = 0f,
-                                )
-
-                                else -> KptTheme.colorScheme.onSurface
+                                TransactionType.CREDIT -> tokens.credit
+                                TransactionType.DEBIT -> tokens.debit
+                                else -> tokens.ink
                             }
                         },
                         textAlign = TextAlign.End,

@@ -9,156 +9,137 @@
  */
 package org.mifospay.feature.payments
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobile_wallet.feature.payments.generated.resources.Res
-import mobile_wallet.feature.payments.generated.resources.baseline_content_copy
-import mobile_wallet.feature.payments.generated.resources.feature_payments_mobile_number
 import mobile_wallet.feature.payments.generated.resources.feature_payments_receive
-import mobile_wallet.feature.payments.generated.resources.feature_payments_show_code
-import mobile_wallet.feature.payments.generated.resources.feature_payments_vpa
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.resources.vectorResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.koin.compose.viewmodel.koinViewModel
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.MifosTheme
-import org.mifospay.core.ui.utils.EventsEffect
 import template.core.base.designsystem.theme.KptTheme
+
+/** The ways someone can pay money into this wallet; each opens its own detail screen. */
+enum class ReceiveMethod { MOBILE, EFT }
 
 @Composable
 fun RequestScreen(
     showQr: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: TransferViewModel = koinViewModel(),
-) {
-    val clipboard = LocalClipboardManager.current
-    val state by viewModel.stateFlow.collectAsStateWithLifecycle()
-
-    EventsEffect(viewModel) { event ->
-        when (event) {
-            is TransferEvent.OnShowQR -> showQr.invoke()
-
-            is TransferEvent.OnCopyTextToClipboard -> {
-                clipboard.setText(AnnotatedString(event.text))
-            }
-        }
-    }
-
-    RequestScreenContent(
-        state = state,
-        modifier = modifier,
-        onAction = remember(viewModel) {
-            { viewModel.trySendAction(it) }
-        },
-    )
-}
-
-@Composable
-private fun RequestScreenContent(
-    state: TransferState,
-    onAction: (TransferAction) -> Unit,
+    onShowDetail: (ReceiveMethod) -> Unit,
+    onProximity: () -> Unit,
+    onPayLink: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs),
     ) {
         Text(
-            modifier = Modifier.padding(top = KptTheme.spacing.sm),
+            modifier = Modifier.padding(top = KptTheme.spacing.sm, bottom = KptTheme.spacing.sm),
             text = stringResource(Res.string.feature_payments_receive),
             style = KptTheme.typography.titleMedium,
             color = KptTheme.colorScheme.primary,
         )
 
-        Column(
+        ReceiveOptionRow(
+            icon = MifosIcons.QrCode,
+            title = "Payment QR",
+            subtitle = "Show a QR code to get paid",
+            onClick = showQr,
+        )
+        ReceiveOptionRow(
+            icon = MifosIcons.Contact,
+            title = "Mobile number",
+            subtitle = "Get paid instantly via PayShap",
+            onClick = { onShowDetail(ReceiveMethod.MOBILE) },
+        )
+        ReceiveOptionRow(
+            icon = MifosIcons.Bank,
+            title = "Bank transfer (EFT)",
+            subtitle = "Share your account details",
+            onClick = { onShowDetail(ReceiveMethod.EFT) },
+        )
+        ReceiveOptionRow(
+            icon = MifosIcons.PayLink,
+            title = "Receive using pay link",
+            subtitle = "Share a link or QR to get paid",
+            onClick = onPayLink,
+        )
+        ReceiveOptionRow(
+            icon = MifosIcons.Proximity,
+            title = "Proximity payment",
+            subtitle = "Get paid by someone nearby",
+            onClick = onProximity,
+        )
+    }
+}
+
+@Composable
+private fun ReceiveOptionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = KptTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(KptTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs),
-                    horizontalAlignment = Alignment.Start,
-                ) {
-                    Text(text = stringResource(Res.string.feature_payments_vpa))
-                    Text(
-                        text = state.externalId,
-                        style = KptTheme.typography.bodyMedium,
-                    )
-                }
-
-                FilledTonalIconButton(
-                    onClick = {
-                        onAction(TransferAction.ShowQR)
-                    },
-                    colors = IconButtonDefaults.filledIconButtonColors(),
-                ) {
-                    Icon(
-                        imageVector = MifosIcons.QrCode,
-                        contentDescription = stringResource(Res.string.feature_payments_show_code),
-                    )
-                }
-            }
-
-            HorizontalDivider(
-                thickness = 1.dp,
-                color = KptTheme.colorScheme.outlineVariant,
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = KptTheme.colorScheme.onPrimaryContainer,
             )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier,
-                    verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs),
-                ) {
-                    Text(text = stringResource(Res.string.feature_payments_mobile_number))
-                    Text(
-                        text = state.mobileNo,
-                        style = KptTheme.typography.bodyMedium,
-                    )
-                }
-
-                FilledTonalIconButton(
-                    onClick = {
-                        onAction(TransferAction.CopyTextToClipboard(state.mobileNo))
-                    },
-                    colors = IconButtonDefaults.filledIconButtonColors(),
-                ) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.baseline_content_copy),
-                        contentDescription = "Copy Text",
-                    )
-                }
-            }
         }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs),
+        ) {
+            Text(text = title, style = KptTheme.typography.bodyLarge)
+            Text(
+                text = subtitle,
+                style = KptTheme.typography.bodySmall,
+                color = KptTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Icon(
+            imageVector = MifosIcons.ChevronRight,
+            contentDescription = null,
+            tint = KptTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -166,12 +147,11 @@ private fun RequestScreenContent(
 @Composable
 private fun RequestScreenPreview() {
     MifosTheme {
-        RequestScreenContent(
-            state = TransferState(
-                mobileNo = "iisque",
-                externalId = "nonumes",
-            ),
-            onAction = {},
+        RequestScreen(
+            showQr = {},
+            onShowDetail = {},
+            onProximity = {},
+            onPayLink = {},
             modifier = Modifier,
         )
     }

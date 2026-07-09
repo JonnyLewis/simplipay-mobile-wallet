@@ -9,7 +9,7 @@
     See https://github.com/openMF/mobile-wallet/blob/master/LICENSE.md
 -->
 <resources>
-    <string name="app_name">Mifos Pay</string>
+    <string name="app_name">SimpliPay</string>
     <string name="home">Accueil</string>
     <string name="payments">Paiements</string>
     <string name="finance">Finance</string>

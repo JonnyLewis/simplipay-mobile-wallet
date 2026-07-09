@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">অবৈধ আর্গুমেন্টের কারণে বায়োমেট্রিক প্রমাণীকরণ শুরু করা যায়নি।</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">অবৈধ আর্গুমেন্টের কারণে বায়োমেট্রিক নিবন্ধন শুরু করা যায়নি।</string>
     <string name="feature_passcode_biometric_error_unknown">একটি অপ্রত্যাশিত বায়োমেট্রিক ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay আনলক করুন</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay আনলক করুন</string>
     <string name="feature_passcode_biometric_prompt_subtitle">চালিয়ে যেতে আপনার পরিচয় যাচাই করুন</string>
     <string name="feature_passcode_biometric_prompt_description">আপনার আঙুলের ছাপ, মুখ, বা ডিভাইস ক্রেডেনশিয়াল ব্যবহার করুন</string>
     <string name="feature_passcode_biometric_prompt_negative_button">বাতিল করুন</string>

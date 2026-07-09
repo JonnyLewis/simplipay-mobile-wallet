@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Không thể bắt đầu xác thực sinh trắc học do đối số không hợp lệ.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Không thể bắt đầu đăng ký sinh trắc học do đối số không hợp lệ.</string>
     <string name="feature_passcode_biometric_error_unknown">Đã xảy ra lỗi sinh trắc học không mong muốn. Vui lòng thử lại.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mở khóa Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Mở khóa SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Xác minh danh tính để tiếp tục</string>
     <string name="feature_passcode_biometric_prompt_description">Sử dụng vân tay, khuôn mặt, hoặc thông tin xác thực thiết bị của bạn</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Hủy</string>

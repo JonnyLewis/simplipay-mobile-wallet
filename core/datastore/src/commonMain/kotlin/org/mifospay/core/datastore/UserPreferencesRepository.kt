@@ -51,6 +51,10 @@ interface UserPreferencesRepository {
 
     suspend fun updateClientInfo(client: Client): DataState<Unit>
 
+    /** Resets the stored client back to the empty default (id 0) without touching the rest of
+     *  the session — used to re-lock the wallet when access is revoked mid-session. */
+    suspend fun clearClientInfo(): DataState<Unit>
+
     suspend fun updateClientProfile(client: UpdatedClient): DataState<Unit>
 
     suspend fun updateDefaultAccount(account: DefaultAccount): DataState<Unit>

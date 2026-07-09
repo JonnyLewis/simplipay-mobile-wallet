@@ -23,6 +23,7 @@ import org.mifospay.core.network.services.createInvoiceService
 import org.mifospay.core.network.services.createKYCLevel1Service
 import org.mifospay.core.network.services.createNotificationService
 import org.mifospay.core.network.services.createOfficeService
+import org.mifospay.core.network.services.createPaymentsService
 import org.mifospay.core.network.services.createRegistrationService
 import org.mifospay.core.network.services.createRunReportService
 import org.mifospay.core.network.services.createSavedCardService
@@ -79,4 +80,6 @@ class KtorfitClient(
     internal val billerApi by lazy { ktorfit.createBillerService() }
 
     internal val billApi by lazy { ktorfit.createBillService() }
+
+    internal val paymentsApi by lazy { ktorfit.createPaymentsService() }
 }

@@ -10,7 +10,6 @@
 package org.mifospay.feature.home
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,10 +37,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -70,10 +65,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,40 +74,33 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import mobile_wallet.feature.home.generated.resources.Res
 import mobile_wallet.feature.home.generated.resources.arrow_backward
-import mobile_wallet.feature.home.generated.resources.coin_image
 import mobile_wallet.feature.home.generated.resources.feature_home_account_number
-import mobile_wallet.feature.home.generated.resources.feature_home_account_type
-import mobile_wallet.feature.home.generated.resources.feature_home_arrow_up
-import mobile_wallet.feature.home.generated.resources.feature_home_autopay
-import mobile_wallet.feature.home.generated.resources.feature_home_coin_image
-import mobile_wallet.feature.home.generated.resources.feature_home_desc
 import mobile_wallet.feature.home.generated.resources.feature_home_mark_default
 import mobile_wallet.feature.home.generated.resources.feature_home_no_account
-import mobile_wallet.feature.home.generated.resources.feature_home_request
-import mobile_wallet.feature.home.generated.resources.feature_home_request_money
-import mobile_wallet.feature.home.generated.resources.feature_home_send
-import mobile_wallet.feature.home.generated.resources.feature_home_send_money
 import mobile_wallet.feature.home.generated.resources.feature_home_view_more
 import mobile_wallet.feature.home.generated.resources.feature_home_wallet_balance
 import mobile_wallet.feature.home.generated.resources.home_no_transactions_found
 import mobile_wallet.feature.home.generated.resources.home_transaction_history
-import mobile_wallet.feature.home.generated.resources.start_sending_your_money_tax_free
 import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
-import org.mifospay.core.common.CurrencyFormatter
+import org.mifospay.core.common.MoneyFormat
+import org.mifospay.core.common.WalletNaming
+import org.mifospay.core.designsystem.component.AnimatedWalletWordmark
 import org.mifospay.core.designsystem.component.BasicDialogState
 import org.mifospay.core.designsystem.component.LoadingDialogState
 import org.mifospay.core.designsystem.component.MifosBasicDialog
 import org.mifospay.core.designsystem.component.MifosLoadingDialog
 import org.mifospay.core.designsystem.component.MifosScaffold
+import org.mifospay.core.designsystem.component.Rosette
 import org.mifospay.core.designsystem.component.scrollbar.DraggableScrollbar
 import org.mifospay.core.designsystem.component.scrollbar.rememberDraggableScroller
 import org.mifospay.core.designsystem.component.scrollbar.scrollbarState
 import org.mifospay.core.designsystem.icon.MifosIcons
+import org.mifospay.core.designsystem.theme.MifosTheme
+import org.mifospay.core.designsystem.theme.SimpliPayTheme
 import org.mifospay.core.model.account.Account
 import org.mifospay.core.model.savingsaccount.Currency
 import org.mifospay.core.model.savingsaccount.Status
@@ -142,7 +128,8 @@ internal fun HomeScreen(
     onNavigateBack: () -> Unit,
     onRequest: (String) -> Unit,
     onPay: () -> Unit,
-    onAutoPay: () -> Unit,
+    onTopUp: () -> Unit,
+    onBuy: () -> Unit,
     navigateToTransactionDetail: (Long, Long) -> Unit,
     navigateToAccountDetail: (Long) -> Unit,
     navigateToHistory: () -> Unit,
@@ -164,7 +151,8 @@ internal fun HomeScreen(
             is HomeEvent.NavigateBack -> onNavigateBack()
             is HomeEvent.NavigateToRequestScreen -> onRequest(event.vpa)
             is HomeEvent.NavigateToSendScreen -> onPay()
-            is HomeEvent.NavigateToAutoPayScreen -> onAutoPay.invoke()
+            is HomeEvent.NavigateToTopUpScreen -> onTopUp.invoke()
+            is HomeEvent.NavigateToBuyScreen -> onBuy()
             is HomeEvent.NavigateToClientDetailScreen -> {}
             is HomeEvent.NavigateToTransactionDetail -> {
                 navigateToTransactionDetail(event.accountId, event.transactionId)
@@ -301,6 +289,17 @@ private fun HomeScreenContent(
             contentPadding = PaddingValues(),
         ) {
             item {
+                AnimatedWalletWordmark(
+                    fontSize = 36.sp,
+                    modifier = Modifier.padding(
+                        start = KptTheme.spacing.md,
+                        top = KptTheme.spacing.md,
+                        bottom = KptTheme.spacing.sm,
+                    ),
+                )
+            }
+
+            item {
                 AccountList(
                     accounts = accounts,
                     defaultAccountId = defaultAccountId,
@@ -312,6 +311,9 @@ private fun HomeScreenContent(
                     },
                     onPageChanged = {
                         onAction(HomeAction.OnSelectedAccountChanged(accounts[it]))
+                    },
+                    onTopUp = {
+                        onAction(HomeAction.TopUpClicked)
                     },
                 )
             }
@@ -328,14 +330,13 @@ private fun HomeScreenContent(
                     onSend = {
                         onAction(HomeAction.SendClicked)
                     },
-                    onAutoPay = {
-                        onAction(HomeAction.AutoPayClicked)
+                    onBuy = {
+                        onAction(HomeAction.BuyClicked)
+                    },
+                    onTopUp = {
+                        onAction(HomeAction.TopUpClicked)
                     },
                 )
-            }
-
-            item {
-                MifosSendMoneyFreeCard()
             }
 
             item {
@@ -401,6 +402,7 @@ private fun AccountList(
     onMarkAsDefault: (Long, String) -> Unit,
     onClick: (Long) -> Unit,
     onPageChanged: (Int) -> Unit,
+    onTopUp: () -> Unit,
 ) {
     val pagerState = rememberPagerState { accounts.size }
 
@@ -422,6 +424,7 @@ private fun AccountList(
             defaultAccountId = defaultAccountId,
             onMarkAsDefault = onMarkAsDefault,
             onClick = onClick,
+            onTopUp = onTopUp,
         )
     }
 }
@@ -433,54 +436,59 @@ private fun AccountCard(
     onMarkAsDefault: (Long, String) -> Unit,
     modifier: Modifier = Modifier,
     onClick: (Long) -> Unit,
-    gradientStartColor: Color = KptTheme.colorScheme.primary,
-    gradientEndColor: Color = KptTheme.colorScheme.secondary,
+    onTopUp: () -> Unit,
 ) {
-    val brush = remember {
-        Brush.linearGradient(
-            colors = listOf(gradientStartColor, gradientEndColor),
-        )
-    }
+    val tokens = SimpliPayTheme.tokens
+    val cardShape = RoundedCornerShape(22.dp)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp)
-            .background(
-                brush = brush,
-                shape = KptTheme.shapes.large,
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .clickable {
-                onClick(account.id)
-            },
+            .height(196.dp)
+            .clip(cardShape)
+            .background(brush = tokens.ivoryGradient)
+            .border(width = 1.dp, color = tokens.ivoryBorder, shape = cardShape)
+            .clickable { onClick(account.id) },
     ) {
+        // Signature rosettes — clipped to the card corners by the parent clip().
+        Rosette(
+            radiusX = 86.dp,
+            radiusY = 30.dp,
+            count = 40,
+            opacity = 0.30f,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 70.dp, y = (-46).dp),
+        )
+        Rosette(
+            radiusX = 70.dp,
+            radiusY = 22.dp,
+            count = 34,
+            opacity = 0.22f,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = (-78).dp, y = 86.dp),
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(KptTheme.spacing.md),
+                .padding(KptTheme.spacing.lg),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
-                Column {
-                    Text(
-                        text = stringResource(Res.string.feature_home_account_type),
-                        fontWeight = FontWeight(300),
-                        style = KptTheme.typography.bodySmall,
-                        color = KptTheme.colorScheme.surface,
-                    )
-
-                    Text(
-                        text = account.name,
-                        fontWeight = FontWeight(400),
-                        color = KptTheme.colorScheme.surface,
-                    )
-                }
+                Text(
+                    text = stringResource(Res.string.feature_home_wallet_balance).uppercase(),
+                    style = KptTheme.typography.labelSmall.copy(
+                        fontFamily = tokens.monoFontFamily,
+                        letterSpacing = 2.sp,
+                    ),
+                    color = tokens.cardLabel,
+                )
 
                 AnimatedContent(
                     targetState = account.id == defaultAccountId,
@@ -488,10 +496,11 @@ private fun AccountCard(
                     if (it) {
                         MifosSmallChip(
                             label = "Default",
-                            containerColor = KptTheme.colorScheme.primary,
+                            containerColor = tokens.jade,
                         )
                     } else {
                         CardDropdownBox(
+                            tint = tokens.cardLabel,
                             onClickDefault = {
                                 onMarkAsDefault(account.id, account.number)
                             },
@@ -500,52 +509,52 @@ private fun AccountCard(
                 }
             }
 
-            Box(
+            val accountBalance = MoneyFormat.zar(account.balance)
+
+            Text(
+                text = accountBalance,
+                color = tokens.cardInk,
+                style = KptTheme.typography.headlineLarge.copy(
+                    fontFamily = tokens.monoFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp,
+                ),
+            )
+
+            Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SavingsChip(label = WalletNaming.friendly(account.name))
+                Text(
+                    text = "•••• ${account.number.takeLast(4)}",
+                    style = KptTheme.typography.bodyMedium.copy(
+                        fontFamily = tokens.monoFontFamily,
+                    ),
+                    color = tokens.cardLabel,
+                )
+            }
+        }
+
+        // Zero-balance prompt: overlay a green "Top up wallet" pill on the card.
+        if (account.balance == 0.0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = KptTheme.spacing.lg)
+                    .clip(RoundedCornerShape(50))
+                    .background(tokens.jade)
+                    .clickable(onClick = onTopUp)
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = account.number,
-                    fontWeight = FontWeight.Bold,
-                    color = KptTheme.colorScheme.surface,
-                    style = KptTheme.typography.headlineMedium,
-                    letterSpacing = 0.50.sp,
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(Res.string.feature_home_wallet_balance),
-                        fontWeight = FontWeight(300),
-                        style = KptTheme.typography.bodySmall,
-                        color = KptTheme.colorScheme.surface,
-                    )
-
-                    val accountBalance = "${account.currency.code} ${account.currency.displaySymbol}${CurrencyFormatter.format(
-                        balance = account.balance,
-                        maximumFractionDigits = 2,
-                    )}"
-
-                    Text(
-                        text = accountBalance,
-                        color = KptTheme.colorScheme.surface,
-                        style = KptTheme.typography.headlineLarge,
-                    )
-                }
-
-                Icon(
-                    modifier = Modifier
-                        .graphicsLayer(rotationZ = 90f)
-                        .padding(KptTheme.spacing.xs),
-                    imageVector = Icons.Filled.KeyboardArrowUp,
-                    contentDescription = stringResource(Res.string.feature_home_arrow_up),
-                    tint = KptTheme.colorScheme.surface,
+                    text = "Top up wallet",
+                    style = KptTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    color = Color(0xFFFBFAF6),
                 )
             }
         }
@@ -553,9 +562,30 @@ private fun AccountCard(
 }
 
 @Composable
+private fun SavingsChip(
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    val tokens = SimpliPayTheme.tokens
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(tokens.jadeTint)
+            .padding(horizontal = 12.dp, vertical = 5.dp),
+    ) {
+        Text(
+            text = label,
+            style = KptTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = tokens.jade,
+        )
+    }
+}
+
+@Composable
 fun CardDropdownBox(
     onClickDefault: () -> Unit,
     modifier: Modifier = Modifier,
+    tint: Color = KptTheme.colorScheme.surface,
 ) {
     var showDropdown by remember { mutableStateOf(false) }
 
@@ -565,7 +595,7 @@ fun CardDropdownBox(
                 showDropdown = !showDropdown
             },
             colors = IconButtonDefaults.iconButtonColors(
-                contentColor = KptTheme.colorScheme.surface,
+                contentColor = tint,
             ),
         ) {
             Icon(
@@ -593,66 +623,65 @@ fun CardDropdownBox(
 private fun PayRequestScreen(
     onRequest: () -> Unit,
     onSend: () -> Unit,
-    onAutoPay: () -> Unit,
+    onBuy: () -> Unit,
+    onTopUp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    Row(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            PaymentButton(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(55.dp),
-                text = stringResource(Res.string.feature_home_request),
-                onClick = onRequest,
-                leadingIcon = {
-                    Icon(
-                        modifier = Modifier
-                            .size(26.dp),
-                        imageVector = vectorResource(
-                            Res.drawable.arrow_backward,
-                        ),
-                        contentDescription = stringResource(Res.string.feature_home_request_money),
-                    )
-                },
-            )
-
-            Spacer(modifier = Modifier.width(20.dp))
-
-            PaymentButton(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(55.dp),
-                text = stringResource(Res.string.feature_home_send),
-                onClick = onSend,
-                leadingIcon = {
-                    Icon(
-                        modifier = Modifier
-                            .size(26.dp)
-                            .graphicsLayer(rotationZ = 180f),
-                        imageVector = vectorResource(Res.drawable.arrow_backward),
-                        contentDescription = stringResource(Res.string.feature_home_send_money),
-                    )
-                },
-            )
-        }
-
-        PaymentButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            text = stringResource(Res.string.feature_home_autopay),
-            onClick = onAutoPay,
-            leadingIcon = {
+        ActionTile(
+            modifier = Modifier.weight(1f),
+            text = "Send Money",
+            onClick = onSend,
+            icon = {
                 Icon(
-                    modifier = Modifier.size(26.dp),
-                    imageVector = MifosIcons.Payment,
-                    contentDescription = stringResource(Res.string.feature_home_autopay),
+                    modifier = Modifier
+                        .size(22.dp)
+                        .graphicsLayer(rotationZ = 180f),
+                    imageVector = vectorResource(Res.drawable.arrow_backward),
+                    contentDescription = "Send Money",
+                    tint = SimpliPayTheme.tokens.jade,
+                )
+            },
+        )
+        ActionTile(
+            modifier = Modifier.weight(1f),
+            text = "Receive Money",
+            onClick = onRequest,
+            icon = {
+                Icon(
+                    modifier = Modifier.size(22.dp),
+                    imageVector = vectorResource(Res.drawable.arrow_backward),
+                    contentDescription = "Receive Money",
+                    tint = SimpliPayTheme.tokens.jade,
+                )
+            },
+        )
+        ActionTile(
+            modifier = Modifier.weight(1f),
+            text = "Buy VAS",
+            onClick = onBuy,
+            icon = {
+                Icon(
+                    modifier = Modifier.size(22.dp),
+                    imageVector = MifosIcons.Storefront,
+                    contentDescription = "Buy VAS",
+                    tint = SimpliPayTheme.tokens.jade,
+                )
+            },
+        )
+        ActionTile(
+            modifier = Modifier.weight(1f),
+            text = "Top-Up Wallet",
+            onClick = onTopUp,
+            icon = {
+                Icon(
+                    modifier = Modifier.size(22.dp),
+                    imageVector = MifosIcons.Wallet,
+                    contentDescription = "Top-Up Wallet",
+                    tint = SimpliPayTheme.tokens.jade,
                 )
             },
         )
@@ -660,76 +689,37 @@ private fun PayRequestScreen(
 }
 
 @Composable
-@Preview
-private fun MifosSendMoneyFreeCard(
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.padding(horizontal = KptTheme.spacing.md),
-        colors = CardDefaults.cardColors(
-            containerColor = KptTheme.colorScheme.surface,
-        ),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(
-                        start = KptTheme.spacing.lg,
-                        end = KptTheme.spacing.md,
-                        top = KptTheme.spacing.lg,
-                        bottom = KptTheme.spacing.lg,
-                    )
-                    .weight(7.5f),
-            ) {
-                Text(
-                    text = stringResource(Res.string.start_sending_your_money_tax_free),
-                    color = KptTheme.colorScheme.primary,
-                    fontWeight = FontWeight(500),
-                    style = KptTheme.typography.bodyLarge,
-                )
-                Text(
-                    text = stringResource(Res.string.feature_home_desc),
-                    style = KptTheme.typography.bodySmall,
-                    fontWeight = FontWeight(300),
-                )
-            }
-
-            Image(
-                modifier = Modifier.weight(2.5f),
-                contentScale = ContentScale.Fit,
-                painter = painterResource(Res.drawable.coin_image),
-                contentDescription = stringResource(Res.string.feature_home_coin_image),
-            )
-        }
-    }
-}
-
-@Composable
-private fun PaymentButton(
+private fun ActionTile(
     text: String,
-    leadingIcon: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
+    icon: @Composable () -> Unit,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Button(
-        modifier = modifier,
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = KptTheme.colorScheme.surface,
-            contentColor = KptTheme.colorScheme.onSurface,
-        ),
+    val tokens = SimpliPayTheme.tokens
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(KptTheme.colorScheme.surface)
+            .border(width = 1.dp, color = tokens.border, shape = RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            leadingIcon()
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = text,
-                fontWeight = FontWeight(400),
-            )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(tokens.jadeTint),
+            contentAlignment = Alignment.Center,
+        ) {
+            icon()
         }
+        Text(
+            text = text,
+            style = KptTheme.typography.labelMedium,
+            color = tokens.ink,
+        )
     }
 }
 
@@ -763,9 +753,14 @@ private fun HomeTransactionHistoryCard(
     modifier: Modifier = Modifier,
     onAction: (HomeAction) -> Unit,
 ) {
+    val tokens = SimpliPayTheme.tokens
+    val cardShape = RoundedCornerShape(18.dp)
     Card(
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .border(width = 1.dp, color = tokens.border, shape = cardShape),
+        shape = cardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
             containerColor = KptTheme.colorScheme.surface,
         ),
@@ -788,11 +783,12 @@ private fun HomeTransactionHistoryCard(
                             style = KptTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
                             ),
+                            color = tokens.ink,
                         )
                         Spacer(Modifier.width(KptTheme.spacing.xs))
                         Icon(
                             imageVector = MifosIcons.OpenInNew,
-                            contentDescription = null,
+                            contentDescription = "See all transactions",
                             modifier = Modifier.size(16.dp).clickable {
                                 onAction(HomeAction.OnClickSeeAllTransactions)
                             },
@@ -800,7 +796,10 @@ private fun HomeTransactionHistoryCard(
                     }
                     Text(
                         text = stringResource(Res.string.feature_home_account_number, selectedAccount),
-                        style = KptTheme.typography.bodySmall,
+                        style = KptTheme.typography.bodySmall.copy(
+                            fontFamily = tokens.monoFontFamily,
+                        ),
+                        color = tokens.sub,
                     )
                 }
                 Box(
@@ -808,7 +807,7 @@ private fun HomeTransactionHistoryCard(
                         .size(32.dp)
                         .border(
                             width = 1.dp,
-                            color = KptTheme.colorScheme.outline,
+                            color = tokens.border,
                             shape = KptTheme.shapes.medium,
                         )
                         .clip(KptTheme.shapes.medium),
@@ -824,7 +823,7 @@ private fun HomeTransactionHistoryCard(
                     ) {
                         Icon(
                             imageVector = MifosIcons.Filter,
-                            contentDescription = null,
+                            contentDescription = "Filter transactions",
                             tint = KptTheme.colorScheme.onSurface,
                         )
                     }
@@ -1029,6 +1028,73 @@ private fun HomeScreenContentPreview() {
             currentSelectedAccount = null,
             transactionType = TransactionType.CREDIT,
             selectedAccount = null,
+            transactionLoading = false,
+        )
+    }
+}
+
+/** Headless render-harness entry point (themed, side-effect free). */
+@Composable
+fun HomeRenderPreview() {
+    val currency = Currency(
+        code = "ZAR",
+        name = "South African Rand",
+        decimalPlaces = 2,
+        displaySymbol = "R",
+        nameCode = "ZAR",
+        displayLabel = "South African Rand (R)",
+    )
+    val status = Status(
+        id = 300,
+        code = "status.active",
+        value = "Active",
+        submittedAndPendingApproval = false,
+        approved = false,
+        rejected = false,
+        withdrawnByApplicant = false,
+        active = true,
+        closed = false,
+        prematureClosed = false,
+        transferInProgress = false,
+        transferOnHold = false,
+        matured = false,
+    )
+    val account = Account(
+        name = "Everyday Savings",
+        number = "100045567",
+        balance = 12480.50,
+        id = 1L,
+        currency = currency,
+        status = status,
+    )
+    val transactions = listOf(
+        Transaction(
+            accountId = 1L, amount = 2500.0, date = "12 Jun 2026", currency = currency,
+            transactionType = TransactionType.CREDIT, transactionId = 101L, accountNo = "100045567",
+            transferId = null, originalTransactionId = 101L, paymentDetailId = null, reversed = false,
+        ),
+        Transaction(
+            accountId = 1L, amount = 349.99, date = "11 Jun 2026", currency = currency,
+            transactionType = TransactionType.DEBIT, transactionId = 102L, accountNo = "100045567",
+            transferId = null, originalTransactionId = 102L, paymentDetailId = null, reversed = false,
+        ),
+        Transaction(
+            accountId = 1L, amount = 1200.0, date = "09 Jun 2026", currency = currency,
+            transactionType = TransactionType.CREDIT, transactionId = 103L, accountNo = "100045567",
+            transferId = null, originalTransactionId = 103L, paymentDetailId = null, reversed = false,
+        ),
+    )
+    MifosTheme(darkTheme = false) {
+        HomeScreenContent(
+            defaultAccountId = 1L,
+            onAction = {},
+            transactions = transactions,
+            accounts = listOf(account),
+            showBottomSheet = false,
+            selectedTransactionType = TransactionType.OTHER,
+            currentSelectedAccount = account,
+            transactionType = TransactionType.OTHER,
+            selectedAccount = account,
             transactionLoading = false,
         )
     }

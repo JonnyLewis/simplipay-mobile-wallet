@@ -140,6 +140,7 @@ internal class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun updateToken(token: String): DataState<Unit> = DataState.Success(Unit)
     override suspend fun updateUserInfo(user: UserInfo): DataState<Unit> = DataState.Success(Unit)
     override suspend fun updateClientInfo(client: Client): DataState<Unit> = DataState.Success(Unit)
+    override suspend fun clearClientInfo(): DataState<Unit> = DataState.Success(Unit)
     override suspend fun updateClientProfile(client: UpdatedClient): DataState<Unit> =
         DataState.Success(Unit)
 

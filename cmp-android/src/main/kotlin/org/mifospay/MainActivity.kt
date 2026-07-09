@@ -9,21 +9,29 @@
  */
 package org.mifospay
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.firebase.messaging.FirebaseMessaging
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.init
 import kotlinx.coroutines.flow.collect
@@ -34,9 +42,11 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.mifospay.core.data.util.NetworkMonitor
 import org.mifospay.core.data.util.TimeZoneMonitor
 import org.mifospay.core.ui.utils.ShareUtils
+import org.mifospay.push.PUSH_TYPE_EXTRA
 import org.mifospay.shared.MifosPaySharedApp
 import org.mifospay.shared.MifosPayViewModel
 import org.mifospay.shared.UserState
+import org.mifospay.shared.push.PushBridge
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -44,8 +54,16 @@ class MainActivity : AppCompatActivity() {
     private val timeZoneMonitor: TimeZoneMonitor by inject()
     private val viewModel: MifosPayViewModel by viewModel()
 
+    private val pushPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) seedFcmToken()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        setupPushBridge()
+        forwardPushTap(intent)
 
         val splashScreen = installSplashScreen()
 
@@ -104,6 +122,51 @@ class MainActivity : AppCompatActivity() {
                     }
                 },
             )
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        forwardPushTap(intent)
+    }
+
+    /** Android half of the shared push bridge (mirror of the iOS AppDelegate wiring). */
+    private fun setupPushBridge() {
+        PushBridge.platformName = "android"
+        PushBridge.permissionRequester = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                pushPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                seedFcmToken()
+            }
+        }
+        PushBridge.badgeClearer = {
+            NotificationManagerCompat.from(this).cancelAll()
+        }
+    }
+
+    /**
+     * `onNewToken` only fires on rotation; on an already-installed app the
+     * current token has to be read explicitly once permission is in place.
+     */
+    private fun seedFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            PushBridge.onNewToken(token)
+        }
+    }
+
+    /**
+     * Background/cold-start notification taps arrive as launcher-intent extras
+     * (FCM puts the data payload there for SDK-rendered notifications; our
+     * foreground path sets the same extra).
+     */
+    private fun forwardPushTap(intent: Intent?) {
+        intent?.getStringExtra(PUSH_TYPE_EXTRA)?.let { type ->
+            PushBridge.onNotificationTapped(type)
+            intent.removeExtra(PUSH_TYPE_EXTRA)
         }
     }
 }

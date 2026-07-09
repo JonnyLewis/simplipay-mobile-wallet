@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Hindi nasimulan ang biometric authentication dahil sa hindi wastong arguments.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Hindi nasimulan ang biometric registration dahil sa hindi wastong arguments.</string>
     <string name="feature_passcode_biometric_error_unknown">May naganap na hindi inaasahang biometric error. Mangyaring subukang muli.</string>
-    <string name="feature_passcode_biometric_prompt_title">I-unlock ang Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">I-unlock ang SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">I-verify ang iyong pagkakakilanlan upang magpatuloy</string>
     <string name="feature_passcode_biometric_prompt_description">Gamitin ang iyong fingerprint, mukha, o device credential</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Kanselahin</string>

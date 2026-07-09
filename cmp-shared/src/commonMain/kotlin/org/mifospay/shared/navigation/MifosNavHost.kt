@@ -9,6 +9,9 @@
  */
 package org.mifospay.shared.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -53,8 +56,10 @@ import org.mifospay.feature.faq.navigation.navigateToFAQ
 import org.mifospay.feature.fastmpay.navigation.FAST_MPAY_ROUTE
 import org.mifospay.feature.fastmpay.navigation.fastMpayScreen
 import org.mifospay.feature.fastmpay.navigation.navigateToFastMpay
+import org.mifospay.feature.finance.buckets.SavingsBucketsScreen
 import org.mifospay.feature.finance.navigation.FINANCE_ROUTE
 import org.mifospay.feature.finance.navigation.financeScreen
+import org.mifospay.feature.finance.spend.SpendInsightsScreen
 import org.mifospay.feature.history.HistoryScreen
 import org.mifospay.feature.history.navigation.historyNavigation
 import org.mifospay.feature.history.navigation.navigateToHistory
@@ -73,23 +78,27 @@ import org.mifospay.feature.kyc.navigation.navigateToKYCLevel3
 import org.mifospay.feature.merchants.navigation.merchantTransferScreen
 import org.mifospay.feature.mpay.qr.navigation.mpayQrScreen
 import org.mifospay.feature.mpay.qr.navigation.navigateToMpayQrScreen
+import org.mifospay.feature.mpay.qr.navigation.navigateToPersonalQr
+import org.mifospay.feature.mpay.qr.navigation.personalQrScreen
 import org.mifospay.feature.mpay.qr.scan.navigation.SCAN_QR_ROUTE
 import org.mifospay.feature.mpay.qr.scan.navigation.navigateToScanQr
 import org.mifospay.feature.mpay.qr.scan.navigation.scanQrScreen
 import org.mifospay.feature.notification.navigateToNotification
 import org.mifospay.feature.notification.notificationScreen
 import org.mifospay.feature.payments.PAYMENTS_ROUTE
-import org.mifospay.feature.payments.PaymentsScreenContents
 import org.mifospay.feature.payments.RequestScreen
+import org.mifospay.feature.payments.pay.PayMode
+import org.mifospay.feature.payments.pay.PayScreen
 import org.mifospay.feature.payments.paymentsScreen
-import org.mifospay.feature.payments.selectTransferType.SelectTransferTypeScreen
 import org.mifospay.feature.profile.navigation.navigateToProfile
 import org.mifospay.feature.profile.navigation.profileNavGraph
+import org.mifospay.feature.proximity.navigation.ProximityEntryMode
+import org.mifospay.feature.proximity.navigation.navigateToProximity
+import org.mifospay.feature.proximity.navigation.proximityScreen
 import org.mifospay.feature.receipt.navigation.receiptScreen
 import org.mifospay.feature.savedcards.createOrUpdate.addEditCardScreen
 import org.mifospay.feature.savedcards.details.cardDetailRoute
 import org.mifospay.feature.send.money.AmountUtils
-import org.mifospay.feature.send.money.SendMoneyScreen
 import org.mifospay.feature.send.money.navigation.PAYMENT_SUCCESS_ROUTE
 import org.mifospay.feature.send.money.navigation.PAY_ANYONE_ROUTE
 import org.mifospay.feature.send.money.navigation.SEND_MONEY_OPTIONS_ROUTE
@@ -125,7 +134,6 @@ import org.mifospay.feature.standing.instruction.details.siDetailsScreen
 import org.mifospay.feature.transfer.interbank.navigation.interbankTransferScreen
 import org.mifospay.feature.transfer.interbank.navigation.navigateToInterbankTransfer
 import org.mifospay.feature.transfer.intrabank.navigation.intraBankHubScreen
-import org.mifospay.feature.transfer.intrabank.navigation.navigateToIntraBankHub
 import org.mifospay.feature.transfer.intrabank.navigation.navigateToTransferConfirm
 import org.mifospay.feature.transfer.intrabank.navigation.transferConfirmScreen
 import org.mifospay.feature.transfer.intrabank.selectScreen.navigateToSelectAccountScreen
@@ -133,6 +141,8 @@ import org.mifospay.feature.transfer.intrabank.selectScreen.selectAccountScreenD
 import org.mifospay.feature.transfer.intrabank.success.navigateTransferSuccess
 import org.mifospay.feature.transfer.intrabank.success.transferSuccessScreen
 import org.mifospay.feature.upi.setup.navigation.setupUpiPinScreen
+import org.mifospay.shared.buy.buyGraph
+import org.mifospay.shared.buy.navigateToBuy
 import org.mifospay.shared.ui.MifosAppState
 import mobile_wallet.cmp_shared.generated.resources.Res as SharedRes
 
@@ -182,29 +192,23 @@ internal fun MifosNavHost(
 
     val paymentsTabContents = listOf(
         TabContent(stringResource(Res.string.feature_payments_send)) {
-            SelectTransferTypeScreen(
-                onIntraBankTransferClick = {
-                    navController.navigateToIntraBankHub()
+            // Pay to a phone number (on-us / PayShap) or a bank account (EFT), wired to the
+            // SimpliPay Payments API via PayViewModel.
+            PayScreen(
+                navigateForPasscodeVerification = { verificationKey ->
+                    navController.navigateToInternalMifosPasscodeScreen(verificationKey)
                 },
-                onInterBankTransferClick = {
-                    navController.navigateToInterbankTransfer()
-                },
-            )
-        },
-        // from send money pr
-        TabContent(PaymentsScreenContents.SEND.name) {
-            SendMoneyScreen(
-                onBackClick = navController::navigateUp,
-                // TODO Need clarification
-                navigateToTransferScreen = navController::navigateToSendMoneyScreen,
-                navigateToScanQrScreen = navController::navigateToScanQr,
-                navigateToPayeeDetails = navController::navigateToPayeeDetailsScreen,
-                showTopBar = false,
+                // On the Payments tab the hosting destination is PAYMENTS_ROUTE, so the passcode
+                // screen writes its result onto that entry's handle — observe the same one here.
+                entryStateHandle = navController.getBackStackEntry(PAYMENTS_ROUTE).savedStateHandle,
             )
         },
         TabContent(stringResource(Res.string.feature_payments_request)) {
             RequestScreen(
                 showQr = navController::navigateToMpayQrScreen,
+                onShowDetail = navController::navigateToReceiveDetail,
+                onProximity = { navController.navigateToProximity(ProximityEntryMode.Receive) },
+                onPayLink = navController::navigateToPayLink,
             )
         },
         TabContent(stringResource(Res.string.feature_payments_history)) {
@@ -224,7 +228,7 @@ internal fun MifosNavHost(
 //            )
 //        },
 
-        TabContent(PaymentsScreenContents.AUTOPAY.name) {
+        TabContent("AutoPay") {
             AutoPayScreen(
                 onNavigateToScheduleManagement = {
                     navController.navigateToScheduleManagement()
@@ -277,6 +281,14 @@ internal fun MifosNavHost(
                 onAddOrEditBeneficiary = navController::navigateToBeneficiaryAddEdit,
             )
         },
+
+        TabContent("Buckets") {
+            SavingsBucketsScreen()
+        },
+
+        TabContent("Spend Insights") {
+            SpendInsightsScreen()
+        },
 //        TabContent(FinanceScreenContents.CARDS.name) {
 //            CardsScreen(
 //                navigateToViewDetail = navController::navigateToCardDetails,
@@ -300,6 +312,12 @@ internal fun MifosNavHost(
         startDestination = HOME_ROUTE,
         navController = navController,
         modifier = modifier,
+        // Short, cheap cross-fade keeps the transition window small so a destination's
+        // first frame doesn't animate concurrently with a longer slide/fade.
+        enterTransition = { fadeIn(tween(140)) },
+        exitTransition = { fadeOut(tween(140)) },
+        popEnterTransition = { fadeIn(tween(140)) },
+        popExitTransition = { fadeOut(tween(140)) },
     ) {
         internalMifosPasscodeScreen(
             navigateToLogin = onClickLogout,
@@ -331,15 +349,42 @@ internal fun MifosNavHost(
         homeScreen(
             onNavigateBack = navController::popBackStack,
             onRequest = {
-                navController.navigateToMpayQrScreen()
+                // Unified Receive: the same screen as the Payments → Request tab (was a divergent sheet).
+                navController.navigateToReceive()
             },
             onPay = navController::navigateToTransferOptions,
-            onAutoPay = {
-                navController.navigateToAutoPay()
+            onTopUp = {
+                navController.navigateToTopUpWallet()
             },
+            onBuy = navController::navigateToBuy,
             navigateToTransactionDetail = navController::navigateToSpecificTransaction,
             navigateToAccountDetail = navController::navigateToSavingAccountDetails,
             navigateToHistory = navController::navigateToHistory,
+        )
+
+        buyGraph(navController = navController)
+
+        topUpWalletScreen(
+            onBackClick = { navController.popBackStack() },
+        )
+
+        payScreen(
+            onBackClick = { navController.popBackStack() },
+            navigateForPasscodeVerification = { verificationKey ->
+                navController.navigateToInternalMifosPasscodeScreen(verificationKey)
+            },
+        )
+
+        receiveScreen(
+            onBackClick = { navController.popBackStack() },
+            onShowQr = navController::navigateToMpayQrScreen,
+            onShowDetail = navController::navigateToReceiveDetail,
+            onProximity = { navController.navigateToProximity(ProximityEntryMode.Receive) },
+            onPayLink = navController::navigateToPayLink,
+        )
+
+        receiveDetailScreen(
+            onBackClick = { navController.popBackStack() },
         )
 
         settingsScreen(
@@ -372,7 +417,12 @@ internal fun MifosNavHost(
             onLinkBankAccount = {
                 navController.navigateToSavingAccountAddEdit(SavingsAddEditType.AddItem)
             },
-            showQrCode = navController::navigateToMpayQrScreen,
+            // Barcode-only personal QR, not the Receive flow's full QR screen.
+            showQrCode = navController::navigateToPersonalQr,
+            navigateBack = navController::popBackStack,
+        )
+
+        personalQrScreen(
             navigateBack = navController::popBackStack,
         )
 
@@ -380,7 +430,14 @@ internal fun MifosNavHost(
             viewTransactionDetail = navController::navigateToSpecificTransaction,
         )
 
-        paymentsScreen(tabContents = paymentsTabContents)
+        paymentsScreen(
+            tabContents = paymentsTabContents,
+            onPayLinkClick = navController::navigateToPayLink,
+        )
+
+        payLinkScreen(
+            onBackClick = { navController.popBackStack() },
+        )
 
         financeScreen(tabContents = tabContents)
 
@@ -946,11 +1003,56 @@ internal fun MifosNavHost(
         )
 
         transferOptionsDialog(
-            onIntraBankTransferClick = navController::navigateToIntraBankHub,
-            onInterBankTransferClick = navController::navigateToInterbankTransfer,
-            onUpiSendMoney = navController::navigateToSendMoneyOptionsScreen,
+            // Both wired to the live Payments API PayScreen (on-us / PayShap / EFT via
+            // /channel/transfer) — NOT the legacy Fineract self-service transfer flows.
+            onSendToMobile = {
+                navController.popBackStack()
+                navController.navigateToPay(PayMode.NUMBER)
+            },
+            onSendToBank = {
+                navController.popBackStack()
+                navController.navigateToPay(PayMode.BANK)
+            },
+            onSendToBarcode = navController::navigateToScanQr,
+            onProximityPayment = {
+                navController.popBackStack()
+                navController.navigateToProximity(ProximityEntryMode.Send)
+            },
+            onAutoPay = {
+                navController.navigateToAutoPay()
+            },
             onDismiss = {
                 navController.popBackStack()
+            },
+        )
+
+        receiveOptionsDialog(
+            onReceiveByBarcode = navController::navigateToMpayQrScreen,
+            onReceiveByPayLink = navController::navigateToPayLink,
+            onReceiveByMobile = {
+                // Receive-by-mobile is not wired yet — dismiss for now.
+                navController.popBackStack()
+            },
+            onProximityPayment = {
+                navController.popBackStack()
+                navController.navigateToProximity(ProximityEntryMode.Receive)
+            },
+            onDismiss = {
+                navController.popBackStack()
+            },
+        )
+
+        proximityScreen(
+            onNavigateBack = navController::popBackStack,
+            onNavigateToQrFallback = {
+                navController.popBackStack()
+                navController.navigateToMpayQrScreen()
+            },
+            // Proximity Send discovered a receiver over BLE → pay them via the normal Pay flow,
+            // prefilled with their phone + amount. Pop proximity so back returns to the wallet.
+            onNavigateToPay = { phone, amount ->
+                navController.popBackStack()
+                navController.navigateToPayPrefilled(PayMode.NUMBER, phone, amount)
             },
         )
 

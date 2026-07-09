@@ -13,7 +13,11 @@ object Constants {
     const val BASIC = "Basic "
     const val SAVINGS = "savingsAccounts"
     const val TRANSACTIONS = "transactions"
-    const val WALLET_ACCOUNT_SAVINGS_PRODUCT_ID = 1
+
+    // Backend-specific: the savings product id new wallet clients are opened against.
+    // On wallet.simplipay.co.za this is product 6 ("SA SimpliWallet", ZAR); product 1 does
+    // not exist there (createClient 404s with "Saving product 1 does not exist").
+    const val WALLET_ACCOUNT_SAVINGS_PRODUCT_ID = 6
     const val MIFOS_MERCHANT_SAVINGS_PRODUCT_ID = 165 // 372
     const val MIFOS_CONSUMER_SAVINGS_PRODUCT_ID = 165 // 373
     private const val MOBILE_WALLET_ROLE_ID = 2

@@ -9,19 +9,13 @@
  */
 package org.mifospay.feature.mpay.qr.components
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -30,13 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import mobile_wallet.feature.mpay_qr.generated.resources.Res
 import mobile_wallet.feature.mpay_qr.generated.resources.feature_mpay_qr_primary
-import mobile_wallet.feature.mpay_qr.generated.resources.logo
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.mifospay.core.designsystem.icon.MifosIcons
@@ -46,10 +36,8 @@ import template.core.base.designsystem.KptMaterialTheme
 import template.core.base.designsystem.theme.KptTheme
 
 /**
- * Professional account selector card displaying:
- * - Mifos logo with branded styling
+ * Account selector card displaying:
  * - Client display name prominently
- * - Office/bank name
  * - Masked account number
  * - "Primary" badge with checkmark
  * - Dropdown indicator when multiple accounts available
@@ -87,26 +75,6 @@ internal fun AccountSelectorCard(
                 .padding(KptTheme.spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Mifos Logo Avatar
-            Box(
-                modifier = Modifier
-                    .size(KptTheme.spacing.lg * 2)
-                    .clip(CircleShape)
-                    .background(KptTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(Res.drawable.logo),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(KptTheme.spacing.lg + KptTheme.spacing.sm)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Fit,
-                )
-            }
-
-            Spacer(modifier = Modifier.width(KptTheme.spacing.md))
-
             // Account Details
             Column(
                 modifier = Modifier.weight(1f),
@@ -119,26 +87,6 @@ internal fun AccountSelectorCard(
                     fontWeight = FontWeight.Medium,
                     color = KptTheme.colorScheme.onSurface,
                 )
-
-                // Office/Bank Name
-                if (client.officeName.isNotBlank()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.xs),
-                    ) {
-                        Icon(
-                            imageVector = MifosIcons.Bank,
-                            contentDescription = null,
-                            modifier = Modifier.size(KptTheme.spacing.md - KptTheme.spacing.xs),
-                            tint = KptTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = client.officeName,
-                            style = KptTheme.typography.labelSmall,
-                            color = KptTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
 
                 // Masked Account Number
                 Text(

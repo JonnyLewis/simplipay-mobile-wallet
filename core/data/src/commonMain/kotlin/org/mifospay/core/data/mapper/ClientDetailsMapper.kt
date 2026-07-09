@@ -61,7 +61,7 @@ fun NewClient.toEntity(): NewClientEntity {
         lastname = lastname,
         externalId = externalId,
         mobileNo = mobileNo,
-        address = address.toEntity(),
+        address = address?.toEntity(),
         savingsProductId = savingsProductId,
     )
 }

@@ -139,6 +139,13 @@ class UserPreferencesDataSource(
         }
     }
 
+    suspend fun clearClientInfo() {
+        withContext(dispatcher) {
+            settings.putClientPreference(ClientPreferences.DEFAULT)
+            _clientInfo.value = ClientPreferences.DEFAULT
+        }
+    }
+
     suspend fun updateClientProfile(client: UpdatedClient) {
         withContext(dispatcher) {
             val updatedClient = _clientInfo.value.copy(
@@ -217,6 +224,14 @@ class UserPreferencesDataSource(
     suspend fun clearInfo() {
         withContext(dispatcher) {
             settings.clear()
+            // settings.clear() only wipes the persisted store; the in-memory
+            // StateFlows survive until process death. Reset them too, otherwise the
+            // previous user's client/userInfo leaks into the next session — e.g. a
+            // no-access login after a KYC logout would keep the stale (id != 0)
+            // client and wrongly unlock the wallet.
+            _userInfo.value = UserInfoPreferences.DEFAULT
+            _clientInfo.value = ClientPreferences.DEFAULT
+            _defaultAccount.value = DefaultAccount.DEFAULT
         }
     }
 

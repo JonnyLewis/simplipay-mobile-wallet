@@ -72,6 +72,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.mifospay.core.common.WalletNaming
 import org.mifospay.core.designsystem.component.BasicDialogState
 import org.mifospay.core.designsystem.component.LoadingDialogState
 import org.mifospay.core.designsystem.component.MifosBasicDialog
@@ -350,7 +351,7 @@ private fun AccountItem(
         ) {
             ListItem(
                 headlineContent = {
-                    Text(text = account.name)
+                    Text(text = WalletNaming.friendly(account.name))
                 },
                 supportingContent = {
                     Text(text = account.number)

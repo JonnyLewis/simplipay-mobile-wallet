@@ -26,7 +26,7 @@
     <string name="feature_request_money_error_oops">ওহ!</string>
     <string name="feature_request_money_unexpected_error_subtitle">একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।</string>
     <string name="feature_mpay_qr_receive_money">টাকা গ্রহণ করুন</string>
-    <string name="feature_mpay_qr_intra_bank">ইন্ট্রা-ব্যাংক QR</string>
+    <string name="feature_mpay_qr_intra_bank">SimpliPay wallet QR</string>
     <string name="feature_mpay_qr_inter_bank">ইন্টার-ব্যাংক QR</string>
     <string name="feature_mpay_qr_share">শেয়ার করুন</string>
     <string name="feature_mpay_qr_unable_to_generate">QR কোড তৈরি করা সম্ভব হয়নি</string>

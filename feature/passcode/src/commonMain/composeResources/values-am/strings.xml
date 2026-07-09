@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">በልክ ያልሆኑ ግቤቶች ምክንያት የባዮሜትሪክ ማረጋገጫ መጀመር አልተቻለም።</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">በልክ ያልሆኑ ግቤቶች ምክንያት የባዮሜትሪክ ምዝገባ መጀመር አልተቻለም።</string>
     <string name="feature_passcode_biometric_error_unknown">ያልተጠበቀ የባዮሜትሪክ ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay ይክፈቱ</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay ይክፈቱ</string>
     <string name="feature_passcode_biometric_prompt_subtitle">ለመቀጠል ማንነትዎን ያረጋግጡ</string>
     <string name="feature_passcode_biometric_prompt_description">የጣት አሻራዎን፣ ፊትዎን ወይም የመሣሪያ ምስክርነቶችን ይጠቀሙ</string>
     <string name="feature_passcode_biometric_prompt_negative_button">ሰርዝ</string>

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -42,8 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -51,11 +51,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import co.touchlab.kermit.Logger
 import mobile_wallet.cmp_shared.generated.resources.Res
 import mobile_wallet.cmp_shared.generated.resources.not_connected
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.mifospay.core.data.util.NetworkMonitor
 import org.mifospay.core.data.util.TimeZoneMonitor
+import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.designsystem.component.IconBox
 import org.mifospay.core.designsystem.component.MifosGradientBackground
 import org.mifospay.core.designsystem.component.MifosNavigationBar
@@ -65,9 +68,13 @@ import org.mifospay.core.designsystem.component.MifosNavigationRailItem
 import org.mifospay.core.designsystem.icon.MifosIcons
 import org.mifospay.core.designsystem.theme.LocalGradientColors
 import org.mifospay.feature.mpay.qr.scan.navigation.navigateToScanQr
+import org.mifospay.feature.notification.NOTIFICATION_ROUTE
+import org.mifospay.feature.notification.navigateToNotification
 import org.mifospay.feature.profile.navigation.navigateToEditProfile
+import org.mifospay.feature.profile.navigation.navigateToProfile
 import org.mifospay.feature.settings.navigation.navigateToSettings
 import org.mifospay.shared.navigation.MifosNavHost
+import org.mifospay.shared.push.PushBridge
 import org.mifospay.shared.utils.TopLevelDestination
 import template.core.base.designsystem.theme.KptTheme
 
@@ -89,6 +96,57 @@ internal fun MifosApp(
 
         val snackbarHostState = remember { SnackbarHostState() }
         val destination = appState.currentTopLevelDestination
+        // Pay/Receive/PayLink detail screens keep their own back bar but should still show the bottom nav.
+        val onPayScreen = appState.isPayRoute
+        val onReceiveScreen = appState.isReceiveRoute
+        val onPayLinkScreen = appState.isPayLinkRoute
+
+        // A wallet-no-access user has no real client (stored client defaults to id == 0). They may
+        // only see the locked Home; the other tabs/QR depend on a real client and would 404, so
+        // navigation away from Home is suppressed until they're KYC-activated.
+        val preferencesRepository = koinInject<UserPreferencesRepository>()
+        val client by preferencesRepository.client.collectAsStateWithLifecycle()
+        val isLocked = client == null || client?.id == 0L
+        val onNavigateToDestination: (TopLevelDestination) -> Unit = { dest ->
+            if (!isLocked || dest == TopLevelDestination.HOME) {
+                // Pay/Receive are pushed detail screens in MAIN_GRAPH. Tab navigation uses
+                // saveState/restoreState, which would otherwise save the detail into Home's back-stack
+                // state and restore it when returning to Home. Pop it first so tabs switch cleanly.
+                if (onPayScreen || onReceiveScreen || onPayLinkScreen) appState.navController.popBackStack()
+                appState.navigateToTopLevelDestination(dest)
+            }
+        }
+        val onScanQrClick: () -> Unit = {
+            if (!isLocked) appState.navController.navigateToScanQr()
+        }
+
+        // Push-notification tap routing (one-shot). This shell only composes after
+        // passcode unlock, so a tap from cold start / background parks in PushBridge
+        // until the user is in — then routes exactly once. TRANSACTION lands on the
+        // History tab; every other type opens the notification centre. Locked
+        // (no-client) users stay on Home; the tap is dropped.
+        val pendingPushTap by PushBridge.lastTappedType.collectAsStateWithLifecycle()
+        LaunchedEffect(pendingPushTap) {
+            pendingPushTap?.let { type ->
+                Logger.d(tag = "PushTap", messageString = "routing tap type=$type isLocked=$isLocked")
+                if (!isLocked) {
+                    when (type) {
+                        "TRANSACTION" -> appState.navigateToTopLevelDestination(TopLevelDestination.HISTORY)
+                        else -> appState.navController.navigateToNotification()
+                    }
+                }
+                PushBridge.consumeTap()
+            }
+        }
+
+        // Opening the notification centre clears the app-icon badge.
+        LaunchedEffect(appState.navController) {
+            appState.navController.currentBackStackEntryFlow.collect { entry ->
+                if (entry.destination.route == NOTIFICATION_ROUTE) {
+                    PushBridge.clearBadge()
+                }
+            }
+        }
 
         val isOffline by appState.isOffline.collectAsStateWithLifecycle()
 
@@ -109,13 +167,13 @@ internal fun MifosApp(
             contentColor = KptTheme.colorScheme.onBackground,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                if (appState.shouldShowBottomBar && destination != null) {
+                if (appState.shouldShowBottomBar && (destination != null || onPayScreen || onReceiveScreen || onPayLinkScreen)) {
                     MifosBottomBar(
                         destinations = appState.topLevelDestinations,
                         destinationsWithUnreadResources = emptySet(),
-                        onNavigateToDestination = appState::navigateToTopLevelDestination,
+                        onNavigateToDestination = onNavigateToDestination,
                         currentDestination = appState.currentDestination,
-                        onScanQrClick = { appState.navController.navigateToScanQr() },
+                        onScanQrClick = onScanQrClick,
                         modifier = Modifier.testTag("NiaBottomBar"),
                     )
                 }
@@ -136,9 +194,9 @@ internal fun MifosApp(
                     MifosNavRail(
                         destinations = appState.topLevelDestinations,
                         destinationsWithUnreadResources = emptySet(),
-                        onNavigateToDestination = appState::navigateToTopLevelDestination,
+                        onNavigateToDestination = onNavigateToDestination,
                         currentDestination = appState.currentDestination,
-                        onScanQrClick = { appState.navController.navigateToScanQr() },
+                        onScanQrClick = onScanQrClick,
                         modifier = Modifier
                             .testTag("NiaNavRail")
                             .safeDrawingPadding(),
@@ -157,6 +215,9 @@ internal fun MifosApp(
                             },
                             onNavigateToEditProfile = {
                                 appState.navController.navigateToEditProfile()
+                            },
+                            onNavigateToProfile = {
+                                appState.navController.navigateToProfile()
                             },
 //                            onNavigateToNotification = {
 //                                appState.navController.navigateToNotification()
@@ -186,12 +247,22 @@ private fun MifosAppBar(
     onNavigateToFaq: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToProfile: () -> Unit,
 //    onNavigateToNotification: () -> Unit,
     destination: TopLevelDestination?,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = { Text(text = title) },
+        title = {
+            if (destination == TopLevelDestination.HOME) {
+                IconBox(
+                    icon = MifosIcons.Profile,
+                    onClick = onNavigateToProfile,
+                )
+            } else {
+                Text(text = title)
+            }
+        },
         actions = {
             Box {
                 when (destination) {
@@ -265,7 +336,7 @@ private fun MifosNavRail(
                         contentDescription = null,
                     )
                 },
-                modifier = if (hasUnread) Modifier.notificationDot() else Modifier,
+                modifier = if (hasUnread) Modifier.notificationDot(KptTheme.colorScheme.tertiary) else Modifier,
                 selectedIcon = {
                     Icon(
                         imageVector = destination.selectedIcon,
@@ -305,7 +376,7 @@ private fun MifosBottomBar(
                             contentDescription = null,
                         )
                     },
-                    modifier = if (hasUnread) Modifier.notificationDot() else Modifier,
+                    modifier = if (hasUnread) Modifier.notificationDot(KptTheme.colorScheme.tertiary) else Modifier,
                     selectedIcon = {
                         Icon(
                             imageVector = destination.selectedIcon,
@@ -332,7 +403,7 @@ private fun MifosBottomBar(
                             contentDescription = null,
                         )
                     },
-                    modifier = if (hasUnread) Modifier.notificationDot() else Modifier,
+                    modifier = if (hasUnread) Modifier.notificationDot(KptTheme.colorScheme.tertiary) else Modifier,
                     selectedIcon = {
                         Icon(
                             imageVector = destination.selectedIcon,
@@ -344,10 +415,15 @@ private fun MifosBottomBar(
             }
         }
 
-        // Center QR Scan FAB - inside navigation bar
+        // Center QR Scan FAB - inside navigation bar. The bottom navigation-bar
+        // inset padding lifts the FAB out of the home-indicator safe area so its
+        // centre lines up with the other nav-item icons (which already sit above
+        // that inset) instead of hanging lower than them.
         FloatingActionButton(
             onClick = onScanQrClick,
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier
+                .navigationBarsPadding()
+                .size(56.dp),
             shape = CircleShape,
             containerColor = KptTheme.colorScheme.primary,
             contentColor = KptTheme.colorScheme.onPrimary,
@@ -364,24 +440,21 @@ private fun MifosBottomBar(
     }
 }
 
-private fun Modifier.notificationDot(): Modifier =
-    composed {
-        val tertiaryColor = KptTheme.colorScheme.tertiary
-        drawWithContent {
+// Non-composed modifier (cheaper than `composed {}`, which re-runs composition for every
+// nav item on every recomposition). The colour is read by the caller and passed in.
+private fun Modifier.notificationDot(color: Color): Modifier =
+    drawWithCache {
+        val radius = 5.dp.toPx()
+        // This is based on the dimensions of the NavigationBar's "indicator pill";
+        // however, its parameters are private, so we must depend on them implicitly
+        // (NavigationBarTokens.ActiveIndicatorWidth = 64.dp)
+        val dotOffset = Offset(
+            64.dp.toPx() * .45f,
+            32.dp.toPx() * -.45f - 6.dp.toPx(),
+        )
+        onDrawWithContent {
             drawContent()
-            drawCircle(
-                tertiaryColor,
-                radius = 5.dp.toPx(),
-                // This is based on the dimensions of the NavigationBar's "indicator pill";
-                // however, its parameters are private, so we must depend on them implicitly
-                // (NavigationBarTokens.ActiveIndicatorWidth = 64.dp)
-                center =
-                center +
-                    Offset(
-                        64.dp.toPx() * .45f,
-                        32.dp.toPx() * -.45f - 6.dp.toPx(),
-                    ),
-            )
+            drawCircle(color, radius = radius, center = center + dotOffset)
         }
     }
 

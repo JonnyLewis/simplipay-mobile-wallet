@@ -24,7 +24,7 @@
     <string name="feature_qr_supported_transfers">Inter-bank • Intra-bank</string>
     <string name="feature_qr_upload_qr">Upload QR</string>
     <string name="feature_qr_torch">Torch</string>
-    <string name="feature_qr_powered_by">Powered by Mifos</string>
+    <string name="feature_qr_powered_by">Powered by SimpliPay</string>
     <string name="feature_qr_help_title">QR Code Safety</string>
     <string name="feature_qr_help_description">Be cautious when scanning QR codes. They could lead to phishing websites that steal your personal information, or download malware onto your device. Only scan QR codes from trusted sources.</string>
     <string name="feature_qr_ok">OK</string>

@@ -143,6 +143,26 @@ compose.desktop {
  * We depend on `createReleaseDistributable` so the `.app` exists, and we guard
  * execution to only run on macOS hosts.
  */
+/**
+ * Headlessly renders the onboarding screens to PNG via [RenderShots] /
+ * `ImageComposeScene` (off-screen Skia — no display needed). For visual
+ * verification during the redesign:
+ *   `./gradlew :cmp-desktop:renderShots -PshotsOut=/abs/output/dir`
+ */
+tasks.register<JavaExec>("renderShots") {
+    group = "verification"
+    description = "Render onboarding screens to PNG headlessly via ImageComposeScene"
+    dependsOn("desktopJar")
+    mainClass.set("RenderShotsKt")
+    classpath = files(
+        tasks.named("desktopJar"),
+        configurations.named("desktopRuntimeClasspath"),
+    )
+    val outDir = (project.findProperty("shotsOut") as String?)
+        ?: layout.buildDirectory.dir("shots").get().asFile.absolutePath
+    args(outDir)
+}
+
 val unquarantineApp = tasks.register<Exec>("unquarantineMacApp") {
     group = "macOS"
     description = "Remove com.apple.quarantine from the built .app before signing"

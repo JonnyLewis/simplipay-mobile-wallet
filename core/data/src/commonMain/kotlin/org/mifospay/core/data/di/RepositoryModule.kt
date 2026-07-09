@@ -33,6 +33,7 @@ import org.mifospay.core.data.repository.KycLevelRepository
 import org.mifospay.core.data.repository.LocalAssetRepository
 import org.mifospay.core.data.repository.NotificationRepository
 import org.mifospay.core.data.repository.OfficeRepository
+import org.mifospay.core.data.repository.PaymentsRepository
 import org.mifospay.core.data.repository.RecentPayeeRepository
 import org.mifospay.core.data.repository.RegistrationRepository
 import org.mifospay.core.data.repository.RunReportRepository
@@ -63,6 +64,7 @@ import org.mifospay.core.data.repositoryImpl.LocalAssetRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.MifosPasscodeAdapterImpl
 import org.mifospay.core.data.repositoryImpl.NotificationRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.OfficeRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.PaymentsRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.RecentPayeeRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.RegistrationRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.RunReportRepositoryImpl
@@ -85,7 +87,7 @@ private val unconfined = named(MifosDispatchers.Unconfined.name)
 val RepositoryModule = module {
     single<Json> { Json { ignoreUnknownKeys = true } }
 
-    single<AssetRepository> { AssetRepositoryImpl() }
+    single<AssetRepository> { AssetRepositoryImpl(get(ioDispatcher)) }
     single<AccountRepository> { AccountRepositoryImpl(get(), get(), get(ioDispatcher)) }
     single<AuthenticationRepository> {
         AuthenticationRepositoryImpl(get(), get(ioDispatcher))
@@ -116,8 +118,9 @@ val RepositoryModule = module {
     single<ThirdPartyTransferRepository> {
         ThirdPartyTransferRepositoryImpl(get(), get(ioDispatcher))
     }
+    single<PaymentsRepository> { PaymentsRepositoryImpl(get(), get(ioDispatcher)) }
     single<TwoFactorAuthRepository> { TwoFactorAuthRepositoryImpl(get(), get(ioDispatcher)) }
-    single<UserRepository> { UserRepositoryImpl(get(), get(ioDispatcher)) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(), get(ioDispatcher)) }
     single<AutoPayRepository> { AutoPayRepositoryImpl(get(), get(ioDispatcher)) }
     single<OfficeRepository> { OfficeRepositoryImpl(get(), get(ioDispatcher)) }
 

@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">تعذر بدء المصادقة الحيوية بسبب مدخلات غير صالحة.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">تعذر بدء تسجيل القياسات الحيوية بسبب مدخلات غير صالحة.</string>
     <string name="feature_passcode_biometric_error_unknown">حدث خطأ غير متوقع في القياسات الحيوية. يُرجى المحاولة مرة أخرى.</string>
-    <string name="feature_passcode_biometric_prompt_title">فتح قفل Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">فتح قفل SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">تحقق من هويتك للمتابعة</string>
     <string name="feature_passcode_biometric_prompt_description">استخدم بصمة إصبعك أو وجهك أو بيانات اعتماد الجهاز</string>
     <string name="feature_passcode_biometric_prompt_negative_button">إلغاء</string>

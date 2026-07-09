@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Geçersiz argümanlar nedeniyle biyometrik kimlik doğrulama başlatılamadı.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Geçersiz argümanlar nedeniyle biyometrik kayıt başlatılamadı.</string>
     <string name="feature_passcode_biometric_error_unknown">Beklenmeyen bir biyometrik hata oluştu. Lütfen tekrar deneyin.</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay kilidini açın</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay kilidini açın</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Devam etmek için kimliğinizi doğrulayın</string>
     <string name="feature_passcode_biometric_prompt_description">Parmak izinizi, yüzünüzü veya cihaz kimlik bilgilerinizi kullanın</string>
     <string name="feature_passcode_biometric_prompt_negative_button">İptal</string>

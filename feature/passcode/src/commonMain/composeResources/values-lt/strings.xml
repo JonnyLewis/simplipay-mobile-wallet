@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">Nepavyko pradėti biometrinio autentifikavimo dėl neteisingų argumentų.</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">Nepavyko pradėti biometrinės registracijos dėl neteisingų argumentų.</string>
     <string name="feature_passcode_biometric_error_unknown">Įvyko netikėta biometrijos klaida. Bandykite dar kartą.</string>
-    <string name="feature_passcode_biometric_prompt_title">Atrakinti Mifos Pay</string>
+    <string name="feature_passcode_biometric_prompt_title">Atrakinti SimpliPay</string>
     <string name="feature_passcode_biometric_prompt_subtitle">Patvirtinkite tapatybę, kad galėtumėte tęsti</string>
     <string name="feature_passcode_biometric_prompt_description">Naudokite piršto atspaudą, veidą ar įrenginio kredencialus</string>
     <string name="feature_passcode_biometric_prompt_negative_button">Atšaukti</string>

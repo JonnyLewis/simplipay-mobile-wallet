@@ -18,7 +18,7 @@
     <string name="feature_passcode_biometric_error_invalid_arguments_auth">अवैध आर्ग्युमेंट्समुळे बायोमेट्रिक प्रमाणीकरण सुरू होऊ शकले नाही।</string>
     <string name="feature_passcode_biometric_error_invalid_arguments_registration">अवैध आर्ग्युमेंट्समुळे बायोमेट्रिक नोंदणी सुरू होऊ शकली नाही।</string>
     <string name="feature_passcode_biometric_error_unknown">एक अनपेक्षित बायोमेट्रिक त्रुटी आली। कृपया पुन्हा प्रयत्न करा।</string>
-    <string name="feature_passcode_biometric_prompt_title">Mifos Pay अनलॉक करा</string>
+    <string name="feature_passcode_biometric_prompt_title">SimpliPay अनलॉक करा</string>
     <string name="feature_passcode_biometric_prompt_subtitle">सुरू ठेवण्यासाठी तुमची ओळख सत्यापित करा</string>
     <string name="feature_passcode_biometric_prompt_description">तुमच्या बोटाचा ठसा, चेहरा, किंवा डिव्हाइस क्रेडेन्शियल वापरा</string>
     <string name="feature_passcode_biometric_prompt_negative_button">रद्द करा</string>
