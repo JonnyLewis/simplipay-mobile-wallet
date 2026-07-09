@@ -28,8 +28,8 @@ fun MifosTheme(
     @Suppress("UNUSED_PARAMETER") darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    // Color scheme — always light for now.
-    val selectedColorScheme = lightKptColorScheme
+    // Color scheme — always light for now. Blueprint (strong-white) palette.
+    val selectedColorScheme = lightBlueprintColorScheme
     val typography = getTypography().toKptTypography()
     val theme = KptThemeProviderImpl(
         colors = selectedColorScheme,
@@ -40,9 +40,9 @@ fun MifosTheme(
     // Flat Platinum-Ivory background (no gradient) so the screen bg fills
     // edge-to-edge, including the status-bar and home-indicator safe areas.
     val gradientColors = GradientColors(
-        top = backgroundLight,
-        bottom = backgroundLight,
-        container = backgroundLight,
+        top = backgroundBlueprintLight,
+        bottom = backgroundBlueprintLight,
+        container = backgroundBlueprintLight,
     )
     // Background theme
     val defaultBackgroundTheme = BackgroundTheme(
@@ -56,8 +56,8 @@ fun MifosTheme(
         else -> TintTheme()
     }
 
-    // SimpliPay non-Material tokens (ivory gradient, money colours, mono font, …)
-    val simpliPayTokens = lightSimpliPayTokens()
+    // SimpliPay non-Material tokens (ultramarine flood card, money colours, mono font, …)
+    val simpliPayTokens = lightBlueprintSimpliPayTokens()
 
     // Composition locals
     CompositionLocalProvider(
