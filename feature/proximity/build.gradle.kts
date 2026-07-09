@@ -26,6 +26,11 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
         }
 
+        androidMain.dependencies {
+            // androidContext() for the Android BLE transport (BluetoothManager).
+            implementation(libs.koin.android)
+        }
+
         commonTest.dependencies {
             implementation(libs.turbine)
         }
