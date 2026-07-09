@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -112,11 +113,16 @@ private fun ReceiveOptionRow(
     comingSoon: Boolean = false,
 ) {
     val tokens = SimpliPayTheme.tokens
+    // Dim a coming-soon row as a whole via the layer alpha — do NOT fold `a` into the
+    // token colours: `jadeTint` already carries a 10% alpha, and `.copy(alpha = a)`
+    // would REPLACE that (a = 1f -> fully opaque jade), collapsing the orb onto the
+    // jade icon tint so the glyph vanishes. Keep the orb tint pale and the icon jade.
     val a = if (comingSoon) 0.5f else 1f
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = !comingSoon, onClick = onClick)
+            .alpha(a)
             .padding(horizontal = KptTheme.spacing.lg, vertical = KptTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(KptTheme.spacing.md),
@@ -125,13 +131,13 @@ private fun ReceiveOptionRow(
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(tokens.jadeTint.copy(alpha = a)),
+                .background(tokens.jadeTint),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = tokens.jade.copy(alpha = a),
+                tint = tokens.jade,
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -140,12 +146,12 @@ private fun ReceiveOptionRow(
                 text = title,
                 style = KptTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = tokens.ink.copy(alpha = a),
+                color = tokens.ink,
             )
             Text(
                 text = subtitle,
                 style = KptTheme.typography.bodySmall,
-                color = tokens.sub.copy(alpha = a),
+                color = tokens.sub,
             )
         }
         if (comingSoon) {
