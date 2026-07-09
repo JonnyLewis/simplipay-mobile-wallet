@@ -21,7 +21,7 @@ val PayLinkModule = module {
             client = httpClient(
                 config = setupDefaultHttpClient(
                     baseUrl = "$SIMPLILINK_URL/",
-                    loggableHosts = listOf("localhost"),
+                    loggableHosts = listOf("api.simplipay.co.za", "localhost"),
                 ),
             ),
             baseUrl = SIMPLILINK_URL,
