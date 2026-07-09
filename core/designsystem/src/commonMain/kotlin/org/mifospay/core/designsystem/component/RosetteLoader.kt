@@ -33,10 +33,17 @@ import org.mifospay.core.designsystem.theme.SimpliPayTheme
 /**
  * The **splash hero**: the big spinning [Rosette] over a soft jade radial glow.
  *
- * Defaults are the splash values: `rosette(166, 54, 35, 0.85)` spinning `81s`
+ * Defaults are the splash values: `rosette(166, 54, 35)` spinning `81s`
  * linear over a `431dp` radial jade glow (`#0F8A7B` @ 0.10 → transparent). This
  * is intentionally large and is used **only** on the splash screen — for the
  * app's loading indicator use the compact [RosetteLoadingIndicator] instead.
+ *
+ * Unlike the card rosettes (white guilloché on the ultramarine flood, which take
+ * the white `tokens.rosetteStroke` default of [Rosette]), this hero sits on the
+ * light screen ground, so it defaults its [color] to the brand [SimpliPayTokens.jade]
+ * — echoing the jade glow behind it — at a softer [opacity] tuned for that
+ * saturated stroke on white. Passing the white `rosetteStroke` here would render
+ * white-on-white and vanish.
  */
 @Composable
 fun RosetteLoader(
@@ -44,9 +51,10 @@ fun RosetteLoader(
     radiusX: Dp = 166.dp,
     radiusY: Dp = 54.dp,
     count: Int = 35,
-    opacity: Float = 0.85f,
+    opacity: Float = 0.45f,
     glowSize: Dp = 431.dp,
     spinDurationMillis: Int = 81_000,
+    color: Color = SimpliPayTheme.tokens.jade,
 ) {
     val tokens = SimpliPayTheme.tokens
     val angle by rosetteSpin(spinDurationMillis)
@@ -68,6 +76,7 @@ fun RosetteLoader(
             radiusY = radiusY,
             count = count,
             opacity = opacity,
+            color = color,
             // Spin via a layer transform on the cached fan (rotationZ in the deferred
             // graphicsLayer block) rather than re-tessellating the ovals every frame.
             modifier = Modifier.graphicsLayer { rotationZ = angle },
@@ -82,6 +91,11 @@ fun RosetteLoader(
  * glow/wordmark/dots — so it reads as a compact spinner.
  *
  * Defaults to a ~`129dp` box (`radiusX = 56`) turning once every [spinDurationMillis].
+ *
+ * Like [RosetteLoader], this spinner hovers over the light app ground / a light
+ * translucent overlay, so it defaults [color] to the brand [SimpliPayTokens.jade]
+ * rather than the white `tokens.rosetteStroke` (which is for the ultramarine card
+ * and would be invisible here).
  */
 @Composable
 fun RosetteLoadingIndicator(
@@ -89,8 +103,9 @@ fun RosetteLoadingIndicator(
     radiusX: Dp = 56.dp,
     radiusY: Dp = 18.dp,
     count: Int = 35,
-    opacity: Float = 0.85f,
+    opacity: Float = 0.5f,
     spinDurationMillis: Int = 9_000,
+    color: Color = SimpliPayTheme.tokens.jade,
 ) {
     val angle by rosetteSpin(spinDurationMillis)
     Rosette(
@@ -98,6 +113,7 @@ fun RosetteLoadingIndicator(
         radiusY = radiusY,
         count = count,
         opacity = opacity,
+        color = color,
         // Spin the cached fan via a layer transform instead of redrawing it each frame.
         modifier = modifier.graphicsLayer { rotationZ = angle },
     )
