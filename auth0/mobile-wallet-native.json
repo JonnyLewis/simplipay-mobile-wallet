@@ -1,0 +1,18 @@
+{
+  "name": "demo-wallet-ios",
+  "app_type": "native",
+  "description": "Native iOS and Android wallet authentication",
+  "grant_types": [
+    "password",
+    "http://auth0.com/oauth/grant-type/password-realm",
+    "refresh_token"
+  ],
+  "token_endpoint_auth_method": "none",
+  "oidc_conformant": true,
+  "is_first_party": true,
+  "custom_login_page_on": false,
+  "connections": ["Username-Password-Authentication"],
+  "client_id": "07LfaEKDp4oBLOXgsjZBb7eeUci4TNL2",
+  "tenant": "simplipay.eu.auth0.com",
+  "audience": "https://api.simplipay.co.za/"
+}

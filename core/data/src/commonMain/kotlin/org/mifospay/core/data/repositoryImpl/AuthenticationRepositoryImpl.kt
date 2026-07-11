@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.mifospay.core.common.DataState
 import org.mifospay.core.data.mapper.toUserInfo
+import org.mifospay.core.data.repository.Auth0Repository
 import org.mifospay.core.data.repository.AuthenticationRepository
 import org.mifospay.core.model.user.UserInfo
 import org.mifospay.core.network.SelfServiceApiManager
@@ -20,10 +21,16 @@ import org.mifospay.core.network.model.entity.authentication.AuthenticationPaylo
 
 class AuthenticationRepositoryImpl(
     private val apiManager: SelfServiceApiManager,
+    private val auth0Repository: Auth0Repository,
     private val ioDispatcher: CoroutineDispatcher,
 ) : AuthenticationRepository {
     override suspend fun authenticate(username: String, password: String): DataState<UserInfo> {
         return try {
+            when (val auth0 = auth0Repository.login(username, password)) {
+                is DataState.Error -> return DataState.Error(Exception("Invalid credentials"))
+                DataState.Loading -> return DataState.Loading
+                is DataState.Success -> Unit
+            }
             val payload = AuthenticationPayload(username, password)
 
             val result = withContext(ioDispatcher) {

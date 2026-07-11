@@ -19,4 +19,5 @@ class NewUser(
     val lastname: String,
     val email: String,
     val password: String,
+    val mobileNumber: String = "",
 ) : Parcelable

@@ -477,6 +477,7 @@ class SignupViewModel(
                     state.lastNameInput,
                     state.emailInput,
                     state.passwordInput,
+                    state.mobileNumberInput,
                 )
                 createUser(newUser)
             }

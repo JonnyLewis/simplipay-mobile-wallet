@@ -18,6 +18,7 @@ import org.mifos.authenticator.biometrics.BiometricStorageAdapter
 import org.mifos.authenticator.passcode.PasscodeStorageAdapter
 import org.mifospay.core.common.MifosDispatchers
 import org.mifospay.core.data.repository.AccountRepository
+import org.mifospay.core.data.repository.Auth0Repository
 import org.mifospay.core.data.repository.AppLockRepository
 import org.mifospay.core.data.repository.AssetRepository
 import org.mifospay.core.data.repository.AuthenticationRepository
@@ -47,6 +48,7 @@ import org.mifospay.core.data.repository.TwoFactorAuthRepository
 import org.mifospay.core.data.repository.UserRepository
 import org.mifospay.core.data.repository.UserVerificationRepository
 import org.mifospay.core.data.repositoryImpl.AccountRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.Auth0RepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AppLockRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AssetRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AuthenticationRepositoryImpl
@@ -90,8 +92,9 @@ val RepositoryModule = module {
     single<AssetRepository> { AssetRepositoryImpl(get(ioDispatcher)) }
     single<AccountRepository> { AccountRepositoryImpl(get(), get(), get(ioDispatcher)) }
     single<AuthenticationRepository> {
-        AuthenticationRepositoryImpl(get(), get(ioDispatcher))
+        AuthenticationRepositoryImpl(get(), get(), get(ioDispatcher))
     }
+    single<Auth0Repository> { Auth0RepositoryImpl(get(), get(ioDispatcher)) }
     single<BeneficiaryRepository> { BeneficiaryRepositoryImpl(get(), get(ioDispatcher)) }
     single<ClientRepository> {
         ClientRepositoryImpl(
@@ -120,7 +123,7 @@ val RepositoryModule = module {
     }
     single<PaymentsRepository> { PaymentsRepositoryImpl(get(), get(ioDispatcher)) }
     single<TwoFactorAuthRepository> { TwoFactorAuthRepositoryImpl(get(), get(ioDispatcher)) }
-    single<UserRepository> { UserRepositoryImpl(get(), get(), get(ioDispatcher)) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(), get(), get(ioDispatcher)) }
     single<AutoPayRepository> { AutoPayRepositoryImpl(get(), get(ioDispatcher)) }
     single<OfficeRepository> { OfficeRepositoryImpl(get(), get(ioDispatcher)) }
 

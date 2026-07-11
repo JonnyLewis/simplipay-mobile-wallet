@@ -20,6 +20,7 @@ import org.mifospay.core.common.DataState
 import org.mifospay.core.common.asDataStateFlow
 import org.mifospay.core.data.mapper.toEntity
 import org.mifospay.core.data.repository.UserRepository
+import org.mifospay.core.data.repository.Auth0Repository
 import org.mifospay.core.data.util.parseMifosError
 import org.mifospay.core.model.user.NewUser
 import org.mifospay.core.network.FineractApiManager
@@ -34,6 +35,7 @@ class UserRepositoryImpl(
     // Platform (admin) API — used for the pre-login onboarding writes (create user, assign
     // client) which can't go through the self-service base (that needs a logged-in token).
     private val fineractApiManager: FineractApiManager,
+    private val auth0Repository: Auth0Repository,
     private val ioDispatcher: CoroutineDispatcher,
 ) : UserRepository {
     override suspend fun getUsers(): Flow<DataState<List<UserWithRole>>> {
@@ -46,6 +48,11 @@ class UserRepositoryImpl(
 
     override suspend fun createUser(newUser: NewUser): DataState<Int> {
         return try {
+            when (val auth0 = auth0Repository.signup(newUser, newUser.mobileNumber)) {
+                is DataState.Error -> return DataState.Error(auth0.exception)
+                DataState.Loading -> return DataState.Loading
+                is DataState.Success -> Unit
+            }
             val result = withContext(ioDispatcher) {
                 fineractApiManager.userApi.createUser(newUser.toEntity())
             }

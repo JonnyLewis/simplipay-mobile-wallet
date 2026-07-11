@@ -33,10 +33,12 @@ import org.mifospay.core.network.services.createStandingInstructionService
 import org.mifospay.core.network.services.createThirdPartyTransferService
 import org.mifospay.core.network.services.createTwoFactorAuthService
 import org.mifospay.core.network.services.createUserService
+import org.mifospay.core.network.services.createAuth0Service
 
 class KtorfitClient(
     ktorfit: Ktorfit,
 ) {
+    internal val auth0Api by lazy { ktorfit.createAuth0Service() }
     internal val authenticationApi by lazy { ktorfit.createAuthenticationService() }
 
     internal val clientsApi by lazy { ktorfit.createClientService() }

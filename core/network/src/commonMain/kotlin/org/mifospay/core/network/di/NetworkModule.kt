@@ -23,6 +23,7 @@ import org.mifos.corebase.network.setupDefaultHttpClient
 import org.mifospay.core.common.MifosDispatchers
 import org.mifospay.core.datastore.UserPreferencesRepository
 import org.mifospay.core.network.FineractApiManager
+import org.mifospay.core.network.Auth0ApiManager
 import org.mifospay.core.network.InterBankApiManager
 import org.mifospay.core.network.KtorfitClient
 import org.mifospay.core.network.PaymentsApiManager
@@ -32,6 +33,7 @@ import org.mifospay.core.network.config.InstanceConfigLoader
 import org.mifospay.core.network.config.InstanceConfigManager
 import org.mifospay.core.network.config.PaymentsApiConfig
 import org.mifospay.core.network.config.ServiceAccountConfig
+import org.mifospay.core.network.config.Auth0Config
 import org.mifospay.core.network.config.SupabaseCredentialsImpl
 import org.mifospay.core.network.config.SupabaseInstanceConfigLoader
 import org.mifospay.core.network.utils.BaseURL
@@ -40,6 +42,7 @@ import org.mifospay.core.network.utils.KtorInterceptor
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 private val ioDispatcher = named(MifosDispatchers.IO.name)
+private val auth0Client = named("auth0-client")
 
 @OptIn(ExperimentalEncodingApi::class)
 val NetworkModule = module {
@@ -198,6 +201,24 @@ val NetworkModule = module {
                 .build(),
         )
     }
+
+    single<KtorfitClient>(qualifier = auth0Client) {
+        KtorfitClient(
+            Ktorfit.Builder()
+                .httpClient(
+                    client = httpClient(
+                        config = setupDefaultHttpClient(
+                            baseUrl = "https://${Auth0Config.DOMAIN}/",
+                            loggableHosts = listOf(Auth0Config.DOMAIN),
+                        ),
+                    ),
+                )
+                .converterFactories(FlowConverterFactory())
+                .build(),
+        )
+    }
+
+    single { Auth0ApiManager(get(auth0Client)) }
 
     single {
         FineractApiManager(ktorfitClient = get(BaseClient))
