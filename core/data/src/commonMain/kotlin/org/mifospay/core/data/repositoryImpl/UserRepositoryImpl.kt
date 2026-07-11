@@ -19,8 +19,8 @@ import kotlinx.coroutines.withContext
 import org.mifospay.core.common.DataState
 import org.mifospay.core.common.asDataStateFlow
 import org.mifospay.core.data.mapper.toEntity
-import org.mifospay.core.data.repository.UserRepository
 import org.mifospay.core.data.repository.Auth0Repository
+import org.mifospay.core.data.repository.UserRepository
 import org.mifospay.core.data.util.parseMifosError
 import org.mifospay.core.model.user.NewUser
 import org.mifospay.core.network.FineractApiManager

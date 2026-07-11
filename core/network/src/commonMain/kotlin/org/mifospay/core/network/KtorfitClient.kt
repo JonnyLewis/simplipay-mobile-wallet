@@ -11,6 +11,7 @@ package org.mifospay.core.network
 
 import de.jensklingenberg.ktorfit.Ktorfit
 import org.mifospay.core.network.services.createAccountTransfersService
+import org.mifospay.core.network.services.createAuth0Service
 import org.mifospay.core.network.services.createAuthenticationService
 import org.mifospay.core.network.services.createAutoPayService
 import org.mifospay.core.network.services.createBeneficiaryService
@@ -33,7 +34,6 @@ import org.mifospay.core.network.services.createStandingInstructionService
 import org.mifospay.core.network.services.createThirdPartyTransferService
 import org.mifospay.core.network.services.createTwoFactorAuthService
 import org.mifospay.core.network.services.createUserService
-import org.mifospay.core.network.services.createAuth0Service
 
 class KtorfitClient(
     ktorfit: Ktorfit,

@@ -18,9 +18,9 @@ import org.mifos.authenticator.biometrics.BiometricStorageAdapter
 import org.mifos.authenticator.passcode.PasscodeStorageAdapter
 import org.mifospay.core.common.MifosDispatchers
 import org.mifospay.core.data.repository.AccountRepository
-import org.mifospay.core.data.repository.Auth0Repository
 import org.mifospay.core.data.repository.AppLockRepository
 import org.mifospay.core.data.repository.AssetRepository
+import org.mifospay.core.data.repository.Auth0Repository
 import org.mifospay.core.data.repository.AuthenticationRepository
 import org.mifospay.core.data.repository.AutoPayHistoryRepository
 import org.mifospay.core.data.repository.AutoPayRepository
@@ -48,9 +48,9 @@ import org.mifospay.core.data.repository.TwoFactorAuthRepository
 import org.mifospay.core.data.repository.UserRepository
 import org.mifospay.core.data.repository.UserVerificationRepository
 import org.mifospay.core.data.repositoryImpl.AccountRepositoryImpl
-import org.mifospay.core.data.repositoryImpl.Auth0RepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AppLockRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AssetRepositoryImpl
+import org.mifospay.core.data.repositoryImpl.Auth0RepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AuthenticationRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AutoPayHistoryRepositoryImpl
 import org.mifospay.core.data.repositoryImpl.AutoPayRepositoryImpl
